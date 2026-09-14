@@ -56,6 +56,7 @@ enum ReleaseReason {
 	INVALID,        ## the target is gone, freed, or refused as a usable target for any other reason
 	OUT_OF_RANGE,   ## the locked target is beyond release_range
 	PLAYER_DEAD,    ## the locking actor died, so no lock outlives it
+	RUN_RESET,      ## the RUN was reset (New Run): no lock outlives the run it was taken in
 }
 
 ## The group this component joins. The camera rig reads targeting state through it, which is how the
@@ -233,6 +234,8 @@ func release_reason_name(reason: int) -> String:
 			return "out-of-range"
 		ReleaseReason.PLAYER_DEAD:
 			return "player-dead"
+		ReleaseReason.RUN_RESET:
+			return "run-reset"
 	return "none"
 
 

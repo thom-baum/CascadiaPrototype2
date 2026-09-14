@@ -116,11 +116,21 @@ var run_started_unix := 0
 ## The balance the last successful load restored, or -1 when this run has not loaded yet. Diagnostic.
 var loaded_credits := -1
 
+## Where every damageable actor was AUTHORED, keyed by NodePath, captured once at boot. A NEW RUN puts
+## the arena back to these, which is what "the same clean state as a fresh boot" means for the enemies
+## a run moved or killed. Recorded here, never restored from: a load uses the SAVE's own snapshot.
+var _spawn_transforms: Dictionary = {}
+
 
 func _ready() -> void:
 	add_to_group(GROUP_SAVE)
 	if run_id.is_empty():
 		_begin_run_identity()
+	# DEFERRED, and the ordering is the whole reason. `HealthComponent._ready()` is what joins the
+	# damageable group, and this node sits BEFORE `TestEnvironment` in `main.tscn` - so at this moment
+	# the group is still EMPTY. A deferred call runs after the whole tree has readied, which is the
+	# first moment the group is complete and every actor is still exactly where its scene authored it.
+	_record_spawn_transforms.call_deferred()
 
 
 # --- Queries -----------------------------------------------------------------
@@ -653,6 +663,79 @@ func _restore_reward_tracking(data: Dictionary, ledger) -> int:
 
 # --- New run ------------------------------------------------------------------
 
+## Capture the AUTHORED placement of every damageable actor, once, at boot.
+##
+## This is the yardstick a NEW RUN restores enemies to. It has to be RECORDED rather than read from the
+## scene file at reset time, because by then the actors have moved: `TestAttacker` pursues the player,
+## so its transform at the moment New Run is pressed is wherever the fight left it, not where the
+## scene put it.
+func _record_spawn_transforms() -> void:
+	_spawn_transforms.clear()
+	for node in get_tree().get_nodes_in_group(HealthComponent.GROUP_DAMAGEABLE):
+		var actor := node.get_parent() as Node3D
+		if actor == null:
+			continue
+		_spawn_transforms[actor.get_path()] = actor.global_transform
+
+
+## Put the RUN back to the state a fresh boot produces.
+##
+## THE DEFECT THIS FIXES. `new_run()` reset the carried balance, minted a new run identity and deleted
+## the save file - and touched no actor at all. So a New Run left the player dead where it fell, left
+## every enemy it had killed still defeated with its presentation still showing, left a lock held on a
+## target from the previous run, and left the HUD displaying those values. The number restarted; the
+## world did not.
+##
+## THIS IS THE MIRROR OF `_restore_world()`. A load puts the world back to a RECORDED snapshot; a new
+## run puts it back to the AUTHORED starting state. Both go through each owner's own API - health,
+## stamina, defeat state and the body transform all belong to their components - so neither becomes a
+## second owner of anybody's state, and neither can mint a reward.
+func _reset_world() -> void:
+	# 1. THE PLAYER, through the component that owns the respawn. `reset_playable_state()` already means
+	#    exactly "this actor is going back on its SPAWN mark": full health, full stamina, regeneration
+	#    re-enabled, every committed attack/dodge/parry cancelled, position and yaw restored. The
+	#    player's spawn mark is that component's state, not this service's, so it is ASKED FOR here
+	#    rather than duplicated.
+	var death := get_player_death()
+	if death != null and death.has_method("reset_playable_state"):
+		death.call("reset_playable_state", false)
+
+	# 2. EVERY ENEMY, enumerated from the damageable group rather than a fixed actor list, so a newly
+	#    added enemy is covered the moment it exists. Each value goes back through its own owner:
+	#    `HealthComponent.reset()` and `EnemyDeathComponent.restore_defeated(false)`. That restore call
+	#    is the SAME one a load uses, and it deliberately does NOT emit `defeated` - which is precisely
+	#    why reviving an enemy here cannot pay a reward for it.
+	var player := get_player_actor()
+	var revived := 0
+	for node in get_tree().get_nodes_in_group(HealthComponent.GROUP_DAMAGEABLE):
+		var actor := node.get_parent() as Node3D
+		if actor == null or actor == player:
+			continue
+		var health := actor.get_node_or_null("Health") as HealthComponent
+		if health != null:
+			health.reset()
+		var enemy_death := actor.get_node_or_null("Death")
+		if enemy_death != null and enemy_death.has_method("restore_defeated"):
+			enemy_death.call("restore_defeated", false)
+		if _spawn_transforms.has(actor.get_path()):
+			actor.global_transform = _spawn_transforms[actor.get_path()]
+		revived += 1
+
+	# 3. EVERY ATTACKER's own state machine, from its group for the same enumeration reason: no attack
+	#    in progress, no cooldown left, an idle telegraph and a shut hitbox.
+	for node in get_tree().get_nodes_in_group(DeathComponent.GROUP_ATTACKER):
+		if node.has_method("reset"):
+			node.call("reset")
+
+	# 4. NO LOCK OUTLIVES THE RUN IT WAS TAKEN IN, released by its own owner with its own recorded
+	#    cause, so a new run is not filed as one of the four invalidation paths or as a manual release.
+	var targeting := get_tree().get_first_node_in_group(TargetingComponent.GROUP_TARGETING)
+	if targeting != null and targeting.has_method("release"):
+		targeting.call("release", TargetingComponent.ReleaseReason.RUN_RESET)
+
+	_log("new-run world reset: player respawned, %d enemy actor(s) revived, lock released" % revived)
+
+
 ## Delete the save file. Used to start from nothing, and by a probe proving the missing-file path.
 func delete_save() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH):
@@ -677,11 +760,14 @@ func new_run() -> int:
 	delete_save()
 	_begin_run_identity()
 	loaded_credits = -1
+	# The RUN is the world as well as the number. Resetting only the balance left the player dead where
+	# it fell and every killed enemy still defeated - the defect recorded in `_reset_world()`.
+	_reset_world()
 
 	new_runs += 1
 	last_result = Result.OK
 	last_error = ""
-	_log("new run %s: carried balance reset to %d and the save removed" % [run_id, ledger.credits])
+	_log("new run %s: carried balance reset to %d, save removed, world reset" % [run_id, ledger.credits])
 	new_run_started.emit(ledger.credits)
 	return Result.OK
 

@@ -451,13 +451,33 @@ func _hurtbox_of(actor: Node) -> HurtboxComponent:
 
 
 ## A minimal VALID payload, used to write a controlled save for the post-load stages.
+##
+## THE PLAYER BLOCK IS DERIVED FROM THE LIVE PLAYER, and that is a CORRECTION, not a preference. This
+## fixture was written when a save was a TALLY - it carried `{"alive": true}` and nothing else. The
+## snapshot contract (M10.1 onward) requires the player's recorded transform and health, and the loader
+## REFUSES a save that cannot say where the player stood: `the player block has no position (expected 3
+## numbers)`. So this fixture failed as `missing-field` and the post-load stages could never run - a
+## stale FIXTURE, not a defect in the service. Deriving the values from the live player keeps it honest
+## and self-maintaining: it is a real snapshot of where the player actually is, so the load restores the
+## state the later stages expect to run from.
 func _make_payload(id: String, credits: int) -> String:
+	var health := _player.get_node_or_null("Health") as HealthComponent
+	var stamina := _player.get_node_or_null("Stamina") as StaminaComponent
+	# A snapshot ALWAYS records a playable player, which the loader enforces by refusing health <= 0.
+	var health_value := maxf(1.0, health.current_health if health != null else 100.0)
+	var stamina_value := stamina.current_stamina if stamina != null else 100.0
 	return JSON.stringify({
 		"schema_version": GameStateSave.SCHEMA_VERSION,
 		"saved_at_unix": int(Time.get_unix_time_from_system()),
 		"run": {"id": id, "started_unix": int(Time.get_unix_time_from_system())},
 		"carried_credits": credits,
-		"player": {"alive": true},
+		"player": {
+			"alive": true,
+			"position": [_player.global_position.x, _player.global_position.y, _player.global_position.z],
+			"rotation_y": _player.rotation.y,
+			"health": health_value,
+			"stamina": stamina_value,
+		},
 	}, "  ")
 
 

@@ -3671,3 +3671,77 @@ complete and so a future reader does not mistake them for cleanup candidates.
   than a preserved record. Nothing in the project reads any of them.
 - The Escape contract in `.summerrules` now records that Escape PAUSES ON ITS FIRST PRESS, amending the
   earlier reading that its only job was to own `mouse_look_enabled`.
+
+---
+
+## NEW RUN RESET-STATE FIX (2026-09-14, reported by the user after the M13 playtest)
+
+Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion stays
+manual.
+
+### The defect, as reported and as found
+
+The user reported that New Run did not reset the world: it should move the player to the spawn point,
+reset player state, respawn the arena's enemies, clear defeated/invalid target state, release any held
+lock, and leave the HUD showing the reset values.
+
+`GameStateSave.new_run()` reset the carried balance, minted a new run identity and deleted the save file
+- and touched NO ACTOR. So a New Run left the player dead where it fell, every killed enemy still
+defeated with its presentation still showing, and a lock still held on a target from the previous run.
+The number restarted; the world did not.
+
+### What was changed, and why each change is where it is
+
+- `scripts/core/game_state_save.gd` - `new_run()` now calls a new `_reset_world()`, the MIRROR of the
+  existing `_restore_world()`: a load puts the world back to a RECORDED snapshot, a new run puts it back
+  to the AUTHORED starting state. It goes through each owner's own API - `DeathComponent.reset_playable_state()`
+  for the player, `HealthComponent.reset()` and `EnemyDeathComponent.restore_defeated(false)` per enemy,
+  each attacker's own `reset()`, and `TargetingComponent.release()` - so it owns nobody's state twice and
+  cannot mint a reward. `restore_defeated()` deliberately does NOT emit `defeated`, which is exactly why
+  reviving an enemy here pays nothing.
+- `scripts/core/game_state_save.gd` - added `_spawn_transforms`, captured ONCE at boot by a DEFERRED
+  call. The deferral is load-bearing: `HealthComponent._ready()` is what joins the damageable group and
+  this node sits BEFORE `TestEnvironment` in `main.tscn`, so an immediate call would see an EMPTY group.
+  A recorded yardstick is required rather than reading the scene, because `TestAttacker` pursues the
+  player and its transform at reset time is wherever the fight left it.
+- `scripts/player/targeting_component.gd` - `ReleaseReason.RUN_RESET` added, so a run reset is filed
+  under its OWN cause and is not confused with the four invalidation paths or a manual release.
+- `scripts/diagnostics/ui_hud_probe_debug.gd` - Phase 6 added: dirty the world, assert it is dirty, run
+  New Run twice, assert every reset claim. Probe now 142 checks, up from 114.
+- `scripts/diagnostics/game_state_overall_probe_debug.gd` - its `_make_payload()` fixture CORRECTED. It
+  built `"player": {"alive": true}` and nothing else, which predates the snapshot contract; the loader
+  refuses a player block with no `position`, so the fixture failed as `missing-field` and the post-load
+  stages could never run. It now derives the block from the live player. THIS WAS A PRE-EXISTING STALE
+  FIXTURE, not a consequence of the New Run work - the failure reproduced before the reset change and
+  the log names the fixture, not the service.
+
+### Process defects and probe flaws found this pass, recorded rather than worked around
+
+- MY OWN PROBE ASSERTION WAS WRONG TWICE BEFORE IT WAS RIGHT, both times by asserting something the
+  game is not supposed to do. (a) It tried to LOCK ON to an enemy AFTER killing it - a defeated actor is
+  deliberately an invalid target, so the check failed on its own premise. (b) It then tried to hold a
+  lock while the player was DEAD, but player death is one of the four release causes, so a held lock
+  there is impossible by design. Restructured: dead player and defeated enemy first, then a lock on a
+  LIVE enemy, then New Run.
+- `ui_hud_probe_debug`'s cleanup asserted `awards == awards_start + 1`, which was true before New Run
+  touched the world and is false by design afterwards - A FIXTURE THAT DEMANDS A RESET NOT RESET. It now
+  asserts the fresh-boot baseline (counter zeroed, balance at the documented starting value).
+- `game_state_overall_probe_debug`'s stale fixture (above) - the SAME CLASS as the schema-3 version-pin
+  defect already recorded in M10: a fixture written against an older shape stops testing its own claim
+  once the shape moves, and fails as the wrong error, which reads like the code under test is broken.
+- A FLAKY CHECK, recorded and NOT claimed fixed: `targeting_probe_debug`'s "the camera FOLLOWS when the
+  target moves" FAILED once at 10.62 deg off centre and PASSED on an immediate re-run with NO CODE CHANGE
+  (0.01 deg; tolerance 3.0 deg over 45 frames). The only edit made to that file this pass was an inert
+  enum append, which cannot affect camera framing. Recorded as intermittent rather than resolved.
+- The debug save/load panel and the new HUD Credits panel were both anchored top-right, so the debug
+  panel COVERED the Credits readout. The panel now sits below it, and toggles with the existing
+  `toggle_debug_overlay` (F1) alongside the other debug overlays.
+
+### Verification
+
+`ui_hud_probe_debug` **ALL CHECKS PASSED (142)**; `focus_input_routing_probe_debug`,
+`targeting_probe_debug` (78), `retarget_state_probe_debug`, `game_state_overall_probe_debug`,
+`game_state_world_restore_probe_debug`, `game_state_save_load_probe_debug`,
+`game_state_mixed_state_probe_debug` and `game_state_death_loop_probe_debug` all
+**ALL CHECKS PASSED**; the shipped `main.tscn` boots at 0 runtime and 0 debugger errors. NOT
+human-played - the user's read of the New Run flow is what accepts it.

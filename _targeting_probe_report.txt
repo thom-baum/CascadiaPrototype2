@@ -39,7 +39,7 @@
 [s101] [TARGETING]   PASS  locked: the SAME axis does NOT turn the camera (0.0000 deg) - one axis, one consumer
 [s106] [TARGETING]   PASS  the lock is re-acquired for the mouse and framing checks
 [s106] [TARGETING]   PASS  and the look intent is declared again
-[s109] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (36.541 deg)
+[s109] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (86.563 deg)
 [s109] [TARGETING]   PASS  a target is locked for the framing checks
 [s154] [TARGETING]   PASS  the camera's own forward points at the locked target (0.00 deg off centre)
 [s154] [TARGETING]   PASS  PITCH is unchanged by lock-on (-12.000 -> -12.000)

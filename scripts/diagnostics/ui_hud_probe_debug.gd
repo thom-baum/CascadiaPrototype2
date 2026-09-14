@@ -122,6 +122,7 @@ func _run() -> void:
 	await _phase_indicator()
 	await _phase_pause()
 	await _phase_save_and_load()
+	await _phase_new_run()
 	await _phase_cleanup()
 	_report()
 
@@ -528,6 +529,137 @@ func _phase_save_and_load() -> void:
 
 # --- Phase 6: leave the scene as it was found --------------------------------
 
+# --- Phase 6: New Run puts the WORLD back, not just the number ---------------
+
+## THE DEFECT THIS MEASURES. `new_run()` used to reset the carried balance, mint a new run identity
+## and delete the save file - and touch no actor at all. So a New Run left the player dead where it
+## fell, left every enemy it had killed still defeated with its presentation still posed, left a lock
+## held on a target from the previous run, and left the HUD showing all of it.
+##
+## The dirty state is produced through REAL gameplay paths rather than by poking flags: the player is
+## genuinely killed through `HealthComponent.apply_damage`, and a real arena enemy is genuinely killed
+## the same way. That costs a reward, which is deliberate - New Run resets the balance too, so the
+## reward is part of what must come back, and it proves the ledger's reward history was cleared rather
+## than merely zeroed.
+##
+## The discriminator is the RELEASE REASON. A death-circuit auto-reset can also revive the player, so
+## "the player is alive" alone would not prove New Run did it. `run-reset` is a cause only this path
+## can produce, and the four invalidation paths are asserted NOT to have absorbed it.
+func _phase_new_run() -> void:
+	_say("[UIHUD] --- PHASE 6: New Run restores the world, not just the balance ---")
+
+	# --- Build a thoroughly DIRTY run -----------------------------------------
+	var enemy: Node3D = null
+	for actor in _arena_actors():
+		var d: Node = actor.get_node_or_null("Death")
+		if d != null and d.has_method("is_defeated"):
+			enemy = actor
+			break
+	_expect(enemy != null, "the arena offers a real enemy to kill for the New Run check")
+
+	var credits_before := _ledger.get_credits()
+	if enemy != null:
+		_apply_lethal(enemy)
+	await _wait(STATE_FRAMES)
+	var enemy_defeated := _enemy_is_defeated(enemy)
+	_expect(enemy_defeated, "DIRTY: a real arena enemy is defeated through the damage chain")
+	_expect(_ledger.get_credits() > credits_before,
+		"DIRTY: and that defeat paid a reward (%d -> %d)" % [credits_before, _ledger.get_credits()])
+
+	# A lock is deliberately NOT taken here, and the reason is a real constraint rather than tidiness:
+	# killing an enemy makes it an INVALID target, and the player's own death RELEASES any lock it held
+	# (the M12 release paths). So a held lock cannot coexist with "player dead AND an enemy defeated",
+	# and asserting one here would fail on a premise that is impossible. The lock is exercised on its
+	# own, against a live enemy, in the second half below.
+	_apply_lethal(_player)
+	await _wait(STATE_FRAMES)
+	_expect(_player_dead(), "DIRTY: the player is dead")
+	_expect(not _targeting.is_locked(),
+		"DIRTY: the player's death already released any lock, as the M12 release paths require")
+
+	# --- The thing under test: New Run through the UI's own path ---------------
+	var code: int = _pause.new_run_via_service()
+	_expect(code == GameStateSave.Result.OK,
+		"the New Run control returned OK (%s)" % GameStateSave.result_name(code))
+	await _wait(STATE_FRAMES * 2)
+
+	# --- 1. The player is back on its spawn mark with starting values ----------
+	_expect(not _player_dead(), "NEW RUN: the player is alive again")
+	_expect(is_equal_approx(_health.current_health, _health.max_health),
+		"NEW RUN: health is back to full (%.1f / %.1f)"
+			% [_health.current_health, _health.max_health])
+	_expect(is_equal_approx(_stamina.current_stamina, _stamina.max_stamina),
+		"NEW RUN: stamina is back to full (%.1f / %.1f)"
+			% [_stamina.current_stamina, _stamina.max_stamina])
+	_expect(_player.global_position.distance_to(_player_start.origin) < 0.5,
+		"NEW RUN: the player is back at its spawn mark (%.3f m from it)"
+			% _player.global_position.distance_to(_player_start.origin))
+
+	# --- 2. Every enemy is alive and standing where the scene put it ----------
+	_expect(not _enemy_is_defeated(enemy), "NEW RUN: the killed enemy is no longer defeated")
+	var enemy_health := enemy.get_node_or_null("Health") as HealthComponent
+	_expect(enemy_health != null and is_equal_approx(enemy_health.current_health, enemy_health.max_health),
+		"NEW RUN: and its health is back to full")
+	_expect(_player.global_position.distance_to(_player_start.origin) < 0.5,
+		"NEW RUN: the arena was left in a usable state (the player is standing, not inside geometry)")
+
+	var still_defeated: Array = []
+	for actor in _arena_actors():
+		if _enemy_is_defeated(actor):
+			still_defeated.append(String(actor.name))
+	_expect(still_defeated.is_empty(),
+		"NEW RUN: NO arena enemy is left defeated (%s)" % str(still_defeated))
+
+	# --- 3. A HELD lock is released by New Run, under its own cause ------------
+	# Measured SEPARATELY from the dead-player state above, because a lock cannot outlive the player
+	# that held it. Here the player is alive and genuinely locked onto a live arena enemy, so the
+	# release has something to do and the cause it is filed under is meaningful.
+	_expect(not _indicator.visible, "NEW RUN: no indicator is left showing after the reset")
+
+	_targeting.acquire()
+	await _wait(STATE_FRAMES)
+	_expect(_targeting.is_locked(), "DIRTY (part B): a lock is genuinely held on a live enemy")
+	_expect(_indicator.visible, "DIRTY (part B): and the indicator is showing for it")
+
+	var run_resets_before := _release_count("run-reset")
+	var code_b: int = _pause.new_run_via_service()
+	_expect(code_b == GameStateSave.Result.OK,
+		"a second New Run also returned OK (%s)" % GameStateSave.result_name(code_b))
+	await _wait(STATE_FRAMES * 2)
+
+	_expect(not _targeting.is_locked(), "NEW RUN: the HELD lock is released")
+	_expect(not _indicator.visible, "NEW RUN: and the indicator is hidden")
+	_expect(_release_count("run-reset") == run_resets_before + 1,
+		"NEW RUN: the release is filed under its OWN cause (%d -> %d)"
+			% [run_resets_before, _release_count("run-reset")])
+	_expect(not _input.is_look_yaw_suppressed(),
+		"NEW RUN: and no look intent is left declared to the input layer")
+
+	# --- 4. The balance and the HUD -------------------------------------------
+	_expect(_ledger.get_credits() == _credits_start,
+		"NEW RUN: the carried balance is back to the starting value (%d, was %d)"
+			% [_credits_start, _ledger.get_credits()])
+	_expect(_hud.credits_label.text == "CREDITS  %d" % _ledger.get_credits(),
+		"NEW RUN: the HUD shows the reset balance (%s)" % _hud.credits_label.text)
+	_expect(_hud.health_label.text == "HEALTH  %d / %d" % [int(_health.max_health), int(_health.max_health)],
+		"NEW RUN: the HUD shows the reset health (%s)" % _hud.health_label.text)
+	_expect(_hud.stamina_label.text == "STAMINA  %d / %d"
+		% [int(_stamina.max_stamina), int(_stamina.max_stamina)],
+		"NEW RUN: the HUD shows the reset stamina (%s)" % _hud.stamina_label.text)
+
+	# --- 5. Everything the probe changed is back, so cleanup has nothing to undo
+	_expect(not get_tree().paused, "NEW RUN: the tree is not left paused")
+
+
+func _enemy_is_defeated(actor: Node3D) -> bool:
+	if actor == null or not is_instance_valid(actor):
+		return false
+	var d: Node = actor.get_node_or_null("Death")
+	if d == null or not d.has_method("is_defeated"):
+		return false
+	return bool(d.call("is_defeated"))
+
+
 func _phase_cleanup() -> void:
 	_targeting.release()
 	await _wait(STATE_FRAMES)
@@ -585,9 +717,17 @@ func _phase_cleanup() -> void:
 			damaged.append(String(actor.name))
 	_expect(damaged.is_empty(), "no ARENA actor was damaged or defeated by this probe (%s)"
 		% str(damaged))
-	_expect(int(_ledger.get("awards")) == _awards_start + 1,
-		"the economy granted no awards except the probe's own controlled one (%d -> %d)"
+	# THE PROBE'S OWN CONTROLLED AWARD NO LONGER EXISTS HERE, AND THAT IS THE POINT. Phase 6 runs a
+	# NEW RUN, and `CreditLedger.reset_credits()` puts the award counter back to the fresh-run
+	# baseline. Asserting the previous "+1" would demand that a reset NOT reset - it was written before
+	# New Run touched the world. What is worth asserting is the state a FRESH BOOT produces: a zeroed
+	# counter and the documented starting balance.
+	_expect(int(_ledger.get("awards")) == 0,
+		"the economy is at the fresh-run baseline after New Run (awards %d -> %d)"
 			% [_awards_start, int(_ledger.get("awards"))])
+	_expect(_ledger.get_credits() == int(_ledger.get("starting_credits")),
+		"and the carried balance is the documented starting value (%d)"
+			% _ledger.get_credits())
 	_expect(_targeting.valid_candidates().size() > 0, "the arena's own targets are still usable")
 
 

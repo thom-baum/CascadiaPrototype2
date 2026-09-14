@@ -6259,9 +6259,13 @@ feedback is legible are the user's read. A probe cannot grade them and must not 
 
 ### 8Q.7 Milestone 13 - status
 
-**IMPLEMENTED AND MEASURED 2026-09-14. NOT YET HUMAN-ACCEPTED - awaiting the user's read of the HUD,
-the indicator, the pause and the save/load feedback. Milestone 12 remains the highest ACCEPTED
-milestone.**
+**IMPLEMENTED AND MEASURED 2026-09-14, INCLUDING THE NEW RUN FIX AND THE ESCAPE CONTRACT CHANGE.
+NOT YET HUMAN-ACCEPTED - awaiting the user's read of the HUD, the indicator, the pause, the save/load
+feedback, and a NEW RUN. Milestone 12 remains the highest ACCEPTED milestone.**
+
+The user reviewed the first pass on 2026-09-14 and reported everything working EXCEPT one
+integration bug: **New Run did not reset the world** (see "The NEW RUN defect" below). That is now
+fixed and measured. The user's stated remaining work is a presentation read, not another pass.
 
 #### What was built
 
@@ -6320,19 +6324,98 @@ behaviour is unchanged - only the number of presses is.** A short section was ap
 `res://.summerrules` recording this, and `focus_input_routing_probe_debug` was updated to measure the
 new contract rather than the old one.
 
+#### The NEW RUN defect - reported by the user, fixed and measured
+
+**REPORTED:** New Run carried the number but not the world. `GameStateSave.new_run()` reset the
+carried balance, minted a new run identity and deleted the save file, and **touched no actor at all**.
+So a New Run left the player dead where it fell, every killed enemy still defeated with its DEFEATED
+presentation still showing, and a lock still held on a target from the previous run - and the HUD
+faithfully displayed those unreset values, which is exactly what the user saw.
+
+**FIXED in `scripts/core/game_state_save.gd`.** `new_run()` now calls a new `_reset_world()`, which is
+the deliberate MIRROR of `_restore_world()`: a LOAD puts the world back to a RECORDED snapshot, a NEW
+RUN puts it back to the AUTHORED starting state. Every value still goes through its own owner:
+
+1. **The player** through `DeathComponent.reset_playable_state(false)` - the component that already
+   means "this actor is going back on its SPAWN mark": full health, full stamina, regeneration
+   re-enabled, every committed attack/dodge/parry cancelled, position and yaw restored. The player's
+   spawn mark is that component's state and is ASKED FOR, not duplicated here.
+2. **Every enemy**, enumerated from `HealthComponent.GROUP_DAMAGEABLE` rather than a fixed list, so a
+   newly added enemy is covered the moment it exists. `HealthComponent.reset()` plus
+   `EnemyDeathComponent.restore_defeated(false)` - the SAME restore a load uses, which deliberately
+   does **not** emit `defeated`, so reviving an enemy cannot pay a reward for it.
+3. **Every attacker's state machine**, from the `enemy_attacker` group for the same enumeration
+   reason.
+4. **The lock**, released by `TargetingComponent` through its own API with a NEW cause.
+   `ReleaseReason.RUN_RESET` was added and named `run-reset`, so a new run is NOT filed as one of the
+   four invalidation paths or as a manual release, and the counters stay honest.
+
+**Enemy POSITIONS need a recorded yardstick, not a scene read.** `TestAttacker` pursues the player, so
+its transform at the moment New Run is pressed is wherever the fight left it - reading the scene at
+reset time would restore the wrong place. `_record_spawn_transforms()` captures every damageable
+actor's AUTHORED placement ONCE at boot, keyed by NodePath. It is called `call_deferred()` from
+`_ready()`, and the ordering is load-bearing: `HealthComponent._ready()` is what joins the damageable
+group, and `GameStateSave` sits BEFORE `TestEnvironment` in `main.tscn`, so at `_ready()` the group is
+still EMPTY. A deferred call is the first moment the group is complete and every actor is still
+exactly where its scene authored it.
+
+THE HUD FOLLOWED WITH NO HUD CHANGE, which is the point of not duplicating state: `reset_credits()`
+emits `credits_changed`, and both components emit from `reset()`, so the display re-reads its owners.
+This is measured rather than assumed - the probe asserts the reset values appear in the labels.
+
+#### Two probe-fixture defects found while verifying the New Run fix
+
+Both were PRE-EXISTING and were found only because the New Run work made those probes run their
+reset path; neither was caused by this pass, and neither is a gameplay defect.
+
+1. **`game_state_overall_probe_debug` had a stale save fixture.** Its `_make_payload()` still built
+   the M9-era TALLY shape `"player": {"alive": true}` and nothing else, while the snapshot contract
+   since M10.1 requires the player's recorded transform and health - the loader refuses a save that
+   cannot say where the player stood (`the player block has no position (expected 3 numbers)`). So the
+   post-load stages failed as `missing-field` and could never run. The fixture now DERIVES a real
+   player block from the live player, which is honest and self-maintaining. `RESULT: ALL CHECKS
+   PASSED` afterwards. This is the second occurrence of the same class the manifest already records
+   for the schema-3 bump: **a fixture that hardcodes a shape stops testing its own claim the moment
+   the shape moves.**
+2. **`ui_hud_probe_debug` asserted a reset would not reset.** Its cleanup check demanded the award
+   counter still read `awards_start + 1`, which was true before New Run touched the world and is
+   false by design afterwards. It now asserts the FRESH-BOOT baseline instead (counter zeroed,
+   balance at the documented starting value), which is the stronger and more honest statement.
+
+#### A FLAKY assertion, recorded rather than papered over
+
+`targeting_probe_debug`'s "the camera FOLLOWS when the target moves" check FAILED once at **10.62 deg**
+off centre and PASSED on an immediate re-run with **no code change** at all (0.01 deg, tolerance
+3.0 deg, 45 frames). The one edit made to that file this pass was an inert enum append
+(`ReleaseReason.RUN_RESET`), which cannot affect camera framing - so this is an INTERMITTENT probe
+artifact, not a regression. It is recorded as flaky rather than claimed fixed, because a pass that
+depends on a re-run is not a pass. `RESULT: ALL CHECKS PASSED (78)` on the recorded run.
+
 #### Measured evidence
 
-- `ui_hud_probe_debug`: **RESULT: ALL CHECKS PASSED (114)** - HUD at rest and after change, the
-  indicator on acquire / cycle / all four release causes, pause stopping a frame-driven value and
-  resume restarting it, no panel stacking, save and load through the real service, the status line
-  differing between success and a refusal, and the HUD showing the RESTORED value after a load
-  (`CREDITS 525, was CREDITS 30`) rather than a stale one.
+- `ui_hud_probe_debug`: **RESULT: ALL CHECKS PASSED (142)**. Its original 114 checks, unchanged and
+  still passing, cover: HUD at rest and after change, the indicator on acquire / cycle / all four
+  release causes, pause stopping a frame-driven value and resume restarting it, no panel stacking,
+  save and load through the real service, the status line differing between success and a refusal,
+  and the HUD showing the RESTORED value after a load (`CREDITS 525, was CREDITS 30`) rather than a
+  stale one. The 28 NEW checks cover New Run: the world dirty (player dead, an enemy defeated through
+  the real damage chain, a lock held, a reward paid), then after New Run - player alive and respawned,
+  every enemy revived to full with no DEFEATED presentation, the lock released and filed under
+  `run-reset`, no look intent left declared, the tree not left paused, and the HUD showing
+  `CREDITS 0` / `HEALTH 100 / 100` / `STAMINA 100 / 100`. A SECOND New Run is also exercised, so the
+  reset is proven repeatable rather than a one-shot, and the probe leaves the balance at the
+  fresh-run baseline.
 - `focus_input_routing_probe_debug`: **RESULT: ALL CHECKS PASSED**.
 - `targeting_probe_debug`: **RESULT: ALL CHECKS PASSED (78)** - Milestone 12 is UNREGRESSED with the
-  orientation tweak in place.
+  orientation tweak in place. (See the flaky check above.)
 - `retarget_state_probe_debug`: **RESULT: ALL CHECKS PASSED**.
-- The shipped `main.tscn` boots with 0 runtime errors and 0 debugger errors, and a rendered frame
-  confirms `CREDITS 0`, `HEALTH 100 / 100` and `STAMINA 100 / 100`.
+- `game_state_overall_probe_debug`: **RESULT: ALL CHECKS PASSED** (after the fixture correction).
+- `game_state_world_restore_probe_debug`: **RESULT: ALL CHECKS PASSED**.
+- `game_state_save_load_probe_debug`: **RESULT: ALL CHECKS PASSED**.
+- `game_state_mixed_state_probe_debug`: **RESULT: ALL CHECKS PASSED** (all five snapshot densities,
+  `exact_state=true`, no reward across any load).
+- `game_state_death_loop_probe_debug`: **RESULT: ALL CHECKS PASSED**.
+- The shipped `main.tscn` boots with 0 runtime errors and 0 debugger errors.
 
 #### Evidence vocabulary, applied honestly
 
