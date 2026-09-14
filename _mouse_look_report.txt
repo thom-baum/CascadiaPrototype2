@@ -1,37 +1,37 @@
 [MLOOK] === mouse motion: delivered-but-empty, or never delivered? ===
 [MLOOK] baseline: input_active=true mouse_mode=2 look_intent=true ticks=5 accumulated=true
 [MLOOK] --- accumulated ON (default) (position (640.0, 360.0)) ---
-[MLOOK]   ARRIVAL: count=2 relative=(290.1154, 0.0) position=(773.6411, 435.0)
-[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(290.1154, 0.0) accessor=(290.1154, 0.0) ; frames=2 ; active=true intent=true
+[MLOOK]   ARRIVAL: count=2 relative=(1410.612, 0.0) position=(3761.633, 2115.75)
+[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(1410.612, 0.0) accessor=(1410.612, 0.0) ; frames=2 ; active=true intent=true
 [MLOOK]   -> the event arrived with real motion
-[MLOOK]   PASS  DELIVERY (accumulated ON (default)): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (290.1154, 0.0), accessor (290.1154, 0.0))
-[MLOOK] --- accumulated ON (default) (position (816.0, 580.0)) ---
-[MLOOK]   ARRIVAL: count=2 relative=(290.1154, 0.0) position=(986.3925, 700.8333)
-[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(290.1154, 0.0) accessor=(290.1154, 0.0) ; frames=2 ; active=true intent=true
+[MLOOK]   PASS  DELIVERY (accumulated ON (default)): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (1410.612, 0.0), accessor (1410.612, 0.0))
+[MLOOK] --- accumulated ON (default) (position (816.0, 2821.0)) ---
+[MLOOK]   ARRIVAL: count=2 relative=(1410.612, 0.0) position=(4796.082, 16579.25)
+[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(1410.612, 0.0) accessor=(1410.612, 0.0) ; frames=2 ; active=true intent=true
 [MLOOK]   -> the event arrived with real motion
-[MLOOK]   PASS  DELIVERY (accumulated ON (default)): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (290.1154, 0.0), accessor (290.1154, 0.0))
+[MLOOK]   PASS  DELIVERY (accumulated ON (default)): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (1410.612, 0.0), accessor (1410.612, 0.0))
 [MLOOK] --- accumulated OFF (position (640.0, 360.0)) ---
-[MLOOK]   ARRIVAL: count=2 relative=(290.1154, 0.0) position=(773.6411, 435.0)
-[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(290.1154, 0.0) accessor=(290.1154, 0.0) ; frames=2 ; active=true intent=true
+[MLOOK]   ARRIVAL: count=2 relative=(1410.612, 0.0) position=(3761.633, 2115.75)
+[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(1410.612, 0.0) accessor=(1410.612, 0.0) ; frames=2 ; active=true intent=true
 [MLOOK]   -> the event arrived with real motion
-[MLOOK]   PASS  DELIVERY (accumulated OFF): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (290.1154, 0.0), accessor (290.1154, 0.0))
-[MLOOK] --- accumulated OFF (position (816.0, 580.0)) ---
-[MLOOK]   ARRIVAL: count=2 relative=(290.1154, 0.0) position=(986.3925, 700.8333)
-[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(290.1154, 0.0) accessor=(290.1154, 0.0) ; frames=2 ; active=true intent=true
+[MLOOK]   PASS  DELIVERY (accumulated OFF): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (1410.612, 0.0), accessor (1410.612, 0.0))
+[MLOOK] --- accumulated OFF (position (816.0, 2821.0)) ---
+[MLOOK]   ARRIVAL: count=2 relative=(1410.612, 0.0) position=(4796.082, 16579.25)
+[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(1410.612, 0.0) accessor=(1410.612, 0.0) ; frames=2 ; active=true intent=true
 [MLOOK]   -> the event arrived with real motion
-[MLOOK]   PASS  DELIVERY (accumulated OFF): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (290.1154, 0.0), accessor (290.1154, 0.0))
-[MLOOK] --- accumulated OFF, push_input (position (816.0, 580.0)) ---
-[MLOOK]   ARRIVAL: count=2 relative=(290.1154, 0.0) position=(986.3925, 700.8333)
-[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(290.1154, 0.0) accessor=(290.1154, 0.0) ; frames=2 ; active=true intent=true
+[MLOOK]   PASS  DELIVERY (accumulated OFF): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (1410.612, 0.0), accessor (1410.612, 0.0))
+[MLOOK] --- accumulated OFF, push_input (position (816.0, 2821.0)) ---
+[MLOOK]   ARRIVAL: count=2 relative=(1410.612, 0.0) position=(4796.082, 16579.25)
+[MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(1410.612, 0.0) accessor=(1410.612, 0.0) ; frames=2 ; active=true intent=true
 [MLOOK]   -> the event arrived with real motion
-[MLOOK]   PASS  DELIVERY (accumulated OFF, push_input): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (290.1154, 0.0), accessor (290.1154, 0.0))
-[MLOOK] --- DIRECT call into the layer (control) (position (576.0, 580.0)) ---
-[MLOOK]   ARRIVAL: count=0 relative=(0.0, 0.0) position=(986.3925, 700.8333)
+[MLOOK]   PASS  DELIVERY (accumulated OFF, push_input): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (1410.612, 0.0), accessor (1410.612, 0.0))
+[MLOOK] --- DIRECT call into the layer (control) (position (576.0, 2821.0)) ---
+[MLOOK]   ARRIVAL: count=0 relative=(0.0, 0.0) position=(4796.082, 16579.25)
 [MLOOK]   LAYER: raw_mouse=(0.0, 0.0) raw_look=(240.0, 0.0) accessor=(240.0, 0.0) ; frames=1 ; active=true intent=true
 [MLOOK]   -> the event arrived with real motion
 [MLOOK]   PASS  DELIVERY (DIRECT call into the layer (control)): the layer RECEIVED the injected motion (raw (0.0, 0.0) / (240.0, 0.0), accessor (240.0, 0.0))
 [MLOOK] --- END TO END: injected motion with the rig processing ---
-[MLOOK]   camera turned 63.8254 deg
-[MLOOK]   PASS  END TO END: the camera TURNS for injected motion (63.8254 deg)
+[MLOOK]   camera turned 310.3347 deg
+[MLOOK]   PASS  END TO END: the camera TURNS for injected motion (310.3347 deg)
 [MLOOK] --- summary ---
 [MLOOK] RESULT: ALL CHECKS PASSED

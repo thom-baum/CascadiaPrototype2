@@ -43,6 +43,10 @@ const STALE_FRAMES := 6
 ## Godot key constants, named so the injected events read clearly.
 const KEY_W := 87
 const KEY_SPACE := 32
+## Escape - Godot's built-in `ui_cancel`, and the ONLY input that releases the cursor on purpose.
+## A player release is a DIFFERENT branch from a host-dropped pointer lock, so it is measured
+## separately: see PHASE 5.
+const KEY_ESCAPE := 4194305
 const MOUSE_LEFT := 1
 
 ## Durable transcript, its own file so it cannot overwrite the save/load contract probe's evidence.
@@ -323,6 +327,91 @@ func _run() -> void:
 			% ("none" if focus_owner == null else String((focus_owner as Node).name)))
 
 	_check_no_pause("PHASE 4")
+
+	# --- PHASE 5: ESCAPE, and the ONE-CONSUMER look contract ---------------------------
+	# Escape is the player's OWN release, and it is NOT the state PHASE 3b produces. There the host
+	# dropped the pointer lock while the capture INTENT stayed on, so the game was still trying to
+	# hold the cursor. Here `set_mouse_look(false)` clears the intent as well, which means the game
+	# must leave the cursor ALONE - not re-take it on the next frame - until the player asks for it
+	# back. Nothing measured that branch before, and it is the user's first listed edge case.
+	_say("[FOCUS] --- PHASE 5: Escape releases the cursor, and the look-consumption contract ---")
+
+	# 5a. THE LOOK CONTRACT, measured at the layer instead of inferred from the camera.
+	#
+	# `get_look_delta()` CONSUMES the pending motion so that exactly ONE gameplay consumer per frame
+	# can spend it, and `peek_look_delta()` is the display-only read the debug overlay uses. Two
+	# readers of one consuming accessor is precisely the defect that killed mouse look - the overlay
+	# ran first and the camera always read zero - so this invariant is worth measuring directly.
+	#
+	# The rig is silenced for it: the camera is the legitimate consumer, and letting it run would
+	# spend the delta before the contract could be read.
+	var rig_was_processing := _rig.can_process()
+	_rig.set_process(false)
+	_input.get_look_delta()
+	_mouse_motion(Vector2(240.0, 0.0))
+	await _frames(3)
+	var peek_first := _input.peek_look_delta()
+	var peek_second := _input.peek_look_delta()
+	_say("[FOCUS] LOOK CONTRACT: the display read returned %s, then %s"
+		% [str(peek_first), str(peek_second)])
+	_check(peek_first.length() > 0.0001,
+		"LOOK CONTRACT: a display read SEES the pending delta (%.4f) - the overlay can still observe it"
+			% peek_first.length())
+	_check(peek_second == peek_first,
+		"LOOK CONTRACT: the display read does NOT consume it (%.4f read twice)"
+			% peek_second.length())
+	var spent := _input.get_look_delta()
+	_check(spent == peek_first,
+		"LOOK CONTRACT: the consuming accessor returns that same pending delta (%.4f)"
+			% spent.length())
+	_check(_input.get_look_delta() == Vector2.ZERO,
+		"LOOK CONTRACT: the consuming accessor SPENDS it - a second read is ZERO")
+	_rig.set_process(rig_was_processing)
+
+	# 5b. ESCAPE itself. The reads are SYNCHRONOUS (flush, no `await`) so the state measured is the
+	# one Escape produced, not one the next frame's reconciliation has had a chance to alter.
+	var attacks_before_escape := _attacks()
+	_key(KEY_ESCAPE, true)
+	Input.flush_buffered_events()
+	_say("[FOCUS] after Escape: mouse=%d look_intent=%s"
+		% [Input.mouse_mode, str(_input.mouse_look_enabled)])
+	_check(not _input.mouse_look_enabled,
+		"ESCAPE: the capture INTENT is OFF - Escape owns the intent, not focus")
+	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE,
+		"ESCAPE: the cursor is RELEASED (mode=%d)" % Input.mouse_mode)
+	_key(KEY_ESCAPE, false)
+	Input.flush_buffered_events()
+
+	# A free cursor must not be able to turn the camera. Measured at the rig, so this is the effect
+	# and not just the accumulator: the reported failure was exactly a camera that kept turning.
+	var escaped_turn := await _look_motion_degrees()
+	_say("[FOCUS] ESCAPE look: yaw changed %.4f deg while the capture intent was OFF" % escaped_turn)
+	_check(escaped_turn < 0.0001,
+		"ESCAPE: mouse motion does NOT turn the camera while the cursor is free (%.4f deg)"
+			% escaped_turn)
+
+	# 5c. The click that asks for the window back. SYNCHRONOUS, for the same reason as PHASE 3b: the
+	# recovery that matters is the one made INSIDE the click's own call stack.
+	_mouse_button(MOUSE_LEFT, true)
+	Input.flush_buffered_events()
+	var escape_capture := Input.mouse_mode
+	var escape_intent := _input.mouse_look_enabled
+	var escape_suppressed := bool(_input.get("_suppress_presses"))
+	_mouse_button(MOUSE_LEFT, false)
+	Input.flush_buffered_events()
+	_check(escape_capture == Input.MOUSE_MODE_CAPTURED,
+		"ESCAPE: the CLICK re-took the cursor (mode=%d)" % escape_capture)
+	_check(escape_intent, "ESCAPE: the click restored the capture INTENT")
+	_check(escape_suppressed,
+		"ESCAPE: that click is SUPPRESSED as a swing - it asked for the window, not an attack")
+	await _frames(ATTACK_FRAMES)
+	_check(_attacks() == attacks_before_escape,
+		"ESCAPE: the recovering click did NOT start an attack (attacks %d -> %d)"
+			% [attacks_before_escape, _attacks()])
+	_check(await _measure_look("ESCAPE-RETURN"),
+		"ESCAPE-RETURN: mouse look works again after the player clicks back in")
+	_measure_focused_state("ESCAPE-RETURN")
+
 	_report()
 
 

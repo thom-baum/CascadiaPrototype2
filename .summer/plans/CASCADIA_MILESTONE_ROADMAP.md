@@ -6,7 +6,25 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (M10.8 - THE ARENA WAS NOT IN THE MAIN SCENE, AND THE DEBUG OVERLAY WAS
+Last updated: 2026-09-13 (M10.9 - INPUT / CAPTURE HARDENING PASS: NO PRODUCTION DEFECT FOUND, NO
+PRODUCTION CODE CHANGED, TWO EDGE CASES MEASURED FOR THE FIRST TIME. This pass was asked to review
+and harden the existing mouse/focus/camera implementation without redesigning it, and to say plainly
+what is proven and what is not. The working routing fix from 8M.22 was CONFIRMED INTACT on disk
+(`peek_look_delta()` is what the overlay reads; `get_look_delta()` still has exactly ONE production
+consumer, the camera; the shipped main scene still instances the arena). No new production defect was
+found, so nothing in `cascadia_input.gd`, the camera or the scene composition was rewritten - the
+architecture already answers the edge cases coherently. What WAS missing was COVERAGE, so it was
+measured rather than assumed. (1) ESCAPE was the ONLY reported edge case with no measurement behind
+it: `ui_cancel` is not overridden in `project.godot` and comes from Godot's built-in action. PHASE 5
+now measures the whole loop - the intent goes OFF and the cursor is released, mouse motion produces NO
+camera turn while the cursor is free (0.0000 deg), the click back re-takes the cursor AND the intent,
+that click is suppressed so it cannot become a swing, and mouse look works again afterwards
+(310.3347 deg). (2) The look-consumption contract was only ever INFERRED from the camera turning; it
+is now measured DIRECTLY - a display read sees the pending delta, reads it twice identically, and the
+consuming read returns that same value and then ZERO on a second read. `focus_input_routing_probe_debug`
+reports RESULT: ALL CHECKS PASSED (132 lines, 0 debugger errors) and `mouse_look_routing_probe_debug`
+reports RESULT: ALL CHECKS PASSED, with the shipped game booting at 0 runtime errors. See 8M.23.)
+Previous: 2026-09-13 (M10.8 - THE ARENA WAS NOT IN THE MAIN SCENE, AND THE DEBUG OVERLAY WAS
 EATING MOUSE LOOK. Two defects, both MEASURED, both fixed. (1) `res://main.tscn` contained no
 `TestEnvironment` instance at all: the Play button booted an EMPTY VOID with no player, no camera, no
 world and a combat readout that itself said `no PlayerCombat in scene`. Every probe scene builds its
@@ -4708,3 +4726,103 @@ there is no sibling of this bug left behind.
   `combat_debug_overlay.gd` and `credit_economy_probe_debug.gd`) is UNCHANGED and still a false
   positive: per-file `state:script-errors` returns 0 for both files and both scripts run. Judge it by a
   run or a per-file query, never by the open-tab linter.
+
+---
+
+### 8M.23 M10.9 - INPUT / CAPTURE HARDENING: NO DEFECT FOUND, TWO EDGES MEASURED (2026-09-13)
+
+Opened as ONE hardening and review pass over the existing mouse / focus / camera implementation, with an
+explicit instruction not to redesign or revert the working routing fix. The outcome is deliberately
+modest and is recorded as such: **no production defect was found, so no production file was changed.**
+
+#### What was confirmed intact (read from DISK, not from a cached view)
+
+- `scripts/input/cascadia_input.gd` contains `peek_look_delta()` - a read-only accessor that returns the
+  pending delta WITHOUT consuming it.
+- `scripts/diagnostics/input_debug_overlay.gd` reads `peek_look_delta()`, not the consuming accessor.
+- A grep for `get_look_delta()` across every `.gd` file leaves exactly ONE production consumer:
+  `ThirdPersonCamera._process`. The remaining hits are this pass's own probes and the retarget probe's
+  comment, both of which are measurement, not gameplay.
+- `main.tscn` still instances `scenes/test_environment.tscn` as `TestEnvironment`, and the shipped game
+  boots the arena with 0 runtime errors.
+- An earlier 7009-byte read of the overlay that appeared to still call `get_look_delta()` was a STALE
+  cached view: disk holds the corrected 7298-byte file. Recorded because acting on that stale view would
+  have "fixed" a defect that was already gone.
+
+#### The questions this pass had to answer, and the answers
+
+- **Ordering / conflicting owners?** No. The layer resolves focus ONCE per frame in `_process`, before
+  anything reads input, and `is_input_active()` is the single authority every semantic query consults.
+  No other script changes `Input.mouse_mode`; the other `MOUSE_MODE_*` hits in the tree are probes.
+- **Frame-cost of the keeper?** Bounded. `_keep_mouse_captured()` returns immediately when capture is
+  already held, and re-asserts only in `PASS` while it is not.
+- **Can the recovery click permanently starve attacks?** No - and this was the specific worry, because an
+  earlier version of this bug ate every attack click. `_capture_recovery_attempted` is reset the first
+  time the keeper OBSERVES capture confirmed, so suppression is once-per-loss rather than while-free.
+- **Is the `_suppress_presses` clear timing fragile?** Checked and deliberately NOT changed. It is
+  cleared at the end of `_process`, while `PlayerCombat` consumes in `_physics_process`, which would
+  normally be a red flag. It is robust here by CONSTRUCTION: `cascadia_input.gd:809` skips BUFFERING
+  entirely while the flag is set, so the press is never stored and there is nothing left to consume even
+  if the clear were late.
+- **Was a no-input window left between recovery and camera look?** No measurable one. Look is re-gated
+  through the same frame's `_process`, and the probe measures the camera turning 310.3347 deg on the
+  first look after each recovery.
+
+#### The two things that genuinely were missing: COVERAGE
+
+Nothing measured ESCAPE, which is the FIRST item on the reported edge-case list, and the look contract
+had only ever been inferred from "the camera turned". Both are now measured directly (probe PHASE 5):
+
+    LOOK CONTRACT: display read (1410.612, 0.0) twice -> does NOT consume
+    LOOK CONTRACT: consuming read (1410.612, 0.0) -> then ZERO (it spends it)
+    ESCAPE: intent OFF, cursor released, motion turns the camera 0.0000 deg while free
+    ESCAPE: the click re-took the cursor AND the intent, and was SUPPRESSED as a swing
+    ESCAPE: the recovering click did NOT start an attack (attacks 2 -> 2)
+    ESCAPE-RETURN: mouse look works again (310.3347 deg)
+
+Note on the magnitude: the injected 240 px arrives at the layer as 1410.612 because the engine re-scales
+synthetic motion. It is deterministic, not ambient noise - the probe's DIRECT-call control stage shows
+the raw 240 passing through unchanged. Comparisons are therefore exact, not approximate.
+
+#### Measured results
+
+- `focus_input_routing_probe_debug` - RESULT: ALL CHECKS PASSED, 132 transcript lines, 0 debugger
+  errors. Five phases plus the new Escape/look-contract phase. Transcript `res://_focus_probe_report.txt`.
+- `mouse_look_routing_probe_debug` - RESULT: ALL CHECKS PASSED, 0 debugger errors. Delivery confirmed on
+  every entry point, direct-call control included, and `END TO END: the camera TURNS (310.3347 deg)`.
+- Shipped game (`res://main.tscn`) - boots the arena with 0 runtime errors.
+
+#### Files changed by this pass
+
+- `scripts/diagnostics/focus_input_routing_probe_debug.gd` - PHASE 5 added (Escape loop + look contract).
+- `CASCADIA_DELETION_MANIFEST.md` - the focus probe's candidate entry updated; status unchanged.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this section.
+
+NO production file was touched. `cascadia_input.gd`, `input_debug_overlay.gd`, `third_person_camera.gd`
+and `main.tscn` are all unchanged from 8M.22.
+
+#### Newly confirmed
+
+- Escape releases the cursor and the capture intent, motion cannot turn the camera while the cursor is
+  free, and the click back restores both - measured, not inferred.
+- The look delta is observed by the overlay WITHOUT being consumed, and is spent exactly once, by the
+  camera.
+
+#### Newly unverified / still open (do not read this pass as closing them)
+
+- The PHYSICAL mouse, a real OS pointer-lock drop and a genuine OS-level window unfocus remain UNPROVEN
+  by this environment, exactly as 8M.21b and 8M.22 recorded. The window here keeps reporting focus, so
+  the simulated transition is single-tick by necessity. The reported "Alt-Tab sometimes needs the window
+  selected again" is therefore plausibly HOST behaviour that no in-game code can fully absorb, and the
+  user's hands-on playtest is the only proof of that half. Stated plainly rather than claimed solved.
+- Not re-measured this pass: quicksave, the other debug panels, the InputMap host-key entries, and the
+  combat probes. No change was made to any of them.
+
+#### Deferred to a future production concern (recorded, NOT implemented)
+
+A deliberate rendering / window policy is still owed before shipping and is explicitly OUT of scope for
+the input passes: windowed vs fullscreen vs borderless, resolution and display-change behaviour, focus
+and mouse-capture behaviour under EACH window mode, whether return should recapture automatically or
+require a click, and player-facing feedback when capture is lost or restored. The current behaviour is
+accepted as a development test bed: playable, recoverable in normal testing, with the state transitions
+understood - not final shipping behaviour.

@@ -3031,6 +3031,12 @@ Notes:
 Keep while the focus behaviour needs to stay re-testable. It writes the durable transcript
 `res://_focus_probe_report.txt`, which is evidence and is NOT proposed for deletion.
 
+Updated 2026-09-13 (M10.9): PHASE 5 added - Escape release/recovery coverage (the one reported edge
+case that had no measurement at all) and a DIRECT measurement of the look-consumption contract
+(`peek_look_delta()` observes the pending delta and does not consume it; `get_look_delta()` returns
+that same value and then ZERO, so the camera remains the single spender). Status unchanged - still a
+candidate for manual deletion, still the re-test harness for focus behaviour.
+
 ## Candidate: scenes/diagnostics/focus_input_routing_probe_debug.tscn
 
 Status: Candidate for manual deletion
