@@ -116,7 +116,7 @@ directories, or retained evidence.
 
 | Path | Why unresolved |
 | ---- | -------------- |
-| `res://_probe_report.txt`, `res://_focus_probe_report.txt`, `res://_mouse_look_report.txt`, `res://_recovery_chain_report.txt`, `res://_retarget_probe_report.txt` | All five were CONFIRMED present on disk on 2026-09-14, but no dedicated per-file entry exists for them. They are referenced inside the M10 pass sections' "Cleanup candidates (recorded, NOT deleted)" lists and inside the focus / mouse-look entries. Status at path level: UNRESOLVED. |
+| `res://_probe_report.txt`, `res://_focus_probe_report.txt`, `res://_mouse_look_report.txt`, `res://_recovery_chain_report.txt`, `res://_retarget_probe_report.txt`, `res://_targeting_probe_report.txt` | All SIX were CONFIRMED present on disk on 2026-09-14, but no dedicated per-file entry exists for them. They are referenced inside the M10 pass sections' "Cleanup candidates (recorded, NOT deleted)" lists and inside the focus / mouse-look entries. Status at path level: UNRESOLVED. CORRECTED 2026-09-14: these transcripts ARE tracked in git (the older five are committed and clean; `_targeting_probe_report.txt` was added by the Milestone 12 commit). An earlier note in this file described them as never tracked - that was wrong. They are durable evidence under the convention the focus and Dodge-authority entries already describe, overwritten by each probe run. `.gitignore` does NOT ignore `_*_report.txt`. |
 | `scripts/debug/` | Suggested by the user as a probe path; does NOT exist in this project. The probe went to `scripts/diagnostics/` instead. Recorded, not resolved. |
 
 ---
