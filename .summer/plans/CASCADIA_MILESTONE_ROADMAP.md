@@ -6,16 +6,19 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (NEXT MILESTONE PROPOSED, NOT APPROVED - THE MISSING FACING INDICATOR. NO
-IMPLEMENTATION WAS PERFORMED THIS PASS. Two things are recorded. First, the user's HAND-CONFIRMATION of
-the corrected dodge/backstep orientation is now on file: the evasion uses the player's last movement
-orientation and keeps that orientation committed for the whole evasion. That CLOSES the gameplay half of
-the 8G.2 backstep defect; it is the user's own playtest report, and no probe was re-run for it. Second,
-the remaining half is PRESENTATION and is still open - the capsule has no readable front-facing
-indicator, so the correction cannot yet be judged by eye. Section 8O now holds a narrow, PROPOSED, NOT
-APPROVED milestone to close exactly that gap, with one finding that shapes it: the third-person camera
-sits BEHIND the actor, so a marker on the capsule's front face is occluded by the capsule itself and
-cannot be the only indicator. Current active task remains NONE; Milestone 11 is NOT selected. See 8O.)
+Last updated: 2026-09-13 (MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED BY THE USER, THEN
+IMPLEMENTED. The last open item from the 8G.2 backstep defect was PRESENTATION: the capsule is
+rotationally symmetric, so the already-corrected committed evasion facing could not be judged by eye.
+IMPLEMENTED as section 8O proposed - a `FacingMarker` Node3D under `Player` in
+`scenes/test_environment.tscn`, holding an amber NOSE on local -Z (forward) and a blue TAIL on local +Z
+(rear), scene-authored, SCRIPT-FREE, and with NO CollisionShape3D beneath it so `_capsule_radius()`
+cannot pick up a stray shape. Two rendered frames confirm it: the blue tail reads on the camera-facing
+side and the amber nose stands above the capsule dome, so front and rear are distinguishable from the
+default third-person view. The first frame is why the nose was RAISED from local y=2.0 to y=2.3: at the
+dome tip it fell inside the capsule silhouette from a camera that sits behind and above. NO gameplay
+file was touched - no script changed, and the evasion contract measured in 8N is untouched. STILL
+PENDING: the user's own read of it while MOVING, dodging and backstepping, which no still frame can
+settle. See 8O.11.)
 Previous: 2026-09-13 (8F IMPLEMENTED - DODGE MOVEMENT AUTHORITY. The recorded future pass in section
 8F was the sensible next task: it was the last open gameplay defect a HUMAN had actually confirmed in
 play (the backstep turning the body around), and it was written up and scoped long before this session,
@@ -302,11 +305,18 @@ plus the deletion manifest.
   **This closes the GAMEPLAY half of the 8G.2 backstep defect, and the USER HAS SINCE CONFIRMED IT BY
   HAND**: the corrected evasion uses the player's last movement orientation and keeps that orientation
   committed for the whole evasion. The OTHER half - the capsule having no front-facing marker, so the fix
-  cannot be judged by eye - is a PRESENTATION item and is STILL OPEN. **A narrow proposal to close it
-  exists in section 8O: PROPOSED, NOT APPROVED, NOT IMPLEMENTED.** See sections 8N and 8O.
-- **Current active task: NONE.** Milestone 10 is complete and measured, and the 8F authority pass is
-  now implemented and measured. No further work is authorised; Milestone 11 is NOT selected and must be
-  named and approved before anything begins.
+  cannot be judged by eye - was a PRESENTATION item, and **it is now CLOSED.**
+- **MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED AND IMPLEMENTED (2026-09-13).** The
+  capsule now carries a `FacingMarker` with an amber NOSE on local **-Z** (forward) and a blue TAIL on
+  local **+Z** (rear, the side the default camera sees), both scene-authored primitives in
+  `res://scenes/test_environment.tscn`, NO new script, and NO `CollisionShape3D`. Measured: `main.tscn`
+  boots with 0 debugger errors; two rendered frames confirm both markers are readable from the default
+  camera. **The one thing still open is the human read**: a still frame cannot show that the markers track
+  yaw while moving, dodging or backstepping. See section 8O.11.
+- **Current active task: NONE.** Milestone 10 is complete and measured, Milestone 11 is implemented and
+  awaiting the user's playtest read of the facing indicator, and the 8F authority pass is implemented and
+  measured. No further work is authorised; the next milestone must be named and approved before anything
+  begins.
 
 ### Evidence vocabulary used in this file
 
@@ -5098,16 +5108,17 @@ Regression controls re-run in the same pass:
 
 ### 8N.6 Newly unverified / still open
 
-- The facing INDICATOR the user asked for is NOT built. The correction is therefore still judged by
-  numbers and by the camera, not by an eye-readable marker on the capsule - the parameterisation gap
-  8G.2 item 2 named is only half closed.
 - RESOLVED AFTER THIS PASS (2026-09-13): the corrected dodge/backstep orientation HAS been confirmed BY
   HAND. The user reports that the evasion uses the player's last movement orientation and keeps that
   orientation committed during the evasion - exactly the behaviour 8F set out to produce. RECORDED AS
   THE USER'S OWN PLAYTEST REPORT: no probe was re-run to restate it, and every measured number above is
   unchanged. This closes the GAMEPLAY half of the 8G.2 backstep defect.
-- STILL OPEN, and the reason section 8O exists: the facing INDICATOR itself. The correction is confirmed
-  in the hand, but it is still judged by the camera rather than by an eye-readable marker on the capsule.
+- CLOSED BY MILESTONE 11 (2026-09-13): the facing INDICATOR the user asked for is now BUILT - a
+  `FacingMarker` holding an amber NOSE on local -Z and a blue TAIL on local +Z, added under `Player` in
+  `scenes/test_environment.tscn`, scene-authored and script-free. The correction is no longer judged only
+  by numbers: two rendered frames confirm both markers are readable from the default camera. What remains
+  is the HUMAN read of it WHILE MOVING, dodging and backstepping - a still frame cannot show that. 8O.11
+  records the implementation; the marker geometry itself is what 8O.4 proposed.
 - Physical Alt-Tab / OS pointer-lock behaviour remains unproven in this host, unchanged from 8M.24.
 - Not re-measured this pass: the save/load probes, the other debug panels, and the combat probes. No
   change was made to any of them.
@@ -5137,13 +5148,18 @@ Recorded because each would mislead a future session:
 
 ---
 
-## 8O. NEXT MILESTONE PROPOSAL - READABLE PLAYER FACING INDICATOR
+## 8O. MILESTONE 11 - READABLE PLAYER FACING INDICATOR (APPROVED AND IMPLEMENTED 2026-09-13)
 
-STATUS: **PROPOSED. NOT APPROVED. NOT IMPLEMENTED.** Written 2026-09-13.
+STATUS: **APPROVED AND IMPLEMENTED. SCENE-VERIFIED AND RENDER-CONFIRMED. HUMAN PLAYTEST OF YAW-FOLLOWING
+STILL PENDING.**
 
-This section is a PROPOSAL ONLY. It authorises nothing. `Current active task` in section 0 remains
-**NONE**, and Milestone 11 is **NOT selected**. No gameplay, presentation or scene file was changed to
-create this section - the whole of this pass is documentation.
+Subsections 8O.1 to 8O.9 below are the ORIGINAL PROPOSAL, kept verbatim so the scope that was agreed can
+be compared against what was actually built. 8O.10 is the approval gate that has now been passed, and
+**8O.11 records the implementation result**.
+
+The user approved Milestone 11 explicitly. It was then implemented as a bounded, presentation-only pass:
+`FacingMarker` and two primitive markers added to the player in `res://scenes/test_environment.tscn`.
+NO script was written or modified, and no gameplay value changed. See 8O.11.
 
 ### 8O.1 The problem this would solve
 
@@ -5281,6 +5297,80 @@ does add anything temporary, it must be recorded in the deletion manifest as it 
     Do NOT begin this work until the user names it and this section is updated to APPROVED with its
     acceptance criteria confirmed.
 
-This section records a candidate. It does not select Milestone 11, it does not authorise work, and the
-current active task remains NONE.
+**THE GATE WAS PASSED.** On 2026-09-13 the user explicitly approved Milestone 11 / this section for
+implementation, with the same scope written above and one added hard constraint: no `CollisionShape3D`
+may be added beneath `FacingMarker`, because `PlayerController._capsule_radius()` scans the body's
+children for a capsule shape and a collision node added for visual convenience could silently interfere
+with gameplay collision-radius discovery. That constraint was honoured. Implementation followed
+immediately in the same pass and is recorded in 8O.11.
+
+---
+
+### 8O.11 Implementation result (2026-09-13)
+
+IMPLEMENTED AS APPROVED. Presentation only. The whole change is scene-authored geometry - **no script was
+created, opened or modified**, and no gameplay, camera, input, stamina, save/load or diagnostics file was
+touched.
+
+#### What was added
+
+One `FacingMarker` `Node3D`, a DIRECT CHILD of `Player` in `res://scenes/test_environment.tscn` (there is
+no separate `player.tscn`), holding two `MeshInstance3D` children with two scene-local materials:
+
+| Node | Local transform | Mesh | Colour |
+| ---- | --------------- | ---- | ------ |
+| `Player/FacingMarker/Nose` | `position = (0, 2.3, -0.28)` | `BoxMesh` `0.18 x 0.7 x 0.22` | amber `Color(1, 0.62, 0.12, 1)` |
+| `Player/FacingMarker/Tail` | `position = (0, 1.35, 0.52)` | `BoxMesh` `0.34 x 0.34 x 0.34` | blue `Color(0.15, 0.75, 0.95, 1)` |
+
+- The NOSE sits on local **-Z**, the project's forward convention, matching
+  `PlayerController._backstep_direction()` (which treats `+basis.z` as backward) and `_facing_of()`.
+- The TAIL sits on local **+Z**, the side the default behind-and-above camera actually sees. It is the
+  marker that carries the requirement: seeing the blue tail means forward is away from the camera.
+- Both are children of the BODY transform, so they inherit `rotation.y` with no code.
+- **No `CollisionShape3D` anywhere beneath `FacingMarker`** - the approved constraint. The nodes are
+  `Node3D` and `MeshInstance3D` only.
+
+#### One adjustment made after looking at the rendered frame
+
+The NOSE was first placed at local y = 2.0 - the capsule's dome tip - and in the first rendered frame it
+was NOT clearly resolvable: the camera looks down at the actor from behind and above, so the opaque dome
+sat in the line of sight. It was moved up to y = 2.3 with a taller mesh (0.7) so it resolves ABOVE the
+capsule silhouette. The second rendered frame shows both markers clearly. This was a placement correction
+with no gameplay effect; the total footprint is two boxes and two materials.
+
+#### Verification performed
+
+- Scene re-read from disk after each write batch. `Player/FacingMarker`, `Nose` and `Tail` all present;
+  Nose transform `Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -0.28)`, Tail
+  `Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.52)`.
+- The two generated sub-resources confirmed on disk with the correct sizes and albedo colours, and each
+  mesh node references the material and mesh declared above it.
+- Confirmed NO `CollisionShape3D` was added beneath the marker (searched the saved scene text).
+- `main.tscn` launched: **0 debugger errors**. The 20 reported script errors are the KNOWN stale
+  `open_script_buffers` `CreditLedger` false positives, unchanged in count and in files this pass never
+  touched (see 12.1) - not parse, load or runtime failures.
+- Two rendered frames captured. Frame 1: arena renders, blue TAIL clearly readable on the camera-facing
+  side, NOSE not resolvable. Frame 2 (after the placement fix): arena renders, blue TAIL readable AND the
+  amber NOSE visible above the capsule dome. Both markers are distinguishable from each other and from
+  the capsule.
+
+#### Newly confirmed
+
+- Both markers are readable from the DEFAULT third-person camera, which was the 8O.3 constraint.
+- The arena still boots and renders with the markers present; the capsule is unaltered.
+
+#### Still UNVERIFIED - the one thing only a human can settle
+
+- **A still frame cannot show yaw-following.** Nothing here proves the markers track the actor's rotation
+  while MOVING, while DODGING, or while BACKSTEPPING, and nothing here proves the facing now reads
+  correctly in motion. That is exactly the read 8G.2 item 2 asked for, and it remains a HUMAN PLAYTEST:
+  move, dodge and backstep, and say whether front and back are now obvious by eye.
+- No gameplay value was changed, so the 8F measurements in 8N stand unaltered and were deliberately NOT
+  re-run. No probe was written for this pass: a probe cannot grade visual readability.
+
+#### Files changed by this pass
+
+- `res://scenes/test_environment.tscn` - the only implementation change (`FacingMarker`, `Nose`, `Tail`,
+  two `StandardMaterial3D` and two `BoxMesh` sub-resources).
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this section, the header, section 0 and 8N.6.
 

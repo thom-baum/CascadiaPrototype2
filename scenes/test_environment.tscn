@@ -152,6 +152,18 @@ height = 1.8
 [sub_resource type="BoxShape3D" id="BoxShape3D_810np"]
 size = Vector3(1.2, 1.4, 1.2)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_adw7c"]
+albedo_color = Color(1, 0.62, 0.12, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_adw7c"]
+size = Vector3(0.18, 0.7, 0.22)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0hxc1"]
+albedo_color = Color(0.15, 0.75, 0.95, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0hxc1"]
+size = Vector3(0.34, 0.34, 0.34)
+
 [node name="TestEnvironment" type="Node3D" unique_id=10485837]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=587596425]
@@ -524,6 +536,18 @@ script = ExtResource("12_death")
 [node name="Participant" type="Node" parent="Player" unique_id=578814347]
 script = ExtResource("10_2qg6i")
 attack_path = NodePath("../Combat")
+
+[node name="FacingMarker" type="Node3D" parent="Player" unique_id=1239214627]
+
+[node name="Nose" type="MeshInstance3D" parent="Player/FacingMarker" unique_id=1229904054]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, -0.28)
+material_override = SubResource("StandardMaterial3D_adw7c")
+mesh = SubResource("BoxMesh_adw7c")
+
+[node name="Tail" type="MeshInstance3D" parent="Player/FacingMarker" unique_id=965604135]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.52)
+material_override = SubResource("StandardMaterial3D_0hxc1")
+mesh = SubResource("BoxMesh_0hxc1")
 
 [node name="CameraRig" type="Node3D" parent="." unique_id=1012415909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
