@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://c6l2gc4hxkbdk"]
+
+[ext_resource type="PackedScene" uid="uid://bfbf3uq4w4kmk" path="res://main.tscn" id="1_main"]
+[ext_resource type="Script" uid="uid://kk6ij7t1ar16" path="res://scripts/diagnostics/save_load_runtime_state_probe_debug.gd" id="2_probe"]
+
+[node name="SaveLoadRuntimeStateProbeRun" type="Node3D" unique_id=1628891195]
+
+[node name="Main" parent="." unique_id=1821083255 instance=ExtResource("1_main")]
+
+[node name="Probe" type="Node3D" parent="." unique_id=201181696]
+script = ExtResource("2_probe")

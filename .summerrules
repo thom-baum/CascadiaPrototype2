@@ -1,0 +1,89 @@
+# Cascadia - Project Rules
+
+Persistent project decisions. Append new rules; do not rewrite existing ones.
+
+## Identity
+
+- Cascadia is a third-person Soulslike. Gameplay is authoritative; animation, models, effects and sound are downstream adapters that must conform to gameplay timing, never define it.
+- The foundation must behave correctly using primitive geometry and placeholder presentation.
+
+## Movement
+
+- Locomotion is grounded. There is NO jumping, platforming, traversal, climbing, vaulting, ledge grabbing, mantling, or aerial combat in the foundation. `jump` is a reserved input slot with no implementation.
+- L3 is reserved for a possible future Jump / Advanced Mobility and is not implemented.
+
+## Input architecture
+
+- Gameplay reads semantic actions only, through CascadiaInput. Gameplay code must never read physical keys, mouse buttons or controller buttons directly.
+- SPRINT and DODGE are separate gameplay actions with independent tuning, even when a controller presents both on Circle.
+- Controller Circle is a device-level contextual source (`mobility_button`): tap = dodge, hold = sprint, resolved in the input layer. Keyboard keeps them physically separate on purpose: Left Shift = sprint, Space = dodge.
+- Reserved input slots with NO implementation: `ranged_attack` (L2, future Ranged / Firearm) and `jump` (L3).
+
+## Future controller layout (recorded, NOT implemented)
+
+- Tap X = contextual Use / Interact.
+- Hold X = open the Quick Bar.
+- While the Quick Bar is held open, the D-pad selects; releasing confirms.
+- Do not build the quick bar, a radial menu, or a complex inventory until its milestone.
+
+## Architecture
+
+- Physical actor collision and combat collision (hitboxes / hurtboxes) are separate concerns on separate physics layers. Combat volumes must never be used as physical body collision.
+- Systems stay modular: input, locomotion, stamina, combat, damage, enemy AI, targeting, game state and animation presentation do not leak into each other.
+- Actors own their own combat state (can act, can be damaged, invulnerable, staggered, dead, current action).
+- Do not solve systemic problems with unexplained positional offsets.
+- Never implement more than the current milestone; do not prematurely combine systems that are still being tuned.
+
+## File hygiene
+
+- Never delete, rename or move project files as part of routine development.
+- When a file looks obsolete, temporary, duplicated or superseded, record it in CASCADIA_DELETION_MANIFEST.md for manual review instead.
+- Do not block or stop a valid development task because cleanup is pending, and do not repeatedly ask whether files may be deleted.
+- Diagnostic and test material belongs under `scripts/diagnostics/` and should be named `*_debug_*` or `*_test_*` where practical.
+
+## Documentation discipline (automatic)
+
+- `CASCADIA_DELETION_MANIFEST.md` and `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` are updated AUTOMATICALLY as part of the work, not afterwards and not only when asked.
+- Manifest: record every new diagnostic, temporary or cleanup-candidate file; every superseded script or scene; every newly discovered candidate; every change to an existing candidate's status; and every recurring editor registration, class-cache or persistence problem.
+- Roadmap: record every milestone status change, every defect found or fixed, newly confirmed behaviour, newly unverified behaviour, and every change to the deferred list.
+- Record these at the moment they are discovered. A roadmap that lags the project is worse than none, because it is trusted.
+- Recording a candidate is the action; deletion stays manual and is never performed autonomously.
+
+## Movement authority (recorded 2026-09-12, end-of-session review)
+
+- A COMMITTED action (dodge, backstep, attack, parry) is authoritative over its own movement for its whole duration. Ordinary locomotion must not overwrite, blend into, or re-orient it.
+- Presentation must never become the accidental authority. Primitive movement, facing and placement are PLACEHOLDERS for a future animation adapter; once that adapter exists, the authoritative gameplay state selects the animation and primitive motion stops being the final presentation.
+- Body orientation during a committed evasion belongs to the locked gameplay facing, not to current velocity. Do not derive facing from velocity while a committed action owns the body.
+- Position must not be rewritten during a committed action by a system that did not author it - for example step-up resolution adding displacement the action never asked for.
+- VERIFIED 2026-09-12: velocity arbitration is already correct (`_apply_horizontal()` sets dodge velocity and returns early). Orientation and position arbitration are NOT - see roadmap section 8F. Recorded as a bounded future pass; do NOT implement it as part of unrelated work.
+
+## Input architecture - amendment (2026-09-12, Sprint/Dodge/Backstep pass)
+
+- AMENDS the earlier "Keyboard keeps them physically separate on purpose" rule. Keyboard Left Shift is now ALSO a shared tap/hold command, resolved in the input layer exactly like the controller: hold = sprint, tap = dodge. Space REMAINS bound as a dedicated dodge, so nothing was removed.
+- CascadeInput resolves TWO command sources through ONE shared `_advance_source()`: `mobility_button` (controller Circle) and `sprint` (Left Shift). Both produce the same tap/hold decision, so keyboard and controller cannot drift apart.
+- A tap of the shared command with NO movement input produces a BACKSTEP, not a forward dodge. A tap WITH movement input produces a directional dodge. This selection lives in PlayerController, not in the input layer.
+- Dodge direction and the dodge's kind (DIRECTIONAL / BACKSTEP) plus its facing (FORWARD / BACKWARD / LEFT / RIGHT) are GAMEPLAY state exposed by DodgeComponent for the animation adapter. Facing is classified against the CAMERA basis, not the body, so a sustained strafe cannot collapse into "forward".
+- Lock-on does NOT exist and is NOT implemented. Dodge direction is camera-relative. Do not build lock-on-relative dodge direction until lock-on is its own milestone.
+- Animation remains deferred: there is no animation system, so these semantic values are state for a future adapter, not clips to play.
+
+## Save/load input bindings - HOST-OWNED KEYS (recorded 2026-09-13, M10.6)
+
+- MEASURED, not assumed: in the Summer Engine host, **F9 is the host's PAUSE TOGGLE** (sets `Engine.time_scale = 0` and releases the mouse while `SceneTree.paused` stays false) and **F8 ENDS THE DEBUG SESSION**. Both were proven with the game's only save/load consumer disabled, so no Cascadia code could be responsible.
+- Therefore `quick_load` (F9) and `quick_load_alt` (F8) can NEVER reach the game reliably. They remain in the InputMap UNUSED for reference; do not build on them.
+- The load path reads `load_run` (**F7**) and `load_run_alt` (**F11**). Both were measured safe: delivered to the game, `scale` stayed 1.000, `paused=false`, mouse stayed captured, no input frame skipped. F1-F7, F10-F12 and ordinary letters are safe; F8 and F9 are not.
+- `quick_save` (F5), `quick_save_alt` (F6) and `new_run` (F10) are safe and remain as they are.
+- Do NOT "restore" F9 as the load key. A host-owned key produces a frozen game that every in-engine health check reports as healthy.
+
+## Window focus and gameplay input (recorded 2026-09-13, M10.7)
+
+- A focus change must never be able to WEDGE the game. The per-frame reconciliation in `CascadiaInput` is RESUME-ONLY: it may clear a suspension, never create one. `has_focus()` is a report, not an authority to freeze gameplay, because a host that never flips it back would suspend the layer every frame forever.
+- A suspension must always be escapable by the player. A deliberate key press or mouse-button press resumes gameplay input (`_input` presence recovery, which runs before GUI handling so no Control can eat it). Motion may NOT resume anything - motion can arrive from the host with no interaction, and treating it as presence re-creates the original defect.
+- `mouse_look_enabled` is gameplay's declared INTENT and is owned by Escape alone. Focus transitions must never clear it, so capture can be re-asserted on return without the player clicking twice.
+- The input layer owns focus and capture; gameplay systems must not add their own focus rules. Verify any future change with `scripts/diagnostics/focus_input_routing_probe_debug.gd`, which measures the focused, focus-lost and stuck-with-no-focus-in states separately.
+
+## Mouse capture must be taken IN AN INPUT EVENT (recorded 2026-09-13, M10.7a)
+
+- MEASURED CONSEQUENCE: requesting pointer capture from a per-frame callback is NOT enough in the Summer Engine host. Pointer lock is a USER-GESTURE permission there, so a request made outside a real input event can be dropped while looking successful from inside the game - the camera responds and the cursor stays free, which was the user's report.
+- Therefore the click itself takes the cursor back: `CascadiaInput._recover_capture_on_press()` runs from `_input` on every mouse-button press, inside that event's own call stack. The per-frame keeper remains as a backstop for the focused-and-captured case; it is not the mechanism that recovers from a drop.
+- That recovering click must ALSO set `_suppress_presses`, because a click that retargets the window is asking for the window, not swinging. MEASURED: without the suppression the refocus click reached `PlayerCombat` as a light attack, and a COMMITTED attack owns the body - which is why the player could not walk afterwards. Any future "click to recover" path must suppress the press for the same reason.
+- Do not gate the capture recovery on the focus belief. That belief can be wrong in either direction, and a click that reached this game is itself the proof that the player is here.

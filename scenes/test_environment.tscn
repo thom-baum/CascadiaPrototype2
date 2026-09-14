@@ -1,0 +1,551 @@
+[gd_scene format=3 uid="uid://df8ea1miy4a5l"]
+
+[ext_resource type="Script" uid="uid://cxk5ttuipdqm6" path="res://scripts/player/player_controller.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://b4dlgmedc2y8m" path="res://scripts/combat/health_component.gd" id="2_8ya4j"]
+[ext_resource type="Script" uid="uid://73rkak3tkaah" path="res://scripts/camera/third_person_camera.gd" id="2_camera"]
+[ext_resource type="Script" uid="uid://to6s0nk4vi84" path="res://scripts/combat/hurtbox_component.gd" id="3_5qein"]
+[ext_resource type="PackedScene" uid="uid://kw550xycbb1b" path="res://scenes/dummy_actor.tscn" id="3_actor"]
+[ext_resource type="Script" uid="uid://cqyrax1qbgrxo" path="res://scripts/combat/enemy_death_component.gd" id="3_q7yga"]
+[ext_resource type="Script" uid="uid://c5wsf8bxvc8pn" path="res://scripts/combat/hitbox_component.gd" id="4_frvy6"]
+[ext_resource type="Script" uid="uid://cl7c6683fslkq" path="res://scripts/diagnostics/enemy_death_presentation_debug.gd" id="5_adw7c"]
+[ext_resource type="Script" uid="uid://caq02ihqxfy4n" path="res://scripts/player/player_combat.gd" id="5_b2arr"]
+[ext_resource type="Script" uid="uid://d3uhut31uvkux" path="res://scripts/stamina/stamina_component.gd" id="6_stamina"]
+[ext_resource type="Script" uid="uid://cra3cq2jic7ku" path="res://scripts/player/dodge_component.gd" id="7_a8tja"]
+[ext_resource type="Script" uid="uid://nb3m4wxhgkwk" path="res://scripts/player/parry_component.gd" id="8_b2563"]
+[ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="10_2qg6i"]
+[ext_resource type="PackedScene" uid="uid://dh4v6csv04oel" path="res://scenes/actors/test_attacker.tscn" id="11_ut5rl"]
+[ext_resource type="Script" uid="uid://cja2f2pcslpdn" path="res://scripts/player/death_component.gd" id="12_death"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.32, 0.42, 0.58, 1)
+sky_horizon_color = Color(0.62, 0.64, 0.66, 1)
+ground_bottom_color = Color(0.18, 0.18, 0.2, 1)
+ground_horizon_color = Color(0.44, 0.44, 0.46, 1)
+
+[sub_resource type="Sky" id="SkyRes"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="EnvRes"]
+background_mode = 2
+sky = SubResource("SkyRes")
+ambient_light_source = 3
+ambient_light_energy = 1.2
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="Mat_ground"]
+albedo_color = Color(0.27, 0.29, 0.32, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_ground"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape_ground"]
+size = Vector3(40, 1, 40)
+
+[sub_resource type="StandardMaterial3D" id="Mat_wall"]
+albedo_color = Color(0.2, 0.22, 0.27, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
+size = Vector3(40, 4, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape_wall_ns"]
+size = Vector3(40, 4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
+size = Vector3(1, 4, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape_wall_ew"]
+size = Vector3(1, 4, 40)
+
+[sub_resource type="StandardMaterial3D" id="Mat_stair"]
+albedo_color = Color(0.76, 0.73, 0.63, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_step14"]
+size = Vector3(6, 0.14, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape_step14"]
+size = Vector3(6, 0.14, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_step28"]
+size = Vector3(6, 0.28, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape_step28"]
+size = Vector3(6, 0.28, 6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_step42"]
+size = Vector3(6, 0.42, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape_step42"]
+size = Vector3(6, 0.42, 6)
+
+[sub_resource type="StandardMaterial3D" id="Mat_slope"]
+albedo_color = Color(0.3, 0.58, 0.4, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_ramp"]
+size = Vector3(5, 0.4, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape_ramp"]
+size = Vector3(5, 0.4, 5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_ledge"]
+albedo_color = Color(0.66, 0.42, 0.24, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_ledge"]
+size = Vector3(4, 1, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape_ledge"]
+size = Vector3(4, 1, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_pillar"]
+albedo_color = Color(0.58, 0.59, 0.61, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pillar"]
+top_radius = 0.6
+bottom_radius = 0.6
+height = 5.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape_pillar"]
+height = 5.0
+radius = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_target"]
+albedo_color = Color(0.64, 0.24, 0.22, 1)
+roughness = 0.7
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_target"]
+top_radius = 0.35
+bottom_radius = 0.35
+height = 1.8
+
+[sub_resource type="CylinderShape3D" id="CylinderShape_target"]
+height = 1.8
+radius = 0.35
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8ya4j"]
+size = Vector3(1.3, 2, 1.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5qein"]
+size = Vector3(1.3, 2, 1.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_frvy6"]
+size = Vector3(1.3, 2, 1.3)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_player"]
+radius = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_player"]
+albedo_color = Color(0.88, 0.88, 0.9, 1)
+roughness = 0.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_player"]
+radius = 0.4
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_8ya4j"]
+radius = 0.6
+height = 1.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_810np"]
+size = Vector3(1.2, 1.4, 1.2)
+
+[node name="TestEnvironment" type="Node3D" unique_id=10485837]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=587596425]
+environment = SubResource("EnvRes")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1925883695]
+transform = Transform3D(1, 0, 0, 0, 0.573576, -0.819152, 0, 0.819152, 0.573576, 0, 0, 0)
+light_energy = 1.4
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1420415112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground" unique_id=1693626182]
+material_override = SubResource("Mat_ground")
+mesh = SubResource("BoxMesh_ground")
+
+[node name="Collision" type="CollisionShape3D" parent="Ground" unique_id=1819602144]
+shape = SubResource("BoxShape_ground")
+
+[node name="Walls" type="Node3D" parent="." unique_id=2100583091]
+
+[node name="WallNorth" type="StaticBody3D" parent="Walls" unique_id=492885687]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -20)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Walls/WallNorth" unique_id=1758110676]
+material_override = SubResource("Mat_wall")
+mesh = SubResource("BoxMesh_wall_ns")
+
+[node name="Collision" type="CollisionShape3D" parent="Walls/WallNorth" unique_id=808021021]
+shape = SubResource("BoxShape_wall_ns")
+
+[node name="WallSouth" type="StaticBody3D" parent="Walls" unique_id=1573600922]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 20)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Walls/WallSouth" unique_id=953854125]
+material_override = SubResource("Mat_wall")
+mesh = SubResource("BoxMesh_wall_ns")
+
+[node name="Collision" type="CollisionShape3D" parent="Walls/WallSouth" unique_id=699790683]
+shape = SubResource("BoxShape_wall_ns")
+
+[node name="WallEast" type="StaticBody3D" parent="Walls" unique_id=308266827]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2, 0)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Walls/WallEast" unique_id=1706119524]
+material_override = SubResource("Mat_wall")
+mesh = SubResource("BoxMesh_wall_ew")
+
+[node name="Collision" type="CollisionShape3D" parent="Walls/WallEast" unique_id=300742654]
+shape = SubResource("BoxShape_wall_ew")
+
+[node name="WallWest" type="StaticBody3D" parent="Walls" unique_id=857641007]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 2, 0)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Walls/WallWest" unique_id=1813586194]
+material_override = SubResource("Mat_wall")
+mesh = SubResource("BoxMesh_wall_ew")
+
+[node name="Collision" type="CollisionShape3D" parent="Walls/WallWest" unique_id=36978437]
+shape = SubResource("BoxShape_wall_ew")
+
+[node name="Course" type="Node3D" parent="." unique_id=1801428186]
+
+[node name="StepLane" type="Node3D" parent="Course" unique_id=1142362759]
+
+[node name="Step14" type="StaticBody3D" parent="Course/StepLane" unique_id=1984495673]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.07, 6)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Course/StepLane/Step14" unique_id=644730168]
+material_override = SubResource("Mat_stair")
+mesh = SubResource("BoxMesh_step14")
+
+[node name="Collision" type="CollisionShape3D" parent="Course/StepLane/Step14" unique_id=1520944970]
+shape = SubResource("BoxShape_step14")
+
+[node name="Step28" type="StaticBody3D" parent="Course/StepLane" unique_id=596958572]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.14, -2)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Course/StepLane/Step28" unique_id=33077451]
+material_override = SubResource("Mat_stair")
+mesh = SubResource("BoxMesh_step28")
+
+[node name="Collision" type="CollisionShape3D" parent="Course/StepLane/Step28" unique_id=446094251]
+shape = SubResource("BoxShape_step28")
+
+[node name="Step42" type="StaticBody3D" parent="Course/StepLane" unique_id=366822498]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.21, -10)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Course/StepLane/Step42" unique_id=77909542]
+material_override = SubResource("Mat_stair")
+mesh = SubResource("BoxMesh_step42")
+
+[node name="Collision" type="CollisionShape3D" parent="Course/StepLane/Step42" unique_id=104314750]
+shape = SubResource("BoxShape_step42")
+
+[node name="RampLane" type="Node3D" parent="Course" unique_id=867754567]
+
+[node name="Ramp" type="StaticBody3D" parent="Course/RampLane" unique_id=2075336617]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, 0.3420201, 0, -0.3420201, 0.9396926, 7, 0.6371, 7.5824)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Course/RampLane/Ramp" unique_id=598467657]
+material_override = SubResource("Mat_slope")
+mesh = SubResource("BoxMesh_ramp")
+
+[node name="Collision" type="CollisionShape3D" parent="Course/RampLane/Ramp" unique_id=1332022416]
+shape = SubResource("BoxShape_ramp")
+
+[node name="HighLedge" type="StaticBody3D" parent="Course/RampLane" unique_id=656171470]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.5, -8)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Course/RampLane/HighLedge" unique_id=260667384]
+material_override = SubResource("Mat_ledge")
+mesh = SubResource("BoxMesh_ledge")
+
+[node name="Collision" type="CollisionShape3D" parent="Course/RampLane/HighLedge" unique_id=429443089]
+shape = SubResource("BoxShape_ledge")
+
+[node name="Props" type="Node3D" parent="." unique_id=1587092797]
+
+[node name="PillarA" type="StaticBody3D" parent="Props" unique_id=1317771134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 2.5, -16)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/PillarA" unique_id=706711130]
+material_override = SubResource("Mat_pillar")
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="Collision" type="CollisionShape3D" parent="Props/PillarA" unique_id=2147343984]
+shape = SubResource("CylinderShape_pillar")
+
+[node name="PillarB" type="StaticBody3D" parent="Props" unique_id=1257955905]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.5, -16)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/PillarB" unique_id=1730732532]
+material_override = SubResource("Mat_pillar")
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="Collision" type="CollisionShape3D" parent="Props/PillarB" unique_id=508882192]
+shape = SubResource("CylinderShape_pillar")
+
+[node name="PillarC" type="StaticBody3D" parent="Props" unique_id=1374559134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 2.5, 16)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/PillarC" unique_id=641896024]
+material_override = SubResource("Mat_pillar")
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="Collision" type="CollisionShape3D" parent="Props/PillarC" unique_id=1244124768]
+shape = SubResource("CylinderShape_pillar")
+
+[node name="PillarD" type="StaticBody3D" parent="Props" unique_id=370869050]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 2.5, 16)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Props/PillarD" unique_id=2037293086]
+material_override = SubResource("Mat_pillar")
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="Collision" type="CollisionShape3D" parent="Props/PillarD" unique_id=533689643]
+shape = SubResource("CylinderShape_pillar")
+
+[node name="Targets" type="Node3D" parent="." unique_id=763464242]
+
+[node name="TargetA" type="StaticBody3D" parent="Targets" unique_id=1070385664]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.18, -2)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Targets/TargetA" unique_id=1694098743]
+material_override = SubResource("Mat_target")
+mesh = SubResource("CylinderMesh_target")
+
+[node name="Collision" type="CollisionShape3D" parent="Targets/TargetA" unique_id=1291485948]
+shape = SubResource("CylinderShape_target")
+
+[node name="Health" type="Node" parent="Targets/TargetA" unique_id=855322120]
+script = ExtResource("2_8ya4j")
+
+[node name="Hurtbox" type="Area3D" parent="Targets/TargetA" unique_id=1661234712]
+script = ExtResource("3_5qein")
+
+[node name="Shape" type="CollisionShape3D" parent="Targets/TargetA/Hurtbox" unique_id=1499548546]
+shape = SubResource("BoxShape3D_8ya4j")
+
+[node name="Death" type="Node" parent="Targets/TargetA" unique_id=1752483695]
+script = ExtResource("3_q7yga")
+
+[node name="Participant" type="Node" parent="Targets/TargetA" unique_id=198577720]
+script = ExtResource("10_2qg6i")
+
+[node name="DeathPresentation" type="Node3D" parent="Targets/TargetA" unique_id=404754898]
+script = ExtResource("5_adw7c")
+
+[node name="TargetB" type="StaticBody3D" parent="Targets" unique_id=1095015180]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0.9, -2)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Targets/TargetB" unique_id=1317538227]
+material_override = SubResource("Mat_target")
+mesh = SubResource("CylinderMesh_target")
+
+[node name="Collision" type="CollisionShape3D" parent="Targets/TargetB" unique_id=144436674]
+shape = SubResource("CylinderShape_target")
+
+[node name="Health" type="Node" parent="Targets/TargetB" unique_id=780377730]
+script = ExtResource("2_8ya4j")
+
+[node name="Hurtbox" type="Area3D" parent="Targets/TargetB" unique_id=1993472171]
+script = ExtResource("3_5qein")
+
+[node name="Shape" type="CollisionShape3D" parent="Targets/TargetB/Hurtbox" unique_id=1091289544]
+shape = SubResource("BoxShape3D_5qein")
+
+[node name="Death" type="Node" parent="Targets/TargetB" unique_id=711956437]
+script = ExtResource("3_q7yga")
+
+[node name="Participant" type="Node" parent="Targets/TargetB" unique_id=700986127]
+script = ExtResource("10_2qg6i")
+
+[node name="DeathPresentation" type="Node3D" parent="Targets/TargetB" unique_id=256408776]
+script = ExtResource("5_adw7c")
+
+[node name="TargetC" type="StaticBody3D" parent="Targets" unique_id=1626236373]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.9, -2)
+collision_mask = 3
+
+[node name="Mesh" type="MeshInstance3D" parent="Targets/TargetC" unique_id=367829747]
+material_override = SubResource("Mat_target")
+mesh = SubResource("CylinderMesh_target")
+
+[node name="Collision" type="CollisionShape3D" parent="Targets/TargetC" unique_id=478579347]
+shape = SubResource("CylinderShape_target")
+
+[node name="Health" type="Node" parent="Targets/TargetC" unique_id=1507895054]
+script = ExtResource("2_8ya4j")
+
+[node name="Hurtbox" type="Area3D" parent="Targets/TargetC" unique_id=1756428024]
+script = ExtResource("3_5qein")
+
+[node name="Shape" type="CollisionShape3D" parent="Targets/TargetC/Hurtbox" unique_id=1078670792]
+shape = SubResource("BoxShape3D_frvy6")
+
+[node name="Death" type="Node" parent="Targets/TargetC" unique_id=1422865069]
+script = ExtResource("3_q7yga")
+
+[node name="Participant" type="Node" parent="Targets/TargetC" unique_id=893337952]
+script = ExtResource("10_2qg6i")
+
+[node name="DeathPresentation" type="Node3D" parent="Targets/TargetC" unique_id=1100313456]
+script = ExtResource("5_adw7c")
+
+[node name="Markers" type="Node3D" parent="." unique_id=2076830780]
+
+[node name="LabelStep14" type="Label3D" parent="Markers" unique_id=1187476019]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.6, 6)
+pixel_size = 0.016
+billboard = 1
+text = "STEP 14 CM"
+
+[node name="LabelStep28" type="Label3D" parent="Markers" unique_id=1214267442]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.8, -2)
+pixel_size = 0.016
+billboard = 1
+text = "STEP 28 CM"
+
+[node name="LabelStep42" type="Label3D" parent="Markers" unique_id=1049949708]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, -10)
+pixel_size = 0.016
+billboard = 1
+text = "STEP 42 CM"
+
+[node name="LabelRamp" type="Label3D" parent="Markers" unique_id=384786601]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.2, 7.6)
+pixel_size = 0.016
+billboard = 1
+text = "RAMP 20 DEG - WALK UP FROM SOUTH"
+
+[node name="LabelLedge" type="Label3D" parent="Markers" unique_id=489687699]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2.9, -8)
+pixel_size = 0.016
+billboard = 1
+text = "LEDGE 1 M - TOO TALL"
+
+[node name="LabelTargetA" type="Label3D" parent="Markers" unique_id=1374525031]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2.88, -2)
+pixel_size = 0.009
+billboard = 1
+text = "TARGET A"
+
+[node name="LabelTargetB" type="Label3D" parent="Markers" unique_id=1421522312]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.6, -2)
+pixel_size = 0.009
+billboard = 1
+text = "TARGET B"
+
+[node name="LabelTargetC" type="Label3D" parent="Markers" unique_id=1860655878]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.6, -2)
+pixel_size = 0.009
+billboard = 1
+text = "TARGET C"
+
+[node name="LabelDummyActor" type="Label3D" parent="Markers" unique_id=686228111]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -2)
+pixel_size = 0.009
+billboard = 1
+text = "DUMMY ACTOR"
+
+[node name="Player" type="CharacterBody3D" parent="." unique_id=301334283 groups=["player_actor"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 12)
+collision_layer = 2
+collision_mask = 3
+floor_max_angle = 0.802851
+floor_snap_length = 0.4
+script = ExtResource("1_player")
+
+[node name="Collision" type="CollisionShape3D" parent="Player" unique_id=892805861]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape_player")
+
+[node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1456733949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+material_override = SubResource("Mat_player")
+mesh = SubResource("CapsuleMesh_player")
+
+[node name="Health" type="Node" parent="Player" unique_id=1441079411]
+script = ExtResource("2_8ya4j")
+
+[node name="Hurtbox" type="Area3D" parent="Player" unique_id=1086394708]
+script = ExtResource("3_5qein")
+
+[node name="Shape" type="CollisionShape3D" parent="Player/Hurtbox" unique_id=975763493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_8ya4j")
+
+[node name="AttackHitbox" type="Area3D" parent="Player" unique_id=551409667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -1.1)
+script = ExtResource("4_frvy6")
+source_actor_path = NodePath("..")
+
+[node name="Shape" type="CollisionShape3D" parent="Player/AttackHitbox" unique_id=1235927492]
+shape = SubResource("BoxShape3D_810np")
+
+[node name="Combat" type="Node" parent="Player" unique_id=1562664704]
+script = ExtResource("5_b2arr")
+
+[node name="Stamina" type="Node" parent="Player" unique_id=1254400412]
+script = ExtResource("6_stamina")
+
+[node name="Dodge" type="Node" parent="Player" unique_id=935373762]
+script = ExtResource("7_a8tja")
+
+[node name="Parry" type="Node" parent="Player" unique_id=1182000643]
+script = ExtResource("8_b2563")
+
+[node name="Death" type="Node" parent="Player" unique_id=1346861843]
+script = ExtResource("12_death")
+
+[node name="Participant" type="Node" parent="Player" unique_id=578814347]
+script = ExtResource("10_2qg6i")
+attack_path = NodePath("../Combat")
+
+[node name="CameraRig" type="Node3D" parent="." unique_id=1012415909]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+script = ExtResource("2_camera")
+pivot_path = NodePath("../Player")
+
+[node name="CameraYaw" type="Node3D" parent="CameraRig" unique_id=886918984]
+
+[node name="CameraPitch" type="Node3D" parent="CameraRig/CameraYaw" unique_id=1171688607]
+transform = Transform3D(1, 0, 0, 0, 0.9781475, 0.20791216, 0, -0.20791216, 0.9781475, 0, 0, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraRig/CameraYaw/CameraPitch" unique_id=2022130228]
+collision_mask = 17
+spring_length = 4.5
+margin = 0.05
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig/CameraYaw/CameraPitch/SpringArm3D" unique_id=1913962947]
+current = true
+fov = 70.0
+
+[node name="DummyActor" parent="." unique_id=1048714085 instance=ExtResource("3_actor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
+
+[node name="TestAttacker" parent="." unique_id=1781428234 instance=ExtResource("11_ut5rl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)

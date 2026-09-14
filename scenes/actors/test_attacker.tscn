@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://dh4v6csv04oel"]
+
+[ext_resource type="Script" uid="uid://b4dlgmedc2y8m" path="res://scripts/combat/health_component.gd" id="1_health"]
+[ext_resource type="Script" uid="uid://to6s0nk4vi84" path="res://scripts/combat/hurtbox_component.gd" id="2_hurtbox"]
+[ext_resource type="Script" uid="uid://c5wsf8bxvc8pn" path="res://scripts/combat/hitbox_component.gd" id="3_hitbox"]
+[ext_resource type="Script" uid="uid://dfnghc7ghrwd2" path="res://scripts/combat/enemy_attacker.gd" id="4_attacker"]
+[ext_resource type="Script" uid="uid://cqyrax1qbgrxo" path="res://scripts/combat/enemy_death_component.gd" id="5_death"]
+[ext_resource type="Script" uid="uid://cl7c6683fslkq" path="res://scripts/diagnostics/enemy_death_presentation_debug.gd" id="6_deathpres"]
+[ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="7_c3asi"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.62, 0.18, 0.22, 1)
+roughness = 0.6
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tell"]
+albedo_color = Color(1, 0.55, 0.1, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(1, 0.5, 0.05, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_tell"]
+radius = 0.22
+height = 0.44
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hurt"]
+radius = 0.45
+height = 1.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_attack"]
+size = Vector3(2.2, 1.8, 2.4)
+
+[node name="TestAttacker" type="CharacterBody3D" unique_id=788003976]
+collision_layer = 2
+collision_mask = 3
+
+[node name="Collision" type="CollisionShape3D" parent="." unique_id=421753181]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=11754410]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+material_override = SubResource("StandardMaterial3D_body")
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="Telegraph" type="MeshInstance3D" parent="." unique_id=461358952]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_tell")
+mesh = SubResource("SphereMesh_tell")
+
+[node name="Health" type="Node" parent="." unique_id=2090323609]
+script = ExtResource("1_health")
+
+[node name="Hurtbox" type="Area3D" parent="." unique_id=1782015915]
+script = ExtResource("2_hurtbox")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtbox" unique_id=1519865401]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+shape = SubResource("CapsuleShape3D_hurt")
+
+[node name="AttackHitbox" type="Area3D" parent="." unique_id=1680878494]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -1.7)
+script = ExtResource("3_hitbox")
+source_actor_path = NodePath("..")
+
+[node name="Shape" type="CollisionShape3D" parent="AttackHitbox" unique_id=1565305710]
+shape = SubResource("BoxShape3D_attack")
+
+[node name="Attacker" type="Node" parent="." unique_id=1544281012]
+script = ExtResource("4_attacker")
+
+[node name="Death" type="Node" parent="." unique_id=1814504617]
+script = ExtResource("5_death")
+
+[node name="DeathPresentation" type="Node3D" parent="." unique_id=279463252]
+script = ExtResource("6_deathpres")
+
+[node name="Participant" type="Node" parent="." unique_id=1342801164]
+script = ExtResource("7_c3asi")
+attack_path = NodePath("../Attacker")

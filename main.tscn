@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://bfbf3uq4w4kmk"]
+
+[ext_resource type="Script" uid="uid://camntx7bvwg6y" path="res://scripts/input/cascadia_input.gd" id="1_input"]
+[ext_resource type="Script" uid="uid://bil8eo050seek" path="res://scripts/diagnostics/input_debug_overlay.gd" id="3_overlay"]
+[ext_resource type="Script" uid="uid://be3ovofi6o707" path="res://scripts/diagnostics/hit_feedback_debug.gd" id="5_7mycd"]
+[ext_resource type="Script" uid="uid://dsl3ib46tw8o0" path="res://scripts/diagnostics/combat_debug_overlay.gd" id="5_lquwl"]
+[ext_resource type="Script" uid="uid://i8f4avuwcn3o" path="res://scripts/diagnostics/death_presentation_debug.gd" id="6_deathpres"]
+[ext_resource type="Script" uid="uid://chx2jporgfrnp" path="res://scripts/economy/credit_ledger.gd" id="7_272bh"]
+[ext_resource type="Script" uid="uid://b6pjn2tox4u3q" path="res://scripts/core/game_state_save.gd" id="8_kek77"]
+[ext_resource type="Script" uid="uid://ce6qe4c324yxo" path="res://scripts/diagnostics/save_load_debug_controls.gd" id="9_4c57u"]
+
+[node name="Cascadia" type="Node3D" unique_id=58351916]
+
+[node name="CascadiaInput" type="Node" parent="." unique_id=374483528]
+script = ExtResource("1_input")
+
+[node name="InputDebugOverlay" type="CanvasLayer" parent="." unique_id=1167515309]
+script = ExtResource("3_overlay")
+
+[node name="CombatDebugOverlay" type="CanvasLayer" parent="." unique_id=884701187]
+script = ExtResource("5_lquwl")
+
+[node name="HitFeedback" type="Node3D" parent="." unique_id=1411193814]
+script = ExtResource("5_7mycd")
+
+[node name="DeathPresentation" type="CanvasLayer" parent="." unique_id=1964161842]
+script = ExtResource("6_deathpres")
+
+[node name="CreditLedger" type="Node" parent="." unique_id=1755937333]
+script = ExtResource("7_272bh")
+
+[node name="GameStateSave" type="Node" parent="." unique_id=1973464890]
+script = ExtResource("8_kek77")
+player_actor_path = NodePath("")
+debug_logging = true
+
+[node name="SaveLoadControls" type="CanvasLayer" parent="." unique_id=1866228881]
+script = ExtResource("9_4c57u")

@@ -1,0 +1,104 @@
+[i0 p0] [FOCUS] === window focus / gameplay input routing contract ===
+[i69 p30] [FOCUS] --- PHASE 1: the game FOCUSED, as a baseline ---
+[i69 p30] [FOCUS] PHASE 1 state: engine_focus=true input_active=true mouse=2 look_intent=true ticks=69
+[i69 p30] [FOCUS]   PASS  PHASE 1: gameplay input is ACTIVE
+[i69 p30] [FOCUS]   PASS  PHASE 1: the mouse is CAPTURED for gameplay (mode=2)
+[i69 p30] [FOCUS]   PASS  PHASE 1: mouse look is ENABLED
+[i69 p30] [FOCUS]   PASS  PHASE 1: the player is in the tree and processing
+[i69 p30] [FOCUS]   PASS  PHASE 1: the player is in the normal process mode
+[i69 p30] [FOCUS]   PASS  PHASE 1: the camera is CURRENT
+[i69 p30] [FOCUS]   PASS  PHASE 1: the player is alive
+[i69 p30] [FOCUS]   PASS  PHASE 1: stamina regeneration is ENABLED
+[i69 p30] [FOCUS]   PASS  PHASE 1: the scene tree is NOT paused
+[i69 p30] [FOCUS]   PASS  PHASE 1: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i81 p33] [FOCUS] PHASE 1 look: yaw changed 74.7243 deg (input_active=true mouse=2)
+[i81 p33] [FOCUS]   PASS  PHASE 1: mouse look works while focused
+[i169 p55] [FOCUS] PHASE 1 move: travelled 0.5350 m over 20 frames
+[i169 p55] [FOCUS]   PASS  PHASE 1: movement works while focused (0.5350 m)
+[i341 p98] [FOCUS]   PASS  PHASE 1: attacks work while focused
+[i353 p101] [FOCUS] PHASE 1 dodge: running=true
+[i373 p106] [FOCUS]   PASS  PHASE 1: dodges work while focused
+[i373 p106] [FOCUS] --- PHASE 2: window focus LOST ---
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: gameplay input is SUSPENDED
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: the layer HANDLED the focus-out notification (0 -> 1)
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: the cursor is RELEASED (mode=0)
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: the capture INTENT is kept - Escape owns the intent, not focus
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: a HELD move key reads as NO movement ((0.0, 0.0))
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: a pending look delta is DISCARDED, not banked for the way back ((0.0, 0.0))
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: sprint reads OFF
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: a queued dodge cannot be consumed into a real dodge
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: a gameplay action cannot be read as pressed
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: the layer's frame counter did not go BACKWARDS (control - 429 -> 429)
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: the scene tree is NOT paused
+[i429 p120] [FOCUS]   PASS  FOCUS LOST: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i437 p123] [FOCUS] one tick after the focus-out: engine_focus=true input_active=true mouse=2
+[i437 p123] [FOCUS]   PASS  FOCUS LOST: the per-frame reconciliation resumes input while the engine still reports focus (the simulation cannot hold the window unfocused - a limit, not a defect)
+[i437 p123] [FOCUS] --- PHASE 2b: suspension with NO focus-in (the reported wedge) ---
+[i437 p123] [FOCUS]   PASS  STUCK: the layer is suspended and no focus-in has been delivered
+[i437 p123] [FOCUS]   PASS  STUCK: mouse MOTION alone does not resume input (motion proves nothing about presence)
+[i437 p123] [FOCUS]   PASS  STUCK: ...and that motion produced no look delta while suspended
+[i437 p123] [FOCUS]   PASS  STUCK: a real CLICK resumes input - the suspension is NOT a trap (the escape hatch is alive)
+[i437 p123] [FOCUS]   PASS  STUCK: that click RESTORED the intended capture (mode=2)
+[i437 p123] [FOCUS]   PASS  STUCK: a real KEY press also resumes input
+[i441 p126] [FOCUS] after click-recovery: input_active=true mouse=2 ticks=441
+[i441 p126] [FOCUS]   PASS  STUCK: input stays ACTIVE after the click recovery
+[i441 p126] [FOCUS]   PASS  STUCK: capture stays held after the click recovery (mode=2)
+[i441 p126] [FOCUS]   PASS  STUCK: the layer kept PROCESSING through the suspension (control - 437 -> 441)
+[i441 p126] [FOCUS]   PASS  STUCK: the scene tree is NOT paused
+[i441 p126] [FOCUS]   PASS  STUCK: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i441 p126] [FOCUS] --- PHASE 3: window focus REGAINED ---
+[i441 p126] [FOCUS]   PASS  REFOCUSED: gameplay input is ACTIVE again
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the layer HANDLED the focus-in notification (3 -> 4)
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the intended capture returned WITHOUT any click (mode=2)
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the button that brought the window back is SUPPRESSED (it cannot become an attack)
+[i441 p126] [FOCUS] REFOCUSED state: engine_focus=true input_active=true mouse=2 look_intent=true ticks=441
+[i441 p126] [FOCUS]   PASS  REFOCUSED: gameplay input is ACTIVE
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the mouse is CAPTURED for gameplay (mode=2)
+[i441 p126] [FOCUS]   PASS  REFOCUSED: mouse look is ENABLED
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the player is in the tree and processing
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the player is in the normal process mode
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the camera is CURRENT
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the player is alive
+[i441 p126] [FOCUS]   PASS  REFOCUSED: stamina regeneration is ENABLED
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the scene tree is NOT paused
+[i441 p126] [FOCUS]   PASS  REFOCUSED: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i445 p129] [FOCUS] REFOCUSED look: yaw changed 74.7243 deg (input_active=true mouse=2)
+[i445 p129] [FOCUS]   PASS  REFOCUSED: mouse look works again
+[i533 p151] [FOCUS] REFOCUSED move: travelled 1.1293 m over 20 frames
+[i533 p151] [FOCUS]   PASS  REFOCUSED: movement works (1.1293 m)
+[i703 p194] [FOCUS]   PASS  REFOCUSED: attacks work
+[i715 p197] [FOCUS] REFOCUSED dodge: running=true
+[i735 p202] [FOCUS]   PASS  REFOCUSED: dodges work
+[i1095 p292] [FOCUS] REFOCUSED stamina: 3.8 -> 21.6 (regen_enabled=true processing=true regen_block=0.000)
+[i1095 p292] [FOCUS]   PASS  REFOCUSED: stamina REGENERATES (3.8 -> 21.6)
+[i1095 p292] [FOCUS] --- PHASE 3b: the HOST dropped the cursor while the game believes it is focused ---
+[i1095 p292] [FOCUS]   PASS  HOST-DROPPED: the CLICK ITSELF re-took the cursor (mode=2)
+[i1095 p292] [FOCUS]   PASS  HOST-DROPPED: that click is SUPPRESSED as a swing - it asked for the window, not an attack
+[i1255 p332] [FOCUS]   PASS  HOST-DROPPED: the refocus click did NOT start an attack (attacks 3 -> 3)
+[i1343 p354] [FOCUS] HOST-DROPPED move: travelled 1.0950 m over 20 frames
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the player can MOVE after the click that re-took the cursor (1.0950 m)
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the scene tree is NOT paused
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i1343 p354] [FOCUS] HOST-DROPPED state: engine_focus=true input_active=true mouse=2 look_intent=true ticks=1343
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: gameplay input is ACTIVE
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the mouse is CAPTURED for gameplay (mode=2)
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: mouse look is ENABLED
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the player is in the tree and processing
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the player is in the normal process mode
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the camera is CURRENT
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the player is alive
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: stamina regeneration is ENABLED
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the scene tree is NOT paused
+[i1343 p354] [FOCUS]   PASS  HOST-DROPPED: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i1343 p354] [FOCUS] --- PHASE 4: targeting input, and the debug panels ---
+[i1343 p354] [FOCUS] lock_on bindings: ["", "PadBtn8"]
+[i1359 p358] [FOCUS] lock_on delivered to the input layer: true
+[i1359 p358] [FOCUS]   PASS  PHASE 4: the `lock_on` action still reaches the input layer after refocusing
+[i1359 p358] [FOCUS]   PASS  PHASE 4: the targeting group still resolves to the player
+[i1359 p358] [FOCUS]   PASS  PHASE 4: retargeting behaviour is unchanged by a focus change
+[i1359 p358] [FOCUS]   PASS  PHASE 4: no debug-panel Control consumes gameplay mouse input (none)
+[i1359 p358] [FOCUS]   PASS  PHASE 4: no UI Control holds focus (none)
+[i1359 p358] [FOCUS]   PASS  PHASE 4: the scene tree is NOT paused
+[i1359 p358] [FOCUS]   PASS  PHASE 4: the time scale is 1.0 (got 1.000) - no pause is used as a workaround
+[i1359 p358] [FOCUS] --- summary ---
+[i1359 p358] [FOCUS] RESULT: ALL CHECKS PASSED

@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://kw550xycbb1b"]
+
+[ext_resource type="Script" uid="uid://b4dlgmedc2y8m" path="res://scripts/combat/health_component.gd" id="1_health"]
+[ext_resource type="Script" uid="uid://to6s0nk4vi84" path="res://scripts/combat/hurtbox_component.gd" id="2_hurtbox"]
+[ext_resource type="Script" uid="uid://cqyrax1qbgrxo" path="res://scripts/combat/enemy_death_component.gd" id="3_death"]
+[ext_resource type="Script" uid="uid://cl7c6683fslkq" path="res://scripts/diagnostics/enemy_death_presentation_debug.gd" id="4_deathpres"]
+[ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="5_hypij"]
+
+[sub_resource type="CapsuleShape3D" id="Capsule_body"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(0.78, 0.34, 0.3, 1)
+roughness = 0.7
+
+[sub_resource type="CapsuleMesh" id="Mesh_body"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="Capsule_hurt"]
+radius = 0.45
+height = 1.8
+
+[node name="DummyActor" type="CharacterBody3D" unique_id=59549133]
+collision_layer = 2
+collision_mask = 3
+
+[node name="Collision" type="CollisionShape3D" parent="." unique_id=1957499429]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("Capsule_body")
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1655224052]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+material_override = SubResource("Mat_body")
+mesh = SubResource("Mesh_body")
+
+[node name="Health" type="Node" parent="." unique_id=1388942578]
+script = ExtResource("1_health")
+
+[node name="Hurtbox" type="Area3D" parent="." unique_id=1194936516]
+script = ExtResource("2_hurtbox")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtbox" unique_id=501956081]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+shape = SubResource("Capsule_hurt")
+
+[node name="Death" type="Node" parent="." unique_id=104360037]
+script = ExtResource("3_death")
+
+[node name="DeathPresentation" type="Node3D" parent="." unique_id=366613481]
+script = ExtResource("4_deathpres")
+
+[node name="Participant" type="Node" parent="." unique_id=2048914968]
+script = ExtResource("5_hypij")

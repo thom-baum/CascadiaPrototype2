@@ -1,0 +1,151 @@
+[i0 p0] [CONTRACT] === quicksave / quickload FULL gameplay contract ===
+[i70 p30] [CONTRACT] --- PHASE 1: the game as it starts ---
+[i70 p30] [CONTRACT]   START      mouse=2 paused=false scale=1.000 win=true gui_clear=true player=0 phys=true dead=false credits=0
+[i70 p30] [CONTRACT]   PASS  PHASE 1: the scene tree is NOT paused
+[i70 p30] [CONTRACT]   PASS  PHASE 1: the mouse is CAPTURED for gameplay (mode=2)
+[i70 p30] [CONTRACT]   PASS  PHASE 1: mouse look is ENABLED
+[i70 p30] [CONTRACT]   PASS  PHASE 1: the player is in the tree and processing
+[i70 p30] [CONTRACT]   PASS  PHASE 1: the player is in the normal process mode
+[i70 p30] [CONTRACT]   PASS  PHASE 1: the camera is CURRENT
+[i70 p30] [CONTRACT]   PASS  PHASE 1: no UI Control holds focus (none)
+[i70 p30] [CONTRACT]   PASS  PHASE 1: the player is alive
+[i70 p30] [CONTRACT]   PASS  PHASE 1: stamina regeneration is ENABLED
+[i70 p30] [CONTRACT]   PASS  the save service and the ledger both exist
+[i196 p62] [CONTRACT] PHASE 1 walk: travelled 1.7950 m over 30 frames
+[i196 p62] [CONTRACT]   PASS  the player MOVES normally (travelled 1.7950 m)
+[i208 p65] [CONTRACT] PHASE 1 look: yaw changed 48.8952 deg (mouse captured=true)
+[i208 p65] [CONTRACT]   PASS  the camera TURNS from mouse motion (yaw changed 48.8952 deg)
+[i379 p108] [CONTRACT] PHASE 1 attack: attacks_started 0 -> 1
+[i379 p108] [CONTRACT]   PASS  the player ATTACKS normally
+[i391 p111] [CONTRACT] PHASE 1 dodge: dodge running=true
+[i411 p116] [CONTRACT]   PASS  the player DODGES normally
+[i411 p116] [CONTRACT]   PASS  stamina was SPENT by the attack and dodge (60.0 of 100.0)
+[i411 p116] [CONTRACT] --- PHASE 2: walk to A, turn, then F5 ---
+[i619 p168] [CONTRACT] PHASE 2 look: yaw changed 48.8952 deg (mouse captured=true)
+[i619 p168] [CONTRACT] position A = (0.00, 0.00, 10.36)  yaw = -48.895 deg  spawn = (0.00, 0.00, 12.00)
+[i619 p168] [CONTRACT]   PASS  position A is DISTINCT from the scene spawn mark (1.64 m apart)
+[i619 p168] [CONTRACT]   PASS  the camera sits at a DISTINCT orbit before the save (-48.895 deg)
+[i691 p186] [CONTRACT]   PASS  the REAL F5 action reached GameStateSave.save_game() (saves 0 -> 1)
+[i691 p186] [CONTRACT]   PASS  a save file was genuinely written
+[i691 p186] [CONTRACT]   PASS  the snapshot RECORDS the player's position (the field that was missing)
+[i691 p186] [CONTRACT]   PASS  the snapshot records position A (0.20 m from the measured A)
+[i691 p186] [CONTRACT]   PASS  the snapshot records the player's health
+[i691 p186] [CONTRACT]   PASS  the snapshot records the carried balance (0)
+[i691 p186] [CONTRACT] snapshot written: schema=4.0 position=[0.00000005134009, 0.00091110588983, 10.1666707992554] health=100.0 credits=0.0
+[i691 p186] [CONTRACT]   SAVED      mouse=2 paused=false scale=1.000 win=true gui_clear=true player=0 phys=true dead=false credits=0
+[i691 p186] [CONTRACT] --- PHASE 3: mutate (walk, turn, kill) ---
+[i831 p221] [CONTRACT] PHASE 3 look: yaw changed 48.8952 deg (mouse captured=true)
+[i831 p221] [CONTRACT]   PASS  the camera turned away from its saved orbit (48.8952 deg)
+[i831 p221] [CONTRACT]   PASS  DummyActor is ALIVE at save time, so it can be killed after
+[i2628 p671] [CONTRACT]   PASS  DummyActor was KILLED after the save through the real combat path
+[i2628 p671] [CONTRACT]   PASS  the mutation EARNED Credits (awards 0 -> 1)
+[i2628 p671] [CONTRACT] position B = (1.15, 0.00, -2.00)  (A was (0.00, 0.00, 10.36))
+[i2628 p671] [CONTRACT]   PASS  the world genuinely DIFFERS from the snapshot (player 12.42 m from A)
+[i2628 p671] [CONTRACT]   MUTATED    mouse=2 paused=false scale=1.000 win=true gui_clear=true player=0 phys=true dead=false credits=100
+[i2628 p671] [CONTRACT] --- PHASE 4: F9 (load 1) ---
+[i2700 p689] [CONTRACT]   PASS  load 1: the REAL F9 action reached GameStateSave.load_game() (loads 0 -> 1)
+[i2700 p689] [CONTRACT] load 1: result=OK  error=
+[i2740 p699] [CONTRACT] load 1: player at (0.00, 0.00, 10.17), A was (0.00, 0.00, 10.36), error 0.195 m
+[i2740 p699] [CONTRACT]   PASS  load 1: the player was restored to position A (0.195 m off, was 12.42 m away before the load)
+[i2740 p699] [CONTRACT]   PASS  load 1: the camera orbit was restored (0.000 deg off the saved -48.895)
+[i2740 p699] [CONTRACT]   PASS  load 1: DummyActor (killed AFTER the save) is ALIVE again
+[i2740 p699] [CONTRACT]   PASS  load 1: the carried balance is the recorded 0 (got 0)
+[i2740 p699] [CONTRACT]   PASS  load 1: the load paid NO reward (awards 1 -> 1 across the load)
+[i2740 p699] [CONTRACT]   PASS  load 1: the scene tree is NOT paused
+[i2740 p699] [CONTRACT]   PASS  load 1: the mouse is CAPTURED for gameplay (mode=2)
+[i2740 p699] [CONTRACT]   PASS  load 1: mouse look is ENABLED
+[i2740 p699] [CONTRACT]   PASS  load 1: the player is in the tree and processing
+[i2740 p699] [CONTRACT]   PASS  load 1: the player is in the normal process mode
+[i2740 p699] [CONTRACT]   PASS  load 1: the camera is CURRENT
+[i2740 p699] [CONTRACT]   PASS  load 1: no UI Control holds focus (none)
+[i2740 p699] [CONTRACT]   PASS  load 1: the player is alive
+[i2740 p699] [CONTRACT]   PASS  load 1: stamina regeneration is ENABLED
+[i2740 p699] --- TRACE after load 1 (40 frames) ---
+[i2740 p699]   TRACE  0 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=74.3 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2740 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2744 p700]   TRACE  1 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=74.7 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2744 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2748 p701]   TRACE  2 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=75.0 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2748 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2752 p702]   TRACE  3 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=75.4 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2752 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2756 p703]   TRACE  4 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=75.8 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2756 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2760 p704]   TRACE  5 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=76.1 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2760 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2764 p705]   TRACE  6 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=76.5 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2764 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2768 p706]   TRACE  7 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=76.9 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2768 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2772 p707]   TRACE  8 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=77.2 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2772 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2776 p708]   TRACE  9 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=77.6 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2776 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2780 p709]   TRACE 10 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=78.0 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2780 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2784 p710]   TRACE 11 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=78.3 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2784 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2788 p711]   TRACE 12 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=78.7 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2788 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2792 p712]   TRACE 13 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=79.1 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2792 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2796 p713]   TRACE 14 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=79.4 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2796 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2800 p714]   TRACE 15 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=79.8 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2800 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2804 p715]   TRACE 16 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=80.2 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2804 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2808 p716]   TRACE 17 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=80.5 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2808 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2812 p717]   TRACE 18 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=80.9 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2812 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2816 p718]   TRACE 19 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=81.3 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2816 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2820 p719]   TRACE 20 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=81.6 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2820 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2824 p720]   TRACE 21 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=82.0 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2824 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2828 p721]   TRACE 22 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=82.4 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2828 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2832 p722]   TRACE 23 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=82.7 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2832 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2836 p723]   TRACE 24 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=83.1 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2836 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2840 p724]   TRACE 25 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=83.5 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2840 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2844 p725]   TRACE 26 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=83.8 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2844 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2848 p726]   TRACE 27 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=84.2 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2848 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2852 p727]   TRACE 28 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=84.6 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2852 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2856 p728]   TRACE 29 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=84.9 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2856 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2860 p729]   TRACE 30 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=85.3 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2860 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2864 p730]   TRACE 31 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=85.7 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2864 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2868 p731]   TRACE 32 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=86.0 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2868 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2872 p732]   TRACE 33 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=86.4 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2872 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2876 p733]   TRACE 34 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=86.8 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2876 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2880 p734]   TRACE 35 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=87.1 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2880 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2884 p735]   TRACE 36 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=87.5 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2884 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2888 p736]   TRACE 37 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=87.9 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2888 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2892 p737]   TRACE 38 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=88.2 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2892 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2896 p738]   TRACE 39 paused=false scale=1.000 win=true mouse=2 | DEATH.is_dead=false health.is_dead=false | stam=88.6 block=0.000 en=true | processing input=true stam=true player=true | input_ticks=2896 root_mode=1 | combat=IDLE attacks=8 pos=0.00,0.00,10.17
+[i2900 p739] [CONTRACT] --- PHASE 5: play on after load 1 ---
+[i3028 p771] [CONTRACT] PHASE 5 walk: travelled 1.7950 m over 30 frames
+[i3028 p771] [CONTRACT]   PASS  the player MOVES after load 1
+[i3040 p774] [CONTRACT] PHASE 5 look: yaw changed 48.8952 deg (mouse captured=true)
+[i3040 p774] [CONTRACT]   PASS  the camera TURNS after load 1
+[i3212 p817] [CONTRACT] PHASE 5 attack: attacks_started 8 -> 9
+[i3212 p817] [CONTRACT]   PASS  the player ATTACKS after load 1
+[i3224 p820] [CONTRACT] PHASE 5 dodge: dodge running=true
+[i3244 p825] [CONTRACT]   PASS  the player DODGES after load 1
+[i3604 p915] [CONTRACT] PHASE 5 stamina: 60.0 -> 77.9 (regen_enabled=true processing=true regen_block=0.000/0.8)
+[i3604 p915] [CONTRACT]   PASS  PHASE 5: stamina REGENERATES after the load (60.0 -> 77.9)
+[i3604 p915] [CONTRACT] --- PHASE 6: load the SAME quicksave a second time ---
+[i3604 p915] [CONTRACT] --- PHASE 4: F9 (load 2) ---
+[i3676 p933] [CONTRACT]   PASS  load 2: the REAL F9 action reached GameStateSave.load_game() (loads 1 -> 2)
+[i3676 p933] [CONTRACT] load 2: result=OK  error=
+[i3716 p943] [CONTRACT] load 2: player at (0.00, 0.00, 10.17), A was (0.00, 0.00, 10.36), error 0.195 m
+[i3716 p943] [CONTRACT]   PASS  load 2: the player was restored to position A (0.195 m off, was 0.66 m away before the load)
+[i3716 p943] [CONTRACT]   PASS  load 2: the camera orbit was restored (0.000 deg off the saved -48.895)
+[i3716 p943] [CONTRACT]   PASS  load 2: DummyActor (killed AFTER the save) is ALIVE again
+[i3716 p943] [CONTRACT]   PASS  load 2: the carried balance is the recorded 0 (got 0)
+[i3716 p943] [CONTRACT]   PASS  load 2: the load paid NO reward (awards 1 -> 1 across the load)
+[i3716 p943] [CONTRACT]   PASS  load 2: the scene tree is NOT paused
+[i3716 p943] [CONTRACT]   PASS  load 2: the mouse is CAPTURED for gameplay (mode=2)
+[i3716 p943] [CONTRACT]   PASS  load 2: mouse look is ENABLED
+[i3716 p943] [CONTRACT]   PASS  load 2: the player is in the tree and processing
+[i3716 p943] [CONTRACT]   PASS  load 2: the player is in the normal process mode
+[i3716 p943] [CONTRACT]   PASS  load 2: the camera is CURRENT
+[i3716 p943] [CONTRACT]   PASS  load 2: no UI Control holds focus (none)
+[i3716 p943] [CONTRACT]   PASS  load 2: the player is alive
+[i3716 p943] [CONTRACT]   PASS  load 2: stamina regeneration is ENABLED
+[i3716 p943] [CONTRACT] --- PHASE 6: play on after load 2 ---
+[i3844 p975] [CONTRACT] PHASE 6 walk: travelled 1.7950 m over 30 frames
+[i3844 p975] [CONTRACT]   PASS  the player MOVES after load 2
+[i3856 p978] [CONTRACT] PHASE 6 look: yaw changed 48.8952 deg (mouse captured=true)
+[i3856 p978] [CONTRACT]   PASS  the camera TURNS after load 2
+[i4027 p1021] [CONTRACT] PHASE 6 attack: attacks_started 9 -> 10
+[i4027 p1021] [CONTRACT]   PASS  the player ATTACKS after load 2
+[i4039 p1024] [CONTRACT] PHASE 6 dodge: dodge running=true
+[i4059 p1029] [CONTRACT]   PASS  the player DODGES after load 2
+[i4419 p1119] [CONTRACT] PHASE 6 stamina: 47.6 -> 65.4 (regen_enabled=true processing=true regen_block=0.000/0.8)
+[i4419 p1119] [CONTRACT]   PASS  PHASE 6: stamina REGENERATES after the load (47.6 -> 65.4)
+[i4419 p1119] [CONTRACT] --- PHASE 7: the load must not have SAVED ---
+[i4419 p1119] [CONTRACT]   PASS  neither load wrote a save (saves stayed at 1)
+[i4419 p1119] [CONTRACT]   PASS  the quicksave file is UNCHANGED by loading it twice
+[i4419 p1119] [CONTRACT] --- summary ---
+[i4419 p1119] [CONTRACT] load 1: pos_error=0.195 yaw_error=0.000 defeated=[none] carried=0 awards=1
+[i4419 p1119] [CONTRACT] load 2: pos_error=0.195 yaw_error=0.000 defeated=[none] carried=0 awards=1
+[i4419 p1119] [CONTRACT] RESULT: ALL CHECKS PASSED

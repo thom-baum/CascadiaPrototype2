@@ -1,0 +1,38 @@
+[i0 p0] [FKEY] === who owns F9 in this host? ===
+[i0 p0] [FKEY] scene root children: ["Main", "Probe"]
+[i0 p0] [FKEY] in-game consumer (main.tscn/SaveLoadControls): PRESENT but DISABLED (process_mode=DISABLED) - quick_load has no consumer
+[i0 p0] [FKEY] binding quick_save -> ["F5"]
+[i0 p0] [FKEY] binding quick_save_alt -> ["F6"]
+[i0 p0] [FKEY] binding quick_load -> ["F9"]
+[i0 p0] [FKEY] binding quick_load_alt -> ["F8"]
+[i0 p0] [FKEY] binding new_run -> ["F10"]
+[i29 p19] [FKEY] settled: scale=1.000 paused=false mouse=2 window_focused=true
+[i29 p19] [FKEY] INJECTING K (letter control - cannot be a host function key) (keycode 75)
+[i30 p19] [FKEY] GAME RECEIVED key K (keycode 75)
+[i71 p30] [FKEY] SURVIVED K (letter control - cannot be a host function key) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=71 look_enabled=true | saves=0 loads=0
+[i71 p30] [FKEY] INJECTING F1 (toggle_debug_overlay) (keycode 4194332)
+[i72 p30] [FKEY] GAME RECEIVED key F1 (keycode 4194332)
+[i113 p40] [FKEY] SURVIVED F1 (toggle_debug_overlay) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=113 look_enabled=true | saves=0 loads=0
+[i113 p40] [FKEY] INJECTING F3 (candidate) (keycode 4194334)
+[i114 p40] [FKEY] GAME RECEIVED key F3 (keycode 4194334)
+[i155 p51] [FKEY] SURVIVED F3 (candidate) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=155 look_enabled=true | saves=0 loads=0
+[i155 p51] [FKEY] INJECTING F4 (candidate) (keycode 4194335)
+[i156 p51] [FKEY] GAME RECEIVED key F4 (keycode 4194335)
+[i197 p62] [FKEY] SURVIVED F4 (candidate) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=197 look_enabled=true | saves=0 loads=0
+[i197 p62] [FKEY] INJECTING F7 (candidate) (keycode 4194338)
+[i198 p62] [FKEY] GAME RECEIVED key F7 (keycode 4194338)
+[i239 p72] [FKEY] SURVIVED F7 (candidate) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=239 look_enabled=true | saves=0 loads=0
+[i239 p72] [FKEY] INJECTING F11 (candidate) (keycode 4194342)
+[i240 p72] [FKEY] GAME RECEIVED key F11 (keycode 4194342)
+[i281 p83] [FKEY] SURVIVED F11 (candidate) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=281 look_enabled=true | saves=0 loads=0
+[i281 p83] [FKEY] INJECTING F12 (candidate) (keycode 4194343)
+[i282 p83] [FKEY] GAME RECEIVED key F12 (keycode 4194343)
+[i323 p93] [FKEY] SURVIVED F12 (candidate) | delivered_to_game=1 | scale=1.000 paused=false mouse=2 | input_ticks=323 look_enabled=true | saves=0 loads=0
+[i323 p93] [FKEY] INJECTING F9 (known host pause key - reference) (keycode 4194340)
+[i324 p93] [FKEY] GAME RECEIVED key F9 (keycode 4194340)
+[i365 p104] [FKEY] SURVIVED F9 (known host pause key - reference) | delivered_to_game=1 | scale=0.000 paused=false mouse=0 | input_ticks=332 look_enabled=true | saves=0 loads=0
+[i365 p104] [FKEY] every key was injected and the process is still running
+[i365 p104] [FKEY] DIRECT save_game() -> OK (saves=1)
+[i405 p114] [FKEY] DIRECT load_game() -> OK (loads=1) | scale=0.000 paused=false mouse=0
+[i445 p124] [FKEY] SURVIVED a direct save+load with no key involved
+[i445 p124] [FKEY] RESULT: ownership separation complete - read the last line reached above
