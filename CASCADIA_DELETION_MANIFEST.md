@@ -3745,3 +3745,46 @@ The number restarted; the world did not.
 `game_state_mixed_state_probe_debug` and `game_state_death_loop_probe_debug` all
 **ALL CHECKS PASSED**; the shipped `main.tscn` boots at 0 runtime and 0 debugger errors. NOT
 human-played - the user's read of the New Run flow is what accepts it.
+
+**ACCEPTED BY THE USER 2026-09-14 on that read.** The acceptance covered the HUD, the lock-on
+indicator, pause/resume, save/load, loaded-state feedback, target cycling, lock-on orientation and the
+debug panel toggle. Milestone 13 is CLOSED and must not be reopened without a genuine regression.
+
+---
+
+## MILESTONE 14 - ENEMY HEALTH BARS (2026-09-14)
+
+### New gameplay-presentation file (NOT a deletion candidate)
+
+- `res://scripts/ui/enemy_health_bars.gd` (`class_name EnemyHealthBars`) - NEW. Draws a small bar over
+  each TRACKED enemy: revealed by that enemy's OWN `damaged` signal, held for `hold_seconds` (4.0 s) or
+  while that enemy is the locked target, and hidden when neither is true. It owns NO health value, no
+  aggro state and no lock state - it reads `HealthComponent.health_fraction()` and
+  `TargetingComponent.get_current_target()` fresh each frame, and stores only its reveal timestamps and
+  the Controls it draws. The player is deliberately EXCLUDED from tracking, because the player already
+  has the HUD's own health bar.
+
+### Recorded as a deletion candidate (NOT deleted)
+
+- `res://scripts/ui/enemy_health_bars.gd` - the module itself is intended to be PERMANENT presentation
+  and is NOT a cleanup candidate. Recorded here only so the file is accounted for. Its
+  `is_engaged()` seam is the documented hand-off point for future enemy AI.
+
+### Process defects found this pass (recorded, not worked around)
+
+- A PROBE CANNOT BE HANDED A FREED NODE. `ui_hud_probe_debug` asserted `bars.is_tracked(enemy)` AFTER
+  `_destroy(enemy)`, and a typed `Node3D` parameter rejects a previously-freed Object - so the probe
+  CRASHED at teardown (`Invalid type in function 'is_tracked' ... previously freed`) rather than
+  measuring. Fixed by counting tracked entries before and after the free, which observes the same drop
+  without naming the dead instance. The component was never at fault; this was the probe's own bug.
+- Same class as the earlier stale fixtures: an assertion written against an object's lifetime rather
+  than against the observable change.
+
+### Verification
+
+`ui_hud_probe_debug` **RESULT: ALL CHECKS PASSED (165)** - up from 142, the 23 new checks covering:
+the player is NOT tracked, no bar at rest, damage reveals, the fill width equals the owner's real
+health fraction (47.00 px measured against 47.00 px expected), the lock holds a bar past the damage
+window, releasing the lock lets it hide, hiding is counted exactly once, and a freed enemy's bar is
+dropped with it. The shipped `main.tscn` boots at 0 runtime and 0 debugger errors. NOT human-read:
+bar size, position, colour and whether the 4 s hold feels right are the user's call.

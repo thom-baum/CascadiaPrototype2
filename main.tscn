@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/ui/game_hud.gd" id="11_gamehud"]
 [ext_resource type="Script" path="res://scripts/ui/lock_on_indicator.gd" id="12_lockindicator"]
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="13_pausemenu"]
+[ext_resource type="Script" path="res://scripts/ui/enemy_health_bars.gd" id="14_enemybars"]
 
 [node name="Cascadia" type="Node3D" unique_id=58351916]
 
@@ -53,5 +54,8 @@ script = ExtResource("12_lockindicator")
 
 [node name="PauseMenu" type="CanvasLayer" parent="."]
 script = ExtResource("13_pausemenu")
+
+[node name="EnemyHealthBars" type="CanvasLayer" parent="."]
+script = ExtResource("14_enemybars")
 
 [node name="TestEnvironment" parent="." unique_id=10485837 instance=ExtResource("2_env")]

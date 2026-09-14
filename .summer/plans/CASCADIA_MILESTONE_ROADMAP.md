@@ -28,16 +28,23 @@ sections; this block is the entry point, not a replacement for them.
 
 ## Milestone status
 
-- **Highest accepted milestone: 12 - TARGET LOCK-ON.** ACCEPTED by the user 2026-09-14 after a MANUAL
-  PLAYTEST of the live game. The user's verdict: the lock-on "works fine". Full record: section 8P.
-  Milestone 11 (facing indicator) was the previous highest accepted, and its own record stands at 8O.15.
-- **Current active task: MILESTONE 13 - MINIMAL UI.** APPROVED by the user 2026-09-14 with the scope
-  record written into section 8Q BEFORE implementation per section 15, and now IMPLEMENTED AND
-  MEASURED: `ui_hud_probe_debug` reports `RESULT: ALL CHECKS PASSED (114)`, and the three existing
-  probes were re-run and pass. It is **NOT yet human-accepted**, so MILESTONE 12 remains the highest
-  ACCEPTED milestone until the user reads the HUD, the indicator, the pause and the save/load feedback.
+- **Highest accepted milestone: 13 - MINIMAL UI.** ACCEPTED by the user 2026-09-14 after a MANUAL
+  READ of the live game. The user's report: the UI pass "seems to have been implemented correctly",
+  "New Run works correctly", "save seems to be implemented correctly", and "the pause menu and debug
+  menu seem to be working fine". Full record: section 8Q. Milestone 12 (target lock-on) was the
+  previous highest accepted, accepted the same day on its own playtest; its record stands at 8P.
+- **Current active task: MILESTONE 14 - ENEMY HEALTH BARS.** Requested by the user 2026-09-14 as the
+  remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
+  implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
+  `RESULT: ALL CHECKS PASSED (165)` (up from 142), and the shipped `main.tscn` boots at 0 runtime and
+  0 debugger errors. It is **NOT yet human-read**: bar size, position, colour and whether the hold
+  feels right are the user's call, and the user has stated this is NOT a permanent HUD decision yet.
+- **The engagement rule is a STAND-IN, not a system.** "Engaged" today means damaged within 4 s or
+  currently locked. **No aggro, threat or deaggro system exists**, and enemy AI does not exist. The
+  single function `EnemyHealthBars.is_engaged()` is the recorded seam where enemy AI will be asked
+  instead. Do NOT describe the current rule as aggro, and do NOT build an aggro system here.
 - **Next milestone after this one: NOT selected and NOT approved.** The user's stated intended
-  direction after the UI pass is save/load presentation work, but it is NOT started and NOT approved.
+  direction after this pass is save/load presentation work, but it is NOT started and NOT approved.
   This file, its milestone index and its deferred list do NOT authorise anything merely by existing.
 - **The carried-over lock-on ORIENTATION tweak is DONE** (part of 8Q, implemented in
   `player_controller.gd`). The accepted M12 mechanics were not reopened: release paths, cycle order,
@@ -185,7 +192,8 @@ Evidence behind each row is in section 0.
 | - | Dodge movement authority (the recorded 8F pass) | 8F, 8N | IMPLEMENTED + MEASURED 2026-09-13 |
 | 11 | Readable player facing indicator | 8O | CLOSED 2026-09-13 - user visual acceptance |
 | 12 | Target lock-on (toggle, cycle, auto-release, camera framing) | 8P | ACCEPTED 2026-09-14 - user playtest; probe 78/78 |
-| 13 | Minimal UI pass (HUD, lock-on indicator, pause, save/load controls) | 8Q | IMPLEMENTED + MEASURED 2026-09-14 (probe 114/114); NOT human-accepted |
+| 13 | Minimal UI pass (HUD, lock-on indicator, pause, save/load controls) | 8Q | ACCEPTED 2026-09-14 - user read; probe 142/142 |
+| 14 | Enemy health bars (damage reveals, disengagement hides) | 8R | IMPLEMENTED + MEASURED 2026-09-14 (probe 165/165); NOT yet human-read |
 
 Delivered milestone sections 8N and 8O were appended at the END of the file, after section 16, so
 they do not follow numerical order. That is an ordering artifact, not a missing record.
@@ -6432,4 +6440,160 @@ depends on a re-run is not a pass. `RESULT: ALL CHECKS PASSED (78)` on the recor
 No settings, graphics, audio or key-rebinding menus; no title screen; no inventory; no animation, VFX
 or sound; no lock-on-relative dodge direction; no checkpoint or respawn work. The three existing debug
 overlays were NOT replaced - the new UI is separate and works with no debug mode.
+
+---
+
+## 8R. MILESTONE 14 - ENEMY HEALTH BAR (damage-revealed engagement feedback) (approved by the user 2026-09-14; roadmap written BEFORE implementation)
+
+### 8R.1 What the user asked for
+
+An enemy health bar for player feedback and combat tuning. It appears after that enemy is ATTACKED,
+remains visible while the enemy is ENGAGED, and disappears after deaggro / disengagement. The user's
+words: it is "the obvious remaining debug/player-feedback layer", and "as a debug feature, the simplest
+version is probably best: damage reveals the bar; combat engagement keeps it visible; deaggro hides it".
+
+It is explicitly NOT a permanent HUD decision yet. It exists so damage, enemy survivability and combat
+tuning are legible during testing.
+
+### 8R.2 THE DESIGN PROBLEM, STATED BEFORE ANY CODE: "ENGAGED" HAS NO OWNER
+
+Measured on disk this pass: this project has NO aggro, threat, engagement or deaggro system. The only
+occurrence of the word is `@export_group("Engagement")` on `EnemyAttacker`, and that group is that
+attacker's OWN attack ranges and cooldowns - not a shared aggro concept any other system can read.
+There is no `is_aggroed()`, no `in_combat`, no deaggro event, and enemy AI / pursuit is a DEFERRED
+milestone that does not exist.
+
+So "stays while engaged, hides on deaggro" cannot be implemented as written: there is nothing to ask.
+Quietly substituting a magic distance or timer and calling it aggro would be exactly the kind of
+unexplained stand-in this project's rules forbid.
+
+WHAT IS IMPLEMENTED INSTEAD - a STAND-IN with ONE owner, stated plainly in the code:
+
+1. DAMAGE REVEALS. The bar appears the moment that enemy takes damage, driven by that enemy's own
+   `HealthComponent.damaged` signal. Nothing watches the player's attack and nothing re-derives damage.
+2. IT IS HELD while EITHER real, existing condition is true: the enemy was damaged within
+   `hold_seconds`, OR the player CURRENTLY HOLDS A LOCK on it (`TargetingComponent`).
+3. IT HIDES when neither is true.
+
+`hold_seconds` is exported precisely because it is a FEEL value intended to be decided by testing.
+Lock-on counts as engagement because it is the only real, player-DECLARED "I am fighting this one"
+signal that exists today. It does NOT reveal an undamaged enemy - that is the separate "appear on
+lock-on" option in 8R.3, and it stays undecided.
+
+WHEN ENEMY AI ARRIVES, the aggro authority it creates is what should replace rule 2. The stand-in is
+shaped to be replaceable: `is_engaged()` is the single function that decides, and it is the one place
+an AI-owned aggro query will be called instead.
+
+### 8R.3 Options the user listed as LATER decisions - recorded, NOT decided, NOT built
+
+- Appear only after damage. THIS is what is built today.
+- Appear on lock-on (revealing an UNDAMAGED enemy). NOT built.
+- Stay while aggroed. NOT possible yet - there is no aggro.
+- Fade after a short period without interaction. Present only as a DURATION (`hold_seconds`); there is
+  no fade, tween or animation in this pass.
+- Remain permanently for bosses or minibosses. NOT built.
+- Show exact HP or a readable health state. Shows a BAR only, no numbers.
+
+### 8R.4 In scope
+
+- One new module drawing a bar over each TRACKED enemy.
+- Reveal on damage; hold and hide per 8R.2.
+- Health read from `HealthComponent`; lock read from `TargetingComponent`. The module owns NO health
+  value, no aggro state, no lock state - only the reveal timestamps and the Controls it draws.
+- Visible in the shipped game with no debug mode and NOT gated behind `debug_enabled`.
+
+### 8R.5 Explicitly OUT of scope (not built, not partially built)
+
+- No aggro / threat / deaggro system and no enemy AI. Nothing in this pass may become one.
+- No change to any enemy's behaviour, health, damage, rewards or attack state machine.
+- No change to combat timing, stamina, save/load, targeting rules, camera framing or the HUD.
+- No boss/miniboss permanent bars, no exact-HP numbers, no fade tween, no damage numbers.
+- No interaction with pause, the debug overlays or the New Run reset beyond READING health.
+
+### 8R.6 Acceptance criteria and evidence plan
+
+1. A bar appears for an enemy ONLY after that enemy takes damage.
+2. The bar is HELD while the damaged-within-`hold_seconds` rule is true.
+3. The bar EXPIRES when that window passes with no further damage and no lock.
+4. A LOCK on that enemy also holds its bar; with the damage window already expired, releasing the lock
+   hides the bar (this is the simple rule - there is no deaggro grace period, because there is no
+   deaggro owner yet, and this is the first thing to tune).
+5. The fill tracks the owner's REAL fraction, read fresh, including after a New Run restores the enemy
+   to full.
+6. READABILITY - bar size, position, colour and whether the hold feels right - is the USER's read. A
+   probe cannot grade it and must not be claimed to.
+
+Evidence: the existing `ui_hud_probe_debug` gains a phase; the shipped `main.tscn` is booted. The
+engagement rule is recorded as PARTIALLY VERIFIED BY CONSTRUCTION: what is measurable is that the bar
+obeys the rule above; what is NOT verifiable is whether that rule is the right FEEL, which needs enemy
+AI and a human read.
+
+### 8R.7 Milestone 14 - status
+
+**IMPLEMENTED AND MEASURED 2026-09-14. NOT YET HUMAN-READ - awaiting the user's look at bar size,
+position, colour, and whether the hold feels right.**
+
+#### What was built
+
+- `scripts/ui/enemy_health_bars.gd` (`class_name EnemyHealthBars`) - NEW. A `CanvasLayer` (its own
+  layer, 2: ABOVE the world, BELOW the debug overlays, so one F1 press still clears the debug layer
+  while this feedback stays visible in the plain game) that draws one small anchored bar per TRACKED
+  enemy. It owns NO health value and NO aggro state: the only things it holds are a reveal timestamp
+  per actor and the Controls it draws. Health is read fresh from `HealthComponent.health_fraction()`
+  every frame; the lock is read from `TargetingComponent`.
+- `main.tscn` - `EnemyHealthBars` instantiated as a sibling, live in the shipped game with no debug
+  mode and not gated behind `debug_enabled`.
+- `scripts/ui/enemy_health_bars.gd` also gained two READ-ONLY accessors for tooling:
+  `is_tracked(actor)` and `fill_width_of(actor)`, the latter returning the DRAWN pixel width so a probe
+  measures what is on screen rather than recomputing it.
+- `scripts/diagnostics/ui_hud_probe_debug.gd` - a new PHASE 7, 23 checks.
+
+#### The two rules, and where the seam is
+
+1. **REVEAL.** The enemy's OWN `HealthComponent.damaged` signal is what makes a bar appear. Nothing
+   watches the player's attack and nothing re-derives damage from a health difference - so a bar cannot
+   appear for damage that did not happen.
+2. **HOLD / HIDE.** One function, `is_engaged()`, is the single place that decides whether an enemy is
+   engaged. Today it is a STAND-IN with two clauses: damaged within `hold_seconds` (4.0 s, exported),
+   or currently locked (while `hold_while_locked`). **There is deliberately no deaggro grace period,
+   because there is no deaggro owner yet.** When enemy AI exists, `is_engaged()` is the seam where the
+   AI is asked instead of this stand-in - the call site does not move.
+
+The player is EXCLUDED from tracking on purpose: the player already has the HUD's own health bar, and
+this module is enemy feedback. The scan is deferred from `_ready()` because `HealthComponent._ready()`
+is what joins the damageable group, and this node precedes the actors in tree order.
+
+#### Measured evidence
+
+- `ui_hud_probe_debug`: **RESULT: ALL CHECKS PASSED (165)** - up from 142, so the 23 new checks all
+  pass. They cover: the module is live in the shipped scene; the arena's 5 enemies are TRACKED at boot
+  while ZERO bars show at rest (existing is not the same as being revealed); the player is NOT tracked;
+  damaging the PLAYER reveals no enemy bar; a tracked but undamaged enemy has no bar; real damage
+  through the damage chain REVEALS the bar and the reveal is counted; the drawn FILL WIDTH equals the
+  owner's own health fraction (47.00 px measured against 47.00 px expected); disengagement hides it
+  after the window with NO further damage, counted exactly once; a LOCKED enemy stays revealed PAST
+  the hold window while the lock is held; releasing the lock lets it hide again; the shipped
+  `hold_seconds` is restored; and the temporary enemy's bar is dropped when the actor is freed.
+- The shipped `main.tscn` boots with 0 runtime errors and 0 debugger errors.
+- The two `TARGET_CYCLE_*` script errors under scope `open_script_buffers` remain the KNOWN stale
+  open-buffer false positive.
+
+#### One probe defect found and fixed during this pass
+
+The probe's own teardown assertion CRASHED the run: it called `is_tracked(enemy)` AFTER
+`queue_free()`, and a freed instance cannot be passed to a typed `Node3D` parameter
+(`Invalid type in function 'is_tracked' ... previously freed`). The component was behaving correctly -
+it had already dropped the entry. The assertion now captures the tracked count BEFORE the free and
+asserts that it DECREASED, which measures the same thing without handing a freed object to a typed
+parameter. Every behavioural check in PHASE 7 passed on the first run; only this teardown check was
+ever wrong.
+
+#### Evidence vocabulary, applied honestly
+
+- The reveal, hold, expire and fill-tracking RULES are **CONFIRMED by deterministic probe measurement**.
+- The ENGAGEMENT RULE itself (4 s hold, lock extends it) is **PARTIALLY VERIFIED BY CONSTRUCTION**: it
+  is measurably obeyed, but whether a 4-second hold and a lock-extended reveal are the RIGHT FEEL is
+  **NOT YET VERIFIED** and cannot be until enemy AI exists and the user reads it.
+- Bar READABILITY - size, position, colour, legibility against the arena - is **NOT YET VERIFIED**.
+  A probe cannot grade it and is not claimed to.
 

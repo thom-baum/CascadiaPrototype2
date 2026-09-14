@@ -123,6 +123,7 @@ func _run() -> void:
 	await _phase_pause()
 	await _phase_save_and_load()
 	await _phase_new_run()
+	await _phase_enemy_health_bars()
 	await _phase_cleanup()
 	_report()
 
@@ -658,6 +659,136 @@ func _enemy_is_defeated(actor: Node3D) -> bool:
 	if d == null or not d.has_method("is_defeated"):
 		return false
 	return bool(d.call("is_defeated"))
+
+
+# --- Phase 7: enemy health bars ----------------------------------------------
+
+## DAMAGE REVEALS, ENGAGEMENT HOLDS, DISENGAGEMENT HIDES.
+##
+## The engagement rule is a documented STAND-IN (roadmap 8R): no aggro system exists yet, so "engaged"
+## today means "damaged within hold_seconds, or currently locked". This asserts the rule AS DEFINED and
+## does not claim the bar follows real aggro.
+func _phase_enemy_health_bars() -> void:
+	_say("[UIHUD] --- PHASE 7: the enemy health bar (damage reveals, disengagement hides) ---")
+
+	var bars := get_tree().get_first_node_in_group(EnemyHealthBars.GROUP_ENEMY_HEALTH_BARS) \
+		as EnemyHealthBars
+	_expect(bars != null, "the enemy health bar module is LIVE in the shipped scene")
+	if bars == null:
+		return
+
+	# A SHORT WINDOW FOR THE MEASUREMENT, so the probe measures the RULE instead of idling for seconds.
+	# Restored before the phase ends, and the restoration is asserted.
+	var real_hold := bars.hold_seconds
+	bars.hold_seconds = 0.4
+
+	# THE AT-REST CHECK NEEDS THE HOLD WINDOWS EXPIRED, and that is a measurement-integrity step, not
+	# tidiness: phase 6 damages a REAL arena enemy, and that damage legitimately reveals its bar. So
+	# asserting "nothing is showing" right here would be asserting that a reveal did NOT happen.
+	await _wait_seconds(bars.hold_seconds + 0.4)
+	_expect(bars.tracked_count() > 0,
+		"the arena's enemies are TRACKED at boot (%d)" % bars.tracked_count())
+	_expect(bars.visible_count() == 0,
+		"NO bar is shown at rest - existing is not the same as being revealed (%d)"
+			% bars.visible_count())
+
+	# THE PLAYER IS NOT AN ENEMY. The player has the HUD's own bar; this module is enemy feedback.
+	_expect(not bars.is_tracked(_player), "the PLAYER is not tracked by the enemy bar module")
+	var player_event := DamageEvent.new()
+	player_event.amount = DAMAGE_AMOUNT
+	player_event.source = _player
+	_health.apply_damage(player_event)
+	await _wait_seconds(bars.hold_seconds + 0.4)
+	_expect(bars.visible_count() == 0,
+		"damaging the PLAYER reveals no enemy bar (%d)" % bars.visible_count())
+	_health.reset()
+	await _wait(STATE_FRAMES)
+
+	# A THROWAWAY ENEMY, so no arena actor is touched by the measurement itself.
+	var enemy := _spawn_target("ProbeTarget_HealthBar")
+	_expect(enemy != null, "a temporary enemy was created for the health-bar checks")
+	if enemy == null:
+		bars.hold_seconds = real_hold
+		return
+	await _wait(STATE_FRAMES)
+	bars.rescan()
+	await _wait(STATE_FRAMES)
+
+	var enemy_health := enemy.get_node_or_null("Health") as HealthComponent
+	_expect(enemy_health != null, "the temporary enemy carries a HealthComponent")
+	if enemy_health == null:
+		bars.hold_seconds = real_hold
+		_destroy(enemy)
+		return
+	_expect(bars.is_tracked(enemy), "the temporary enemy is tracked")
+	_expect(not bars.is_showing(enemy),
+		"it has NO bar before it is damaged - being tracked is not enough")
+
+	# 1. DAMAGE REVEALS.
+	var to_half := maxf(1.0, enemy_health.current_health - (enemy_health.max_health * 0.5))
+	_expect(_apply_damage(enemy, to_half),
+		"the temporary enemy took real damage through the damage chain")
+	await _wait(STATE_FRAMES)
+	_expect(bars.is_showing(enemy), "DAMAGE REVEALS the bar")
+	_expect(bars.reveals > 0, "and the reveal was counted (%d)" % bars.reveals)
+
+	# 2. THE FILL IS THE OWNER'S OWN HEALTH FRACTION, read back from the drawn bar.
+	var expected_fill := (bars.bar_width - 2.0) * clampf(enemy_health.health_fraction(), 0.0, 1.0)
+	_expect(absf(bars.fill_width_of(enemy) - expected_fill) < 1.0,
+		"the fill width IS the owner's health fraction (%.2f px, expected %.2f px)"
+			% [bars.fill_width_of(enemy), expected_fill])
+
+	# 3. DISENGAGEMENT HIDES, once the hold window passes with no further damage.
+	var hides_before := bars.hides
+	await _wait_seconds(bars.hold_seconds + 0.4)
+	_expect(not bars.is_showing(enemy),
+		"DISENGAGEMENT hides it (no damage for %.1f s)" % bars.hold_seconds)
+	_expect(bars.hides == hides_before + 1,
+		"and the hide was counted exactly once (%d -> %d)" % [hides_before, bars.hides])
+
+	# 4. A LOCKED TARGET STAYS REVEALED WHILE THE LOCK IS HELD.
+	_expect(await _lock_onto(enemy), "the temporary enemy was locked for the hold check")
+	_expect(_targeting.is_locked(), "a lock is genuinely held")
+	await _wait_seconds(bars.hold_seconds + 0.4)
+	_expect(bars.is_showing(enemy),
+		"a LOCKED target stays revealed past the hold window while the lock is held")
+
+	# 5. RELEASING THE LOCK LETS IT HIDE AGAIN.
+	_targeting.release()
+	await _wait_seconds(bars.hold_seconds + 0.4)
+	_expect(not bars.is_showing(enemy), "releasing the lock lets the bar hide again")
+
+	# Leave the module as it was found.
+	bars.hold_seconds = real_hold
+	_expect(is_equal_approx(bars.hold_seconds, real_hold),
+		"the shipped hold window was restored (%.1f s)" % bars.hold_seconds)
+	# The count is taken BEFORE the free on purpose: a freed instance cannot be passed to a typed
+	# `Node3D` parameter, so asserting on the actor itself here would crash the probe rather than
+	# measure anything. The DROP is what matters, and the count is how it is observed.
+	var tracked_before_destroy := bars.tracked_count()
+	_expect(tracked_before_destroy > 0,
+		"the module is still tracking enemies before the teardown (%d)" % tracked_before_destroy)
+	_destroy(enemy)
+	await _wait(STATE_FRAMES + 2)
+	_expect(bars.tracked_count() < tracked_before_destroy,
+		"the temporary enemy's bar was dropped with it (%d -> %d)"
+			% [tracked_before_destroy, bars.tracked_count()])
+	_expect(bars.visible_count() == 0,
+		"no bar is left showing at the end of the phase (%d)" % bars.visible_count())
+
+
+## Apply a NON-LETHAL amount of real damage through the damage chain. The probe's own lethal helper
+## exists for the death paths; this is for a measurement that needs the actor to survive.
+func _apply_damage(actor: Node3D, amount: float) -> bool:
+	if actor == null or not is_instance_valid(actor):
+		return false
+	var health := actor.get_node_or_null("Health") as HealthComponent
+	if health == null:
+		return false
+	var event := DamageEvent.new()
+	event.amount = amount
+	event.source = _player
+	return health.apply_damage(event)
 
 
 func _phase_cleanup() -> void:

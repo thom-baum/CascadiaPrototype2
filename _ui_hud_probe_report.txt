@@ -73,7 +73,7 @@
 [s167] [UIHUD]   PASS  PAUSED: and it went through the GameStateSave service (saves 0 -> 1)
 [s170] [UIHUD]   PASS  the panel's Resume button cleared the pause
 [s170] [UIHUD]   PASS  and hid the panel
-[s242] [UIHUD]   PASS  RESUMED: the same gameplay value advances again (10.0 -> 19.8)
+[s242] [UIHUD]   PASS  RESUMED: the same gameplay value advances again (10.0 -> 19.9)
 [s242] [UIHUD]   PASS  exactly one pause panel node exists (1)
 [s242] [UIHUD]   PASS  cycle 1: open paused the game
 [s242] [UIHUD]   PASS  cycle 1: still exactly one panel
@@ -131,19 +131,43 @@
 [s289] [UIHUD]   PASS  NEW RUN: the HUD shows the reset health (HEALTH  100 / 100)
 [s289] [UIHUD]   PASS  NEW RUN: the HUD shows the reset stamina (STAMINA  100 / 100)
 [s289] [UIHUD]   PASS  NEW RUN: the tree is not left paused
-[s292] [UIHUD]   PASS  no lock is left held
-[s292] [UIHUD]   PASS  no indicator is left visible
-[s295] [UIHUD]   PASS  no pause is left applied
-[s295] [UIHUD]   PASS  no pause panel is left visible
-[s298] [UIHUD]   PASS  the carried balance is back at 0 - no Credits were minted
-[s298] [UIHUD]   PASS  and the HUD followed it back (CREDITS  0)
-[s301] [UIHUD]   PASS  the player is alive at the end of the probe
-[s301] [UIHUD]   PASS  the player's health is back at 100.0 (now 100.0)
-[s301] [UIHUD]   PASS  the player's stamina is back at 100.0 (now 100.0)
-[s301] [UIHUD]   PASS  the player is back where it started
-[s306] [UIHUD]   PASS  every probe target was freed ([])
-[s306] [UIHUD]   PASS  no ARENA actor was damaged or defeated by this probe ([])
-[s306] [UIHUD]   PASS  the economy is at the fresh-run baseline after New Run (awards 0 -> 0)
-[s306] [UIHUD]   PASS  and the carried balance is the documented starting value (0)
-[s306] [UIHUD]   PASS  the arena's own targets are still usable
-[s306] [UIHUD] RESULT: ALL CHECKS PASSED (142)
+[s289] [UIHUD] --- PHASE 7: the enemy health bar (damage reveals, disengagement hides) ---
+[s289] [UIHUD]   PASS  the enemy health bar module is LIVE in the shipped scene
+[s337] [UIHUD]   PASS  the arena's enemies are TRACKED at boot (5)
+[s337] [UIHUD]   PASS  NO bar is shown at rest - existing is not the same as being revealed (0)
+[s337] [UIHUD]   PASS  the PLAYER is not tracked by the enemy bar module
+[s385] [UIHUD]   PASS  damaging the PLAYER reveals no enemy bar (0)
+[s388] [UIHUD]   PASS  a temporary enemy was created for the health-bar checks
+[s394] [UIHUD]   PASS  the temporary enemy carries a HealthComponent
+[s394] [UIHUD]   PASS  the temporary enemy is tracked
+[s394] [UIHUD]   PASS  it has NO bar before it is damaged - being tracked is not enough
+[s394] [UIHUD]   PASS  the temporary enemy took real damage through the damage chain
+[s397] [UIHUD]   PASS  DAMAGE REVEALS the bar
+[s397] [UIHUD]   PASS  and the reveal was counted (3)
+[s397] [UIHUD]   PASS  the fill width IS the owner's health fraction (47.00 px, expected 47.00 px)
+[s445] [UIHUD]   PASS  DISENGAGEMENT hides it (no damage for 0.4 s)
+[s445] [UIHUD]   PASS  and the hide was counted exactly once (2 -> 3)
+[s452] [UIHUD]   PASS  the temporary enemy was locked for the hold check
+[s452] [UIHUD]   PASS  a lock is genuinely held
+[s500] [UIHUD]   PASS  a LOCKED target stays revealed past the hold window while the lock is held
+[s548] [UIHUD]   PASS  releasing the lock lets the bar hide again
+[s548] [UIHUD]   PASS  the shipped hold window was restored (4.0 s)
+[s548] [UIHUD]   PASS  the module is still tracking enemies before the teardown (6)
+[s553] [UIHUD]   PASS  the temporary enemy's bar was dropped with it (6 -> 5)
+[s553] [UIHUD]   PASS  no bar is left showing at the end of the phase (0)
+[s556] [UIHUD]   PASS  no lock is left held
+[s556] [UIHUD]   PASS  no indicator is left visible
+[s559] [UIHUD]   PASS  no pause is left applied
+[s559] [UIHUD]   PASS  no pause panel is left visible
+[s562] [UIHUD]   PASS  the carried balance is back at 0 - no Credits were minted
+[s562] [UIHUD]   PASS  and the HUD followed it back (CREDITS  0)
+[s565] [UIHUD]   PASS  the player is alive at the end of the probe
+[s565] [UIHUD]   PASS  the player's health is back at 100.0 (now 100.0)
+[s565] [UIHUD]   PASS  the player's stamina is back at 100.0 (now 100.0)
+[s565] [UIHUD]   PASS  the player is back where it started
+[s570] [UIHUD]   PASS  every probe target was freed ([])
+[s570] [UIHUD]   PASS  no ARENA actor was damaged or defeated by this probe ([])
+[s570] [UIHUD]   PASS  the economy is at the fresh-run baseline after New Run (awards 0 -> 0)
+[s570] [UIHUD]   PASS  and the carried balance is the documented starting value (0)
+[s570] [UIHUD]   PASS  the arena's own targets are still usable
+[s570] [UIHUD] RESULT: ALL CHECKS PASSED (165)

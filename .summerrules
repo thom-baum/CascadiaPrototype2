@@ -107,3 +107,11 @@ Persistent project decisions. Append new rules; do not rewrite existing ones.
 - The camera yaws to frame the locked target on the shortest arc and NEVER writes pitch; roll stays zero by construction. The rig only READS lock state.
 - Lock-on-RELATIVE dodge direction is still NOT implemented. Dodge stays camera-relative; that is a separate deferred pass.
 - `EnemyAttacker.target_group` is the ENEMY targeting the PLAYER - a different concern. Never conflate it with player lock-on.
+
+## Enemy health bars (recorded 2026-09-14, Milestone 14)
+
+- The enemy health bar is a DEBUG / PLAYER-FEEDBACK layer, NOT a permanent HUD decision. The user explicitly deferred the feel: whether it should appear only on damage, on lock-on, stay while aggroed, fade, or become permanent for bosses is a later call made with enemy AI in hand.
+- Rule today: an enemy's OWN `damaged` signal reveals its bar, it is held for `hold_seconds` (4.0 s) or while that enemy is the locked target, and it hides when neither is true.
+- **NO aggro, threat or deaggro system exists.** "Engaged" is a STAND-IN meaning "damaged recently or currently locked". `EnemyHealthBars.is_engaged()` is the single recorded seam where enemy AI will be asked instead. Never describe the current rule as aggro, and never build an aggro system as part of bar work.
+- The bar READS `HealthComponent.health_fraction()` and `TargetingComponent.get_current_target()` and owns neither. It must never store a health copy or a lock copy.
+- The PLAYER is never tracked by this module: the HUD already draws the player's health, and a second floating bar would be a duplicate authority.
