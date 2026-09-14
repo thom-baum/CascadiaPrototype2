@@ -298,6 +298,24 @@ func get_look_delta() -> Vector2:
 	return delta
 
 
+## The look delta WITHOUT consuming it, for a display-only reader.
+##
+## WHY THIS EXISTS - the defect it fixes, and it was a real one. `get_look_delta()` deliberately
+## CONSUMES the delta so that exactly ONE gameplay consumer per frame can spend it. A diagnostic that
+## calls it is therefore not a passive reader at all: it BECOMES the consumer, and whoever runs later
+## in the frame reads ZERO. MEASURED: `InputDebugOverlay` is a CanvasLayer sibling ordered BEFORE the
+## world in `main.tscn`, so its per-frame display read consumed the motion every single frame and
+## `ThirdPersonCamera` never turned - mouse look was dead while movement, attacks and dodge all worked.
+##
+## Read-only by contract: this may be used to DISPLAY the pending delta and must never be used to move
+## anything, because two readers of the same unconsumed value is exactly the ambiguity the consuming
+## accessor exists to prevent.
+func peek_look_delta() -> Vector2:
+	if not is_input_active():
+		return Vector2.ZERO
+	return _look_accum
+
+
 ## Resolved sprint state: keyboard sprint key OR controller Circle hold.
 func is_sprinting() -> bool:
 	return _sprint_active and is_input_active()

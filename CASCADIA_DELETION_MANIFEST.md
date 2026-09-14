@@ -3101,3 +3101,74 @@ in the normal process mode. Transcript `res://_focus_probe_report.txt`.
 - The lint FALSE POSITIVE `mouse-capture-must-release` on every probe that sets `Input.mouse_mode`: the
   Escape release lives in `CascadiaInput`, which each probe scene provides. Not a real trap.
 - `F8` / `F9` remain HOST-OWNED in this engine host and stay unusable as load keys (M10.6). Unchanged.
+
+---
+
+## Candidate: scripts/diagnostics/mouse_look_routing_probe_debug.gd (+ .uid)
+
+Status: Temporary diagnostic, retained
+
+Reason:
+Built to localise ONE defect: injected mouse motion did not turn the camera while movement, attacks,
+dodge, stamina and focus handling all worked. It measures each link separately (arrival, delivery,
+accumulation, a direct control call into the layer, and the end-to-end yaw change) instead of a single
+yaw reading, so it can say WHERE motion dies and not only that it did. It is the probe that proved the
+look delta was accumulated by `CascadiaInput` and then consumed by a display reader before the camera
+could spend it.
+
+Replacement:
+None. It is a targeted diagnostic, not a placeholder for production code.
+
+Used By:
+`res://scenes/diagnostics/mouse_look_routing_probe_debug.tscn`, which instances `res://main.tscn` the
+same way every other probe does. Registered here at the moment of creation, per the hygiene rule.
+
+Safe To Delete:
+Yes, once the mouse-look routing is stable and covered by the focus probe's own look checks.
+
+Date Flagged:
+2026-09-13
+
+Notes:
+Writes its transcript to `res://_mouse_look_report.txt` (also a cleanup candidate; it is a durable
+transcript under the same convention as `_focus_probe_report.txt`). It restores
+`Input.use_accumulated_input` and the camera rig's process mode before the run ends. Carries the
+`mouse-capture-must-release` lint warning, which is the SAME documented false positive as every other
+probe here: the Escape release lives in `CascadiaInput`, which the probe scene provides.
+
+---
+
+## Recurring: stale open-buffer linter false positive (UNCHANGED, fifth confirmation)
+
+Status: Known false positive, do NOT "fix" by editing the named files
+
+Reason:
+The diagnostics panel still reports 20 phantom `Identifier "CreditLedger" not declared` errors in
+`combat_debug_overlay.gd` and `credit_economy_probe_debug.gd` under scope `open_script_buffers`, while
+per-file `state:script-errors` returns 0 for EVERY file involved and both scripts run and print in
+full. Re-confirmed 2026-09-13 during M10.8.
+
+Safe To Delete:
+Nothing to delete. Judge the affected files by a RUN or a per-file query, never by the open-tab linter.
+
+Date Flagged:
+2026-09-12 (re-confirmed 2026-09-13)
+
+---
+
+## Recurring: `mouse-capture-must-release` lint false positive (UNCHANGED)
+
+Status: Known false positive
+
+Reason:
+Reported on every script that sets `Input.mouse_mode`, and on `input_debug_overlay.gd` again during
+M10.8 when its look read was changed. The Escape release is implemented ONCE, in `CascadiaInput`, which
+every probe scene and the main scene provide. The affected scripts are display-only and set no mouse
+mode of their own; the warning is emitted for the file because it references the mouse mode for
+reporting.
+
+Safe To Delete:
+Nothing to delete. Not a real trap.
+
+Date Flagged:
+2026-09-13

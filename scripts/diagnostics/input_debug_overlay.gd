@@ -52,7 +52,10 @@ func _process(_delta: float) -> void:
 		return
 
 	var move := input.get_move_vector()
-	var look := input.get_look_delta()
+	# `peek_look_delta()`, NOT `get_look_delta()`. This overlay is a CanvasLayer ordered BEFORE the
+	# world in `main.tscn`, so consuming the delta here made the DISPLAY the only consumer and the
+	# camera always read ZERO - mouse look was dead while movement, attacks and dodge all worked.
+	var look := input.peek_look_delta()
 	_header_move.text = "move (%.2f, %.2f)   look (%.1f, %.1f)" % [move.x, move.y, look.x, look.y]
 	# The LIVE engine state and the focus gate, side by side, so a focus change is readable while it
 	# happens instead of being inferred from the camera. `mouse_look_enabled` is still gameplay's

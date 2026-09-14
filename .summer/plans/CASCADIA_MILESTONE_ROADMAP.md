@@ -6,8 +6,21 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-12 (MILESTONE 10 IMPLEMENTED AND MEASURED - Game-State Saving and Loading
-Foundation; roadmap written BEFORE implementation)
+Last updated: 2026-09-13 (M10.8 - THE ARENA WAS NOT IN THE MAIN SCENE, AND THE DEBUG OVERLAY WAS
+EATING MOUSE LOOK. Two defects, both MEASURED, both fixed. (1) `res://main.tscn` contained no
+`TestEnvironment` instance at all: the Play button booted an EMPTY VOID with no player, no camera, no
+world and a combat readout that itself said `no PlayerCombat in scene`. Every probe scene builds its
+own world by instancing `main.tscn`, so the whole probe suite kept passing while the SHIPPED game had
+no world in it - the probe scenes supplied the very thing the main scene was missing. (2)
+`InputDebugOverlay._process` called the CONSUMING `get_look_delta()`, and that CanvasLayer is ordered
+BEFORE `TestEnvironment` in the main scene, so the diagnostic consumed the look delta every single
+frame and `ThirdPersonCamera` always read ZERO - mouse look was dead while movement, attacks, dodge,
+stamina and focus handling all worked. This is the actual cause of the "camera does not turn" reports
+that the three earlier focus passes (8M.21, 8M.21a, 8M.21b) were chasing. Mouse look now measures
+63.8254 deg where it measured 0.0000 deg, and `focus_input_routing_probe_debug` reports
+`RESULT: ALL CHECKS PASSED`. See 8M.22.)
+Previous: MILESTONE 10 IMPLEMENTED AND MEASURED - Game-State Saving and Loading Foundation;
+roadmap written BEFORE implementation)
 Updated by: Milestone 10 implementation pass. The user ACCEPTED Milestone 9 (carried Credits measured
 and verified: 5 eligible enemies, 500 Credits, 5 awards, duplicate prevention, player and non-mortal
 exclusions counted by cause) and SELECTED Milestone 10 as the next goal. Milestone 9's history,
@@ -4609,3 +4622,89 @@ mode.
 - Whether a host that keeps REFUSING both requests indefinitely can be fully recovered: the settle
   window bounds our asking, and the click path remains the documented manual escape.
 - Not re-measured this pass: quicksave, the debug panels, and the deletion-manifest hygiene entries.
+
+---
+
+### 8M.22 M10.8 - THE SHIPPED GAME HAD NO WORLD, AND THE DEBUG OVERLAY ATE MOUSE LOOK (2026-09-13)
+
+This pass was opened as "make the game window and mouse capture behave correctly". The previous three
+passes (8M.21, 8M.21a, 8M.21b) had all worked on the FOCUS handling and all measured ALL CHECKS
+PASSED, while the user kept reporting that control did not come back. The user's framing was not
+accepted at face value, and the first thing done was to RUN THE SHIPPED GAME rather than a probe.
+
+#### Root cause 1 - the main scene contained no world at all (the bigger defect)
+
+`res://main.tscn` held only `CascadiaInput`, the four debug CanvasLayers, `HitFeedback`,
+`CreditLedger`, `GameStateSave` and `SaveLoadControls`. It contained NO `TestEnvironment` instance, so
+pressing Play booted an empty void. The captured frame showed exactly that: a blank viewport, the
+input readout, the save/load panel, and the combat overlay reporting `phase: no PlayerCombat in scene`
+with an empty DAMAGEABLE ACTORS list.
+
+WHY EVERY PROBE STILL PASSED, and this is the trap. Every probe scene in `res://scenes/diagnostics/`
+instances `main.tscn` as its own world and adds a probe node next to it, and every probe and the save
+system resolve the arena at `TestEnvironment/...` under that root. So the probe scenes SUPPLIED the
+world that the main scene was missing, and the suite measured a composition the shipped game did not
+have. `main_scene` pointed at `res://main.tscn` the whole time; the defect was in the scene's
+CONTENTS, not the setting.
+
+FIX - the `TestEnvironment` instance was added back to `main.tscn` (the intended composition: input
+layer, debug layers, ledger, save, save/load controls, and the world). Nothing else in the main scene
+was changed. `scenes/test_environment.tscn` itself was NOT modified, and it was already tracked in
+git - it was present on disk and simply not instanced by the main scene.
+
+#### Root cause 2 - the diagnostic overlay was consuming the mouse look every frame
+
+MEASURED, link by link, with a purpose-built probe (`mouse_look_routing_probe_debug`):
+
+    ARRIVAL:  the injected motion ARRIVED with real content - relative=(290.1154, 0.0)
+    LAYER:    raw_mouse=(0.0, 0.0)  raw_look=(290.1154, 0.0)  ->  the layer DID accumulate it
+    END:      camera turned 0.0000 deg
+
+The motion reached the input layer and the layer accumulated it - and the camera still never moved. The
+delta was being spent by something else first. `get_look_delta()` is documented as CONSUMING the delta
+so that exactly one consumer per frame can spend it, and a grep for its callers found a SECOND one:
+`InputDebugOverlay._process` (a DISPLAY read). That CanvasLayer is ordered BEFORE `TestEnvironment` in
+`main.tscn`, so its per-frame display read consumed the motion every frame and the camera - running
+later in the same frame - always read ZERO.
+
+This is why the symptom discriminated the systems so cleanly, and why the previous passes were aimed at
+the wrong layer: mouse look was the ONLY consumer whose value could be consumed by a bystander, so
+camera rotation died while movement, attacks, dodge, stamina and focus handling all kept working.
+
+FIX - `CascadiaInput.peek_look_delta()` was added: a READ-ONLY accessor that returns the pending delta
+WITHOUT consuming it, with its contract documented (display only; never a second mover). `input_debug_overlay.gd`
+now uses it. `get_look_delta()` keeps its single consumer (`ThirdPersonCamera`) and its consuming
+contract unchanged. `buffer_time()`, `is_action_held()` and `is_action_pressed_now()` were checked for
+the same defect and are all pure/heap reads - `get_look_delta()` was the only consuming accessor, so
+there is no sibling of this bug left behind.
+
+#### Measured results
+
+- `mouse_look_routing_probe_debug` - RESULT: ALL CHECKS PASSED, 0 debugger errors. Delivery OK on
+  every entry point (`Input.parse_input_event` with accumulated input on and off, and
+  `Viewport.push_input`), a DIRECT call into the layer's `_unhandled_input` as the control, and
+  `END TO END: the camera TURNS for injected motion (63.8254 deg)` where it measured 0.0000 deg.
+- `focus_input_routing_probe_debug` - RESULT: ALL CHECKS PASSED (was `2 FAILED` before this pass, both
+  failures being the look checks). `PHASE 1: mouse look works while focused` and `REFOCUSED: mouse look
+  works again` both report yaw changed 63.8254 deg. Every focus, capture, staleness and
+  debug-panel check still passes unchanged. Transcript `res://_focus_probe_report.txt`.
+- Shipped game (`res://main.tscn`): boots with the arena rendering, the player capsule under the
+  third-person camera, and the combat overlay reporting `phase IDLE`, `player 100/100`, `stamina
+  100/100` and all five damageable actors alive and targetable. Rendered frame read by eye.
+
+#### Newly confirmed
+
+- The shipped main scene now contains a playable world, and mouse look reaches the camera from injected
+  motion through the real input pipeline (63.8254 deg).
+
+#### Newly unverified / still open
+
+- The PHYSICAL mouse and a real Alt-Tab remain unproven by this environment, exactly as 8M.21b recorded.
+  The recovery PATH is measured; an OS-level pointer-lock drop and a genuine window unfocus cannot be
+  held here. The user's hands-on playtest is the proof of that half.
+- NOT re-measured this pass: quicksave, the other debug panels, the InputMap host-key entries, and the
+  combat probes. No change was made to any of them.
+- The stale open-buffer linter defect (`Identifier "CreditLedger" not declared`, 20 phantom errors in
+  `combat_debug_overlay.gd` and `credit_economy_probe_debug.gd`) is UNCHANGED and still a false
+  positive: per-file `state:script-errors` returns 0 for both files and both scripts run. Judge it by a
+  run or a per-file query, never by the open-tab linter.

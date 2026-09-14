@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bfbf3uq4w4kmk"]
 
 [ext_resource type="Script" uid="uid://camntx7bvwg6y" path="res://scripts/input/cascadia_input.gd" id="1_input"]
+[ext_resource type="PackedScene" uid="uid://df8ea1miy4a5l" path="res://scenes/test_environment.tscn" id="2_env"]
 [ext_resource type="Script" uid="uid://bil8eo050seek" path="res://scripts/diagnostics/input_debug_overlay.gd" id="3_overlay"]
 [ext_resource type="Script" uid="uid://be3ovofi6o707" path="res://scripts/diagnostics/hit_feedback_debug.gd" id="5_7mycd"]
 [ext_resource type="Script" uid="uid://dsl3ib46tw8o0" path="res://scripts/diagnostics/combat_debug_overlay.gd" id="5_lquwl"]
@@ -36,3 +37,5 @@ debug_logging = true
 
 [node name="SaveLoadControls" type="CanvasLayer" parent="." unique_id=1866228881]
 script = ExtResource("9_4c57u")
+
+[node name="TestEnvironment" parent="." unique_id=10485837 instance=ExtResource("2_env")]
