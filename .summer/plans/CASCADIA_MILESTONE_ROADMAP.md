@@ -6,7 +6,17 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (8F IMPLEMENTED - DODGE MOVEMENT AUTHORITY. The recorded future pass in section
+Last updated: 2026-09-13 (NEXT MILESTONE PROPOSED, NOT APPROVED - THE MISSING FACING INDICATOR. NO
+IMPLEMENTATION WAS PERFORMED THIS PASS. Two things are recorded. First, the user's HAND-CONFIRMATION of
+the corrected dodge/backstep orientation is now on file: the evasion uses the player's last movement
+orientation and keeps that orientation committed for the whole evasion. That CLOSES the gameplay half of
+the 8G.2 backstep defect; it is the user's own playtest report, and no probe was re-run for it. Second,
+the remaining half is PRESENTATION and is still open - the capsule has no readable front-facing
+indicator, so the correction cannot yet be judged by eye. Section 8O now holds a narrow, PROPOSED, NOT
+APPROVED milestone to close exactly that gap, with one finding that shapes it: the third-person camera
+sits BEHIND the actor, so a marker on the capsule's front face is occluded by the capsule itself and
+cannot be the only indicator. Current active task remains NONE; Milestone 11 is NOT selected. See 8O.)
+Previous: 2026-09-13 (8F IMPLEMENTED - DODGE MOVEMENT AUTHORITY. The recorded future pass in section
 8F was the sensible next task: it was the last open gameplay defect a HUMAN had actually confirmed in
 play (the backstep turning the body around), and it was written up and scoped long before this session,
 so it is roadmap work rather than an invented milestone. IMPLEMENTED: during a COMMITTED evasion the
@@ -289,9 +299,11 @@ plus the deletion manifest.
   evasion owns the body, and the evasion's residual burst velocity is cleared on the handoff frame so
   ordinary facing cannot be dragged backwards by it. MEASURED: `dodge_authority_probe_debug` ALL CHECKS
   PASSED, 80-line transcript on disk, 0 debugger errors; `step_probe_debug` re-run clean.
-  **This closes the GAMEPLAY half of the 8G.2 backstep defect. The OTHER half - the capsule having no
-  front-facing marker, so the fix cannot be judged by eye - is a PRESENTATION item and is STILL OPEN.**
-  See section 8N.
+  **This closes the GAMEPLAY half of the 8G.2 backstep defect, and the USER HAS SINCE CONFIRMED IT BY
+  HAND**: the corrected evasion uses the player's last movement orientation and keeps that orientation
+  committed for the whole evasion. The OTHER half - the capsule having no front-facing marker, so the fix
+  cannot be judged by eye - is a PRESENTATION item and is STILL OPEN. **A narrow proposal to close it
+  exists in section 8O: PROPOSED, NOT APPROVED, NOT IMPLEMENTED.** See sections 8N and 8O.
 - **Current active task: NONE.** Milestone 10 is complete and measured, and the 8F authority pass is
   now implemented and measured. No further work is authorised; Milestone 11 is NOT selected and must be
   named and approved before anything begins.
@@ -5089,8 +5101,13 @@ Regression controls re-run in the same pass:
 - The facing INDICATOR the user asked for is NOT built. The correction is therefore still judged by
   numbers and by the camera, not by an eye-readable marker on the capsule - the parameterisation gap
   8G.2 item 2 named is only half closed.
-- The corrected backstep has NOT been re-played by hand. Probes confirm the numbers; only the user can
-  confirm how it now reads in motion.
+- RESOLVED AFTER THIS PASS (2026-09-13): the corrected dodge/backstep orientation HAS been confirmed BY
+  HAND. The user reports that the evasion uses the player's last movement orientation and keeps that
+  orientation committed during the evasion - exactly the behaviour 8F set out to produce. RECORDED AS
+  THE USER'S OWN PLAYTEST REPORT: no probe was re-run to restate it, and every measured number above is
+  unchanged. This closes the GAMEPLAY half of the 8G.2 backstep defect.
+- STILL OPEN, and the reason section 8O exists: the facing INDICATOR itself. The correction is confirmed
+  in the hand, but it is still judged by the camera rather than by an eye-readable marker on the capsule.
 - Physical Alt-Tab / OS pointer-lock behaviour remains unproven in this host, unchanged from 8M.24.
 - Not re-measured this pass: the save/load probes, the other debug panels, and the combat probes. No
   change was made to any of them.
@@ -5117,3 +5134,153 @@ Recorded because each would mislead a future session:
    tap, so the body is already walking when the evasion starts; counting that approach reported
    1.9150 m against an authored 1.6875 m. The measurement is now anchored to the evasion's OWN first
    frame, which is why AC2 reads 1.6875 m exactly.
+
+---
+
+## 8O. NEXT MILESTONE PROPOSAL - READABLE PLAYER FACING INDICATOR
+
+STATUS: **PROPOSED. NOT APPROVED. NOT IMPLEMENTED.** Written 2026-09-13.
+
+This section is a PROPOSAL ONLY. It authorises nothing. `Current active task` in section 0 remains
+**NONE**, and Milestone 11 is **NOT selected**. No gameplay, presentation or scene file was changed to
+create this section - the whole of this pass is documentation.
+
+### 8O.1 The problem this would solve
+
+The 8F pass corrected the evasion's orientation: during a committed dodge or backstep the body now holds
+the facing it had when the evasion began, instead of re-deriving it from its own burst velocity
+(section 8N). The user has confirmed that by hand - the evasion uses the last movement orientation and
+keeps it committed.
+
+What is STILL missing is the ability to SEE it. The player body is a plain pale capsule
+(`Player/Mesh`, a `CapsuleMesh` with `Mat_player`, albedo roughly 0.88 white). A capsule is rotationally
+symmetric about its vertical axis, so it looks IDENTICAL at every yaw. The user cannot tell, by eye,
+which way the actor is facing at any moment - and therefore cannot visually confirm the very correction
+that was just made. This is the parameterisation gap 8G.2 item 2 named, and it is the only half of that
+item still open. It is a PRESENTATION gap, not a gameplay defect: nothing about the evasion's behaviour
+is in question.
+
+### 8O.2 Why this is the next sensible candidate
+
+- It is the last item in this file that is ALREADY OPEN and already recorded against a human-reported
+  finding, rather than a system invented for activity. 8G.2 item 2, 8F.2 and 8N.6 all name it.
+- It is tiny and it is bounded: primitive geometry in one scene, no new system, no new script, and no
+  change to any gameplay value.
+- It closes a REAL blocker on judging other open feel items. 8G.4 lists parry timing, windup
+  readability, attack commitment and "whether the facing reads" as UNADJUDGED. None of those can be
+  judged while the actor's orientation is invisible.
+- It is a prerequisite for any future animation work reading better. When animation arrives
+  (Milestone 15) the primitive facing markers stop mattering, but until then they are the ONLY way the
+  player-facing orientation is expressible at all.
+
+It is NOT a milestone-scale system, and this section should not be read as inflating it into one.
+
+### 8O.3 One finding that shapes the scope
+
+**The third-person camera sits BEHIND the actor, so a front-face marker alone cannot work.**
+
+Read from `scenes/test_environment.tscn`: the rig is `CameraRig/CameraYaw/CameraPitch/SpringArm3D/Camera3D`
+with `spring_length = 4.5` and a `CameraPitch` of about -12 degrees, pivoted on the player. The camera
+therefore looks at the actor from behind and slightly above. A marker placed only on the capsule's FRONT
+would sit on the far side of an 0.8 m-wide opaque capsule and be hidden by the capsule itself for the
+whole default view.
+
+So the indicator must be readable FROM BEHIND as well as from other angles. That is a design constraint on
+the proposal below, not a reason to move the camera: the camera is accepted and must not change.
+
+### 8O.4 Proposed scope - the smallest change that makes facing readable
+
+One new node in the player's own scene: `FacingMarker`, a `Node3D` added as a DIRECT CHILD of `Player` in
+`res://scenes/test_environment.tscn`, holding two primitive markers with two scene-local materials:
+
+- a NOSE marker on the actor's FORWARD side - local -Z, because Godot's convention here is that -Z is
+  world forward. This matches `PlayerController._backstep_direction()` (which treats `+basis.z` as
+  backward) and `_facing_of()`. It is made brighter and, deliberately, protrudes past the capsule so it
+  is also visible in silhouette from above and from the side.
+- a TAIL marker on the actor's REAR side - local +Z - in a contrasting dark colour. This is the one that
+  carries the actual requirement, because it is the side the default camera sees: seeing the tail
+  unambiguously means "forward is away from you", which is exactly the read a backstep needs.
+
+Two markers rather than one, because a single rear marker reads correctly from behind but goes ambiguous
+whenever the camera orbits to the front, and a single front marker reads correctly from the front but is
+invisible from behind. The pair is readable from every angle at the cost of one extra primitive.
+
+Both markers are children of the BODY transform, so they inherit `rotation.y` automatically. Nothing
+drives them: no script writes to them, and they are presentation only.
+
+### 8O.5 What must NOT change
+
+Everything except the actor's rendered appearance. Specifically, and unchanged from this pass:
+
+- No change to `player_controller.gd`, `dodge_component.gd`, or ANY script. The proposal needs zero new
+  code and zero script edits.
+- Dodge direction, backstep direction, orientation authority, evasion commitment, dodge speed, duration,
+  distance, stamina cost, i-frames, the attack/evasion mutex and parry all stay exactly as measured in 8N.
+- Movement, lock-on, camera, mouse look, mouse capture, focus handling, input routing, save/load, credits,
+  enemy behaviour, combat timing, animation, AI, inventory, ranged combat and weapons.
+- The camera rig itself, including spring length and pitch.
+
+Hard constraint on the implementation: the markers must contain **no `CollisionShape3D`**. A capsule-shaped
+collision shape added under `Player` would be silently picked up by `PlayerController._capsule_radius()`,
+which walks the body's children looking for a `CapsuleShape3D`. Marker nodes are `MeshInstance3D` only, so
+that path cannot see them.
+
+### 8O.6 Acceptance criteria for a FUTURE implementation pass
+
+Checkable from the saved scene text:
+
+- AC-A `FacingMarker` exists as a direct child of `Player` in `res://scenes/test_environment.tscn`, and
+  contains no `CollisionShape3D`.
+- AC-B the forward marker's local Z offset is NEGATIVE and the rear marker's is POSITIVE, so the markers
+  agree with the -Z forward convention the movement code already uses.
+- AC-C no script file is added or modified by the pass.
+
+Checkable by eye, once and only once, from the running game:
+
+- AC-D with the default third-person camera, the actor shows a distinct rear marker, and the two markers
+  are visually distinguishable from each other.
+
+Only the user can settle:
+
+- AC-E **HUMAN PLAYTEST - the criterion that actually closes 8G.2 item 2:** the user performs a backstep
+  and a directional dodge and reports whether the facing is readable while the evasion runs.
+
+### 8O.7 Evidence rules for that pass (recorded now so they cannot be softened later)
+
+- AC-A/B/C are `[CONFIRMED]` by reading the saved scene and confirming no script changed.
+- AC-D is `[PARTIAL]` at best. One rendered frame can show that the markers exist, where they sit and
+  that they differ in colour. It CANNOT show readability in motion, and it cannot prove the evasion
+  holds its facing.
+- AC-E is the only thing that closes the item, and it is a human playtest. **NO new probe is proposed.**
+  A probe cannot grade "can you read which way he is facing" - that is precisely why 8E, 8G and 8N all
+  ended with a human read. Writing one would be activity, not evidence.
+
+### 8O.8 Files expected to change in that later pass
+
+- `res://scenes/test_environment.tscn` - the ONLY production file expected to change. The player body is
+  authored INLINE in this scene (there is no `player.tscn`), so this is the correct and only owner.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` and `CASCADIA_DELETION_MANIFEST.md` - bookkeeping.
+
+New files: **none expected.** No new diagnostic, no new scene, no new directory. If the implementation
+does add anything temporary, it must be recorded in the deletion manifest as it is created.
+
+### 8O.9 Alternatives considered and NOT selected
+
+- **Replacing the capsule with a character model or rig.** A scope jump, and animation is deferred by
+  design (Milestone 15) with gameplay timing authoritative. Explicitly out of scope.
+- **A world-space `Label3D` above the actor.** The arena already uses `Label3D` markers, so it is cheap -
+  but a billboard label does not rotate with the body, so it would show position, not facing, and would
+  answer nothing.
+- **An on-screen debug readout of the facing value.** Would duplicate what the diagnostic overlays already
+  imply, and still would not let the user judge facing BY EYE on the actor, which is the actual gap.
+- **Making the overlay draw a facing gizmo.** Same objection: the requirement is a readable actor, not
+  another number.
+
+### 8O.10 Approval gate
+
+    Do NOT begin this work until the user names it and this section is updated to APPROVED with its
+    acceptance criteria confirmed.
+
+This section records a candidate. It does not select Milestone 11, it does not authorise work, and the
+current active task remains NONE.
+
