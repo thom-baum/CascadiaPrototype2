@@ -40,6 +40,24 @@ const FOCUS_REASSERT_FRAMES := 8
 ## Mouse look is only applied while the cursor is captured.
 var mouse_look_enabled := true
 
+## Gameplay's declared LOOK-YAW INTENT, and the exact analogue of `mouse_look_enabled` above
+## (Milestone 12, target lock-on).
+##
+## WHO DECLARES IT: the targeting module, and only on a lock STATE CHANGE - never per frame. WHO
+## HONOURS IT: `_update_look()`, which drops the horizontal STICK component of the look delta while
+## it is true. Mouse motion is deliberately NOT affected, because the mouse is still how an aiming
+## player turns and the wheel is that player's cycle input.
+##
+## WHY IT EXISTS: joypad axis 2 is bound BOTH to `camera_look_left`/`camera_look_right` and to
+## `target_cycle_left`/`target_cycle_right`, because the Soulslike convention puts target cycling on
+## the right stick. Without this intent, one physical axis would turn the camera AND cycle the lock
+## on the same frame.
+##
+## This layer never DERIVES this flag from lock state, and a focus transition never clears it: it is
+## gameplay's declared intent, exactly as `mouse_look_enabled` is. A per-frame reconciliation that
+## could invent its own state is the defect this project already fixed once - do not add one.
+var look_yaw_suppressed := false
+
 var _buffers: Dictionary = {}
 var _missing_actions: Array = []
 
@@ -372,6 +390,16 @@ func consume_lock_on() -> bool:
 	return consume(GameActions.LOCK_ON)
 
 
+## Target cycling, left and right, while a lock is held (Milestone 12). Separate consuming
+## accessors, like every other semantic press, so gameplay never sees the axis that produced them.
+func consume_target_cycle_left() -> bool:
+	return consume(GameActions.TARGET_CYCLE_LEFT)
+
+
+func consume_target_cycle_right() -> bool:
+	return consume(GameActions.TARGET_CYCLE_RIGHT)
+
+
 ## The arena restart. A system action, still read through this layer like every
 ## other semantic action, so the reset path never reads a raw key.
 func consume_restart() -> bool:
@@ -430,6 +458,28 @@ func _source_state_name(source: Dictionary) -> String:
 ## Actions listed in GameActions that are missing from the project InputMap.
 func missing_actions() -> Array:
 	return _missing_actions
+
+
+## Declare, or withdraw, gameplay's LOOK-YAW INTENT (Milestone 12).
+##
+## Called by the targeting module on a lock state change and at no other time. There is deliberately
+## no automatic counterpart in this file: this layer does not read lock state, does not guess when the
+## intent should change, and does not clear it on a focus transition. Gameplay decides; this layer
+## obeys. See `look_yaw_suppressed`.
+func set_look_yaw_suppressed(enabled: bool) -> void:
+	if look_yaw_suppressed == enabled:
+		return
+	look_yaw_suppressed = enabled
+	# A pending stick contribution earned under the OLD intent must not be spent under the new one:
+	# without this, the axis that took the lock would also nudge the camera one last time on the
+	# frame the lock was taken, and the axis that released it would nudge it on the way out.
+	_look_accum = Vector2.ZERO
+	_mouse_look_accum = Vector2.ZERO
+
+
+## Whether gameplay currently owns the horizontal stick for target cycling. Read-only report.
+func is_look_yaw_suppressed() -> bool:
+	return look_yaw_suppressed
 
 
 func set_mouse_look(enabled: bool) -> void:
@@ -831,6 +881,11 @@ func _update_look(delta: float) -> void:
 			GameActions.CAMERA_LOOK_DOWN,
 			LOOK_STICK_DEADZONE
 		)
+	# Gameplay has declared that it owns the horizontal stick this frame: a lock is held and the SAME
+	# axis (joypad axis 2) also feeds target_cycle_left/right. Only that component is dropped. The
+	# vertical stick still pitches the camera and every mouse delta still reaches it.
+	if look_yaw_suppressed:
+		stick.x = 0.0
 	_look_accum += _mouse_look_accum
 	_look_accum += stick * LOOK_STICK_PIXELS_PER_SECOND * delta
 	_mouse_look_accum = Vector2.ZERO

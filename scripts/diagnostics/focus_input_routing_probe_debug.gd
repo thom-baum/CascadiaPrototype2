@@ -308,9 +308,10 @@ func _run() -> void:
 
 	# --- PHASE 4: targeting / lock-on, and the debug panels ----------------------------
 	_say("[FOCUS] --- PHASE 4: targeting input, and the debug panels ---")
-	# `lock_on` is a RESERVED action with no targeting system (roadmap 8E.5), so what can honestly be
-	# measured is that the ACTION still reaches the input layer after a focus round trip. A lock-on
-	# system does not exist to test, and this probe does not pretend otherwise.
+	# `lock_on` now HAS a targeting system (Milestone 12, roadmap section 8P), so this stays a DELIVERY
+	# check and not a gameplay one: what is measured is that the ACTION still reaches the input layer
+	# after a focus round trip. The targeting module's own behaviour is covered by
+	# `targeting_probe_debug`; this probe does not duplicate it or pretend to grade it.
 	_check(await _lock_on_reaches_the_layer(),
 		"PHASE 4: the `lock_on` action still reaches the input layer after refocusing")
 	_check(get_tree().get_first_node_in_group(&"player_actor") != null,

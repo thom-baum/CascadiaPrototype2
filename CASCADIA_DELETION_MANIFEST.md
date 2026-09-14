@@ -1,43 +1,123 @@
 # CASCADIA - DELETION MANIFEST
 
-Manual cleanup manifest. This is NOT an automated deletion system.
+CANONICAL artifact-cleanup ledger for Cascadia. Manual cleanup only. This is NOT an
+automated deletion system, and it is NOT a second roadmap.
 
-During development, temporary diagnostic scripts, test scenes, experimental
-resources, replacement implementations, obsolete scripts and generated test
-assets accumulate. None of those are deleted automatically. They are recorded
-here as candidates and the user removes them manually when appropriate.
+Development truth - what Cascadia is, which milestone is accepted, what is verified,
+what is deferred - lives in `res://.summer/plans/CASCADIA_MILESTONE_ROADMAP.md`.
+This file answers one question class only: **what artifacts exist, whether they are
+cleanup candidates, why, what supersedes them, and whether a deletion actually happened.**
+
+Last reviewed: 2026-09-14 (documentation consolidation pass; index added, nothing deleted).
+
+---
+
+## READ THIS FIRST
+
+**NO FILE IN THIS PROJECT HAS EVER BEEN DELETED.** There is no `DELETED` entry anywhere in
+this manifest, and every candidate listed below was confirmed present on disk. Recording a
+candidate is the action. Deletion is a separate, deliberate, manual step the user performs
+later. Do not read this file as evidence that cleanup already happened.
 
 Rules:
-- Never delete a project file as part of routine development.
+- Never delete, rename or move a project file as part of routine development.
 - When a file looks obsolete, add an entry here instead.
 - Do not stop or block normal development because cleanup is pending.
 - Do not repeatedly ask for deletion confirmation.
-- If usefulness is uncertain, leave the file in place and mark
-  "Safe To Delete: Uncertain".
+- If usefulness is uncertain, leave the file in place and mark "Safe To Delete: Uncertain".
+- Never upgrade a candidate's status to `APPROVED` or `DELETED` without an explicit user
+  decision. Do not infer approval from age, from a replacement existing, or from this file.
 
-Entry format:
+Status vocabulary (use exactly these):
+
+    RETAIN                           - deliberately kept; still useful
+    REVIEW                           - needs a human decision before any action
+    CANDIDATE FOR DELETION           - unnecessary once its dependents stop needing it
+    APPROVED - MANUAL DELETION REQUIRED - the user approved removal; the file is still here
+    DELETED                          - removed. NOTHING IS IN THIS STATE TODAY.
+    REPLACED                         - a canonical file supersedes it
+    CONSOLIDATED                     - merged into another file
+    UNRESOLVED                       - path or status could not be verified; do not guess
+
+Entry format (unchanged; every entry body is authoritative for its own fields):
 
     ## Candidate: path/to/file
 
     Status: Candidate for manual deletion
 
-    Reason:
-    Why the file appears obsolete, temporary, duplicated, or superseded.
+    Reason:        Why the file appears obsolete, temporary, duplicated or superseded.
+    Replacement:   The file/system that replaced it, if applicable.
+    Used By:       Known remaining dependencies. READ THIS BEFORE DELETING ANYTHING.
+    Safe To Delete: Yes / Uncertain
+    Date Flagged:  YYYY-MM-DD
+    Notes:         Additional relevant information.
 
-    Replacement:
-    The file/system that replaced it, if applicable.
+---
 
-    Used By:
-    Known remaining dependencies, if any.
+## ENTRY INDEX
 
-    Safe To Delete:
-    Yes / Uncertain
+Status as recorded in each entry. Derived from the entry headings and their `Status:` lines
+on 2026-09-14. The entry body is always the authority for Reason / Used By / Safe To Delete /
+Date Flagged - this index is for navigation and retrieval only.
 
-    Date Flagged:
-    YYYY-MM-DD
+### A. Cleanup candidates - development diagnostics and temporary tooling
 
-    Notes:
-    Additional relevant information.
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/input_debug_overlay.gd` | CANDIDATE FOR DELETION (uncertain; retain while input ergonomics are unsettled) |
+| `scripts/player/player_stub.gd` | CANDIDATE FOR DELETION (M0 placeholder actor, superseded by the real controller) |
+| `scripts/diagnostics/step_probe_debug.gd` + `scenes/diagnostics/step_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/damage_probe_debug.gd` + `scenes/diagnostics/damage_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scenes/actors/dummy_actor.tscn` | CANDIDATE FOR DELETION (M2 test target; still used by probes) |
+| `scripts/diagnostics/actor_probe_debug.gd` + `scenes/diagnostics/actor_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/attack_probe_debug.gd` + `scenes/diagnostics/attack_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/hit_feedback_debug.gd` | CANDIDATE FOR DELETION (M4 observability) |
+| `scripts/diagnostics/target_sweep_debug.gd` and `scenes/diagnostics/target_sweep_debug.tscn` | CANDIDATE FOR DELETION (two headings share ONE entry body; delete the pair together) |
+| `scripts/diagnostics/input_path_probe_debug.gd` + `scenes/diagnostics/input_path_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/dodge_probe_debug.gd` + `scenes/diagnostics/dodge_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; holds M6's measured claims) |
+| `scripts/diagnostics/parry_probe_debug.gd` + `scenes/diagnostics/parry_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/enemy_attack_probe_debug.gd` + `scenes/diagnostics/enemy_attack_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/dodge_input_probe_debug.gd` + `scenes/diagnostics/dodge_input_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/fkey_host_ownership_probe_debug.gd` + `scenes/diagnostics/fkey_host_ownership_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; records which F-keys the host owns) |
+| `res://_fkey_probe_report.txt` | CANDIDATE FOR DELETION (probe transcript at project root) |
+| `scripts/diagnostics/focus_input_routing_probe_debug.gd` + `scenes/diagnostics/focus_input_routing_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/mouse_look_routing_probe_debug.gd` (+ `.uid`) | RETAIN - temporary diagnostic, retained |
+| `scripts/diagnostics/recovery_chain_probe_debug.gd` + `scenes/diagnostics/recovery_chain_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; delete together) |
+| `scripts/diagnostics/dodge_authority_probe_debug.gd` + `scenes/diagnostics/dodge_authority_probe_debug.tscn` | CANDIDATE FOR DELETION (two entries; holds the 8N measured claims) |
+| `scripts/diagnostics/facing_marker_feedback_debug.gd` | CANDIDATE FOR DELETION (uncertain; delete WITH the facing markers or the marker loses swing feedback) |
+| `scripts/diagnostics/credit_economy_probe_debug.gd` + `scenes/diagnostics/credit_economy_probe_debug.tscn` | CANDIDATE FOR DELETION (recorded in the M9 pass section) |
+| Save/load probes and `scripts/diagnostics/save_load_debug_controls.gd` | CANDIDATE FOR DELETION once save/load becomes a real menu routed through `CascadiaInput` (recorded inside the M10 pass sections) |
+| `scripts/diagnostics/game_state_world_restore_probe_debug.gd` + its scene | CANDIDATE FOR DELETION (recorded inside the M10.2 pass section) |
+| `scripts/diagnostics/game_state_mixed_state_probe_debug.gd` + its scene | CANDIDATE FOR DELETION (recorded inside the M10.3 pass section) |
+| `res://project.godot.bak` | CANDIDATE FOR DELETION (root-level backup, same byte size as `project.godot`) |
+| InputMap bindings `quick_load` (F9) and `quick_load_alt` (F8) | REVIEW - binding removal only, NOT a file. The keys are owned by the embedding host and can never reach the game |
+
+### B. Entries whose heading says "Candidate" but which are NOT deletion candidates
+
+Mislabelled by convention, not by intent. Do not delete these; they are real systems, in-use
+directories, or retained evidence.
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/combat/enemy_attacker.gd` | NOT a cleanup candidate - real system |
+| `scenes/actors/test_attacker.tscn` | NOT a cleanup candidate - real system |
+| `.summer/plans/` (directory) | In use - NOT a deletion candidate |
+| `res://_dodge_authority_report.txt` | RETAIN - evidence for the 8N measured claims, not a cleanup candidate |
+| "Notes On Dodge And I-Frames (Milestone 6) - Acceptance" | Not a candidate at all - an ACCEPTANCE record |
+
+### C. Recurring tooling and editor problems (not files)
+
+| Problem | Status as recorded |
+| ------- | ------------------ |
+| Stale `open_script_buffers` linter false positive (recorded under more than one heading, and repeatedly as a recurrence) | RETAIN as recorded knowledge - known false positive, do not chase |
+| The mouse-capture-must-be-released-in-an-input-event symptom | RETAIN as recorded knowledge - known false positive |
+
+### D. Unresolved paths - recorded, NOT verified (do not guess a status)
+
+| Path | Why unresolved |
+| ---- | -------------- |
+| `res://_probe_report.txt`, `res://_focus_probe_report.txt`, `res://_mouse_look_report.txt`, `res://_recovery_chain_report.txt`, `res://_retarget_probe_report.txt` | All five were CONFIRMED present on disk on 2026-09-14, but no dedicated per-file entry exists for them. They are referenced inside the M10 pass sections' "Cleanup candidates (recorded, NOT deleted)" lists and inside the focus / mouse-look entries. Status at path level: UNRESOLVED. |
+| `scripts/debug/` | Suggested by the user as a probe path; does NOT exist in this project. The probe went to `scripts/diagnostics/` instead. Recorded, not resolved. |
 
 ---
 
@@ -3363,3 +3443,145 @@ own, and owns no gameplay state - the colour FOLLOWS the phase, never the revers
 material on first use so it can never mutate a resource another node draws with. Delete together with the
 facing markers, or the marker loses its swing feedback. Its colours are exported, so a re-tune needs no
 code change.
+
+---
+
+## Recurring: case-mismatch import warnings (38 measured, 2026-09-14)
+
+Status: RECURRING EDITOR/IMPORT ISSUE - NOT a deletion candidate. No file is proposed for removal.
+
+Reason (recorded, not worked around):
+`state:diagnostics` reports 38 warnings of one class while the editor is open:
+
+    Case mismatch opening requested file
+    'res://assets/environments/Sci-Fi Essentials Kit[Standard]/textures/...',
+    stored as '.../Textures/...' in the filesystem.
+    This file will not open when exported to other case-sensitive platforms.
+
+Measured this pass across two third-party Unity kits:
+`assets/environments/Sci-Fi Essentials Kit[Standard]/` and
+`assets/environments/Modular SciFi MegaKit[Standard]/`. Something requests the textures directory
+with a lowercase `textures/` while the on-disk folder is `Textures/`.
+
+Replacement:
+None. This is an already-imported third-party asset tree, not a superseded file.
+
+Used By:
+Nothing at runtime that this pass measured. The warnings do not block opening the project on
+Windows; they would block an export to a case-sensitive platform.
+
+Safe To Delete:
+NOT APPLICABLE - this entry tracks a warning class, not a file.
+
+Date Flagged:
+2026-09-14
+
+Notes:
+Recorded rather than fixed. NOT verified: which code or resource requests the lowercase path, and
+whether any scene actually depends on these textures. Do NOT "clean up" the asset folders to
+silence this - renaming folders inside an imported Unity kit is exactly the change that breaks
+imports. Fix the requesting path, not the asset.
+
+---
+
+## Process record: documentation consolidation pass (2026-09-14)
+
+Status: RECORDED. Not a file entry.
+
+What changed: this manifest gained a READ THIS FIRST block, a status vocabulary and an ENTRY
+INDEX. The roadmap gained a `# CURRENT STATE - READ THIS FIRST` block, a DOCUMENT MAP and a
+MILESTONE INDEX, and its stale "CURRENT TASK" / "CURRENT MILESTONE" / "NEXT MILESTONE" headings
+were relabelled as HISTORICAL.
+
+What did NOT change: no file was deleted, renamed or moved. No gameplay file was edited. No
+milestone was started or authorised. No candidate's Safe To Delete value was upgraded. Every
+candidate above was confirmed still present on disk.
+
+Carried forward UNRESOLVED (recorded, not guessed): see section D of the ENTRY INDEX for the five
+root-level `_*_report.txt` transcripts and `scripts/debug/`.
+
+---
+
+## MILESTONE 12 - TARGET LOCK-ON PASS - NEW FILES AND RECORDED CHANGES (2026-09-14)
+
+Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion
+stays manual. The scope record was written into the roadmap as section 8P BEFORE implementation.
+
+### New gameplay file (NOT a deletion candidate)
+
+- `scripts/player/targeting_component.gd` (`class_name TargetingComponent`). Gameplay, not
+  diagnostic: it owns lock-on state - the candidate list, the current target and the acquire/cycle
+  order - and nothing else. It reuses the project's EXISTING validity authority
+  (`CombatParticipant.is_usable_target()` / `target_refusal()`) rather than adding a second one, reads
+  defeat from the target's own defeat authority, and reads player death from `DeathComponent.is_dead()`.
+  Wired as the `Targeting` node in `main.tscn`. It does not touch locomotion, stamina, combat damage,
+  enemy AI or animation.
+
+### New diagnostic files (cleanup candidates, delete with their scene)
+
+- `scripts/diagnostics/targeting_probe_debug.gd` - deterministic probe covering acquire, cycle-left,
+  cycle-right, wrap and round-trip, the declared look-yaw intent measured from both sides, camera
+  framing / pitch / roll / hierarchy, and all four auto-release causes each counted separately.
+- `scenes/diagnostics/targeting_probe_debug.tscn` - the probe's standalone entry scene.
+
+### Recorded changes to existing files
+
+- `scripts/input/cascadia_input.gd`: added `look_yaw_suppressed` (a gameplay-DECLARED intent, the
+  established analogue of `mouse_look_enabled`), `set_look_yaw_suppressed()` /
+  `is_look_yaw_suppressed()`, and `consume_target_cycle_left()` / `consume_target_cycle_right()`.
+  `_update_look()` drops ONLY the horizontal stick component while the intent is set; mouse motion and
+  the vertical stick are untouched. The layer never derives lock state and focus transitions never
+  clear the intent.
+- `scripts/core/game_actions.gd`: `TARGET_CYCLE_LEFT` / `TARGET_CYCLE_RIGHT` added to the TARGETING
+  group and to `BUFFERED_ACTIONS`.
+- `scripts/camera/third_person_camera.gd`: added `_frame_locked_target()` plus `lock_yaw_smoothing`.
+  It yaws onto the locked target on the shortest arc, never writes pitch, keeps roll zero by
+  construction, and only READS the lock. The rig hierarchy is unchanged.
+- `project.godot`: `target_cycle_left` / `target_cycle_right` bound to joypad axis 2 at -1.0 / +1.0
+  plus mouse wheel. Nothing new is bound to R, F8 or F9; `lock_on` is untouched.
+- `main.tscn`: added the `Targeting` node.
+- `project.godot.bak`: re-written by the engine when project settings were saved. Pre-existing tracked
+  candidate (see its own entry); no action needed, recorded so the change is not a surprise.
+
+### Measured result (this pass)
+
+`targeting_probe_debug`: `RESULT: ALL CHECKS PASSED (78)`, 0 debugger errors. The probe leaves the
+arena as it found it: no arena actor damaged or defeated, carried balance unchanged, `awards`
+unchanged, no lock and no look intent left held.
+
+### Probe defects found and fixed in THIS pass (all three in the probe, none in the module)
+
+- `_spawn_target()` pre-registered its temporary actor with `CreditLedger.handle_defeat()` expecting
+  that to BLOCK a later reward. It does not: that call refuses and returns BEFORE `_rewarded[id]` is
+  set, and the ledger re-scans the damageable group every physics frame, so a defeated temporary actor
+  WOULD have been paid and the cleanup assertions WOULD have failed. Replaced with
+  `EnemyDeathComponent.restore_defeated(true)`, which sets the authoritative defeated state WITHOUT
+  emitting `defeated` - the documented reason Milestone 10 uses it for loads, and what makes it safe
+  for a probe to reach the defeated state without minting Credits.
+- The look-intent stick measurement was taken WHILE a lock was held, so TWO yaw authorities were active
+  at once (the stick, and the rig framing the target). It reported a FALSE FAILURE of 0.8644 deg that
+  was entirely the framing transient - the rig's yaw had been restored off-target and framing pulled it
+  back. The measurement is now taken with no lock held, with `is_framing_lock()` asserted false; the
+  re-run measures exactly 0.0000 deg. The lock is re-acquired immediately for the mouse and framing
+  checks.
+- `_resolve()` resolved the camera rig BEFORE assigning `_camera`, and `_find_camera_rig()` returns null
+  when `_camera` is null - so the rig could never be found and the probe aborted before running a
+  single check (`1 of 0 FAILED`).
+
+### Recurring issue re-confirmed (NOT a new defect)
+
+`state:diagnostics` reported 2 script errors during this pass:
+`Cannot find member "TARGET_CYCLE_LEFT" / "TARGET_CYCLE_RIGHT" in base "GameActions"` at
+`scripts/input/cascadia_input.gd` lines 396 and 400, scope `open_script_buffers`. Both constants ARE
+present on disk in `game_actions.gd` (lines 60-61) AND the probe exercised BOTH actions successfully
+at runtime, so this is the stale open-buffer linter false positive recorded above, not a real error.
+
+### Documentation corrections carried out in the same pass
+
+- The two duplicate `8M.15` / `8M.16` headings are renumbered to `8M.17a` / `8M.17b` (the file's own
+  suffix pattern, as used by `8M.21a` / `8M.21b`), with every cross-reference updated. The two notes
+  that recorded the collision as "left to manual review" now record it as RESOLVED.
+- The stale header comment in `scripts/player/player_combat.gd` that claimed "Stamina cost is
+  deliberately NOT implemented" while the same file charges it was corrected.
+- The inverted `float(+)/sunk(-)` label in `scripts/diagnostics/grounding_probe_debug.gd` was
+  corrected: negative means the collider bottom is BELOW the surface (sunk), positive means above it.

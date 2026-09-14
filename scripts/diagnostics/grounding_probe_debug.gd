@@ -78,10 +78,12 @@ func _audit(actor: Node3D, space: PhysicsDirectSpaceState3D) -> void:
 		return
 
 	var mesh_vs_collision := absf(mesh_y - collision_y)
-	# Positive means floating above the surface, negative means sunk into it.
+	# surface_y - collision_y. NEGATIVE means the collider bottom sits ABOVE the
+	# surface (floating); POSITIVE means it sits BELOW it (sunk). The check below
+	# takes absf, so only the SIGN LABEL depended on this and not the verdict.
 	var collision_vs_surface := surface_y - collision_y
 
-	print("[GROUND] %-12s surface=%.3f  collision=%.3f  mesh=%.3f  mesh-vs-collision=%.3f  float(+)/sunk(-)=%.3f" % [
+	print("[GROUND] %-12s surface=%.3f  collision=%.3f  mesh=%.3f  mesh-vs-collision=%.3f  float(-)/sunk(+)=%.3f" % [
 		label, surface_y, collision_y, mesh_y, mesh_vs_collision, collision_vs_surface])
 
 	_expect(mesh_vs_collision <= TOLERANCE,

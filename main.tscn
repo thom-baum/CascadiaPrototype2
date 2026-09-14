@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://chx2jporgfrnp" path="res://scripts/economy/credit_ledger.gd" id="7_272bh"]
 [ext_resource type="Script" uid="uid://b6pjn2tox4u3q" path="res://scripts/core/game_state_save.gd" id="8_kek77"]
 [ext_resource type="Script" uid="uid://ce6qe4c324yxo" path="res://scripts/diagnostics/save_load_debug_controls.gd" id="9_4c57u"]
+[ext_resource type="Script" path="res://scripts/player/targeting_component.gd" id="10_targeting"]
 
 [node name="Cascadia" type="Node3D" unique_id=58351916]
 
@@ -37,5 +38,9 @@ debug_logging = true
 
 [node name="SaveLoadControls" type="CanvasLayer" parent="." unique_id=1866228881]
 script = ExtResource("9_4c57u")
+
+[node name="Targeting" type="Node" parent="." unique_id=1102736415]
+script = ExtResource("10_targeting")
+actor_path = NodePath("")
 
 [node name="TestEnvironment" parent="." unique_id=10485837 instance=ExtResource("2_env")]

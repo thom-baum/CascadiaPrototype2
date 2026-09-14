@@ -87,3 +87,15 @@ Persistent project decisions. Append new rules; do not rewrite existing ones.
 - Therefore the click itself takes the cursor back: `CascadiaInput._recover_capture_on_press()` runs from `_input` on every mouse-button press, inside that event's own call stack. The per-frame keeper remains as a backstop for the focused-and-captured case; it is not the mechanism that recovers from a drop.
 - That recovering click must ALSO set `_suppress_presses`, because a click that retargets the window is asking for the window, not swinging. MEASURED: without the suppression the refocus click reached `PlayerCombat` as a light attack, and a COMMITTED attack owns the body - which is why the player could not walk afterwards. Any future "click to recover" path must suppress the press for the same reason.
 - Do not gate the capture recovery on the focus belief. That belief can be wrong in either direction, and a click that reached this game is itself the proof that the player is here.
+
+## Target lock-on (recorded 2026-09-14, Milestone 12)
+
+- Lock-on is a TOGGLE on the EXISTING `lock_on` action (TAB, and joypad button 8 = R3). Do NOT rebind it and do NOT add a second toggle action. While a lock is held, `target_cycle_left` / `target_cycle_right` cycle through the valid targets - the Bloodborne/Souls convention the user chose.
+- `target_cycle_left` / `target_cycle_right` are bound to joypad axis 2 at -1.0 / +1.0 plus mouse wheel. Axis 2 is ALSO `camera_look_left` / `camera_look_right`, so the same physical input would otherwise both turn the camera and cycle targets. R and F8/F9 are forbidden for new bindings: R is already bound twice (`critical` and `restart`) and the host owns F8/F9.
+- That conflict is resolved the project's ESTABLISHED way - gameplay DECLARES an intent and the input layer honours it. `TargetingComponent` sets `CascadiaInput.look_yaw_suppressed` while a lock is held and `_update_look()` drops ONLY the horizontal stick component. Mouse motion and the vertical stick are untouched.
+- The input layer must NEVER derive lock state per frame, and the camera must never become the lock authority. This is the same rule as the resume-only focus reconciliation: a per-frame reconciliation that can create its own state is a defect this project already fixed once.
+- Target validity has exactly ONE owner: `CombatParticipant.is_usable_target()` / `target_refusal()`. Do not add a second validity authority.
+- Auto-release is REQUIRED on all four causes, each counted separately: target defeated, target invalid or freed, target beyond `release_range`, and player death.
+- The camera yaws to frame the locked target on the shortest arc and NEVER writes pitch; roll stays zero by construction. The rig only READS lock state.
+- Lock-on-RELATIVE dodge direction is still NOT implemented. Dodge stays camera-relative; that is a separate deferred pass.
+- `EnemyAttacker.target_group` is the ENEMY targeting the PLAYER - a different concern. Never conflate it with player lock-on.

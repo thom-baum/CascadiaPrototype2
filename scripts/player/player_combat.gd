@@ -15,9 +15,11 @@ extends Node
 ## except by finishing recovery. A press during an attack is refused outright
 ## rather than queued, so nothing here turns into a combo by accident.
 ##
-## Stamina cost is deliberately NOT implemented. The stamina system does not
-## exist yet and is its own milestone. When it arrives the cost belongs to this
-## state machine, not to the hitbox.
+## Stamina cost IS implemented here (Milestone 5). This state machine charges the
+## sibling StaminaComponent BEFORE an attack is accepted and refuses the attack
+## when the pool cannot pay, so the cost belongs to the DECISION TO SWING rather
+## than to the hitbox. An actor with no StaminaComponent is never charged and
+## never refused.
 
 enum State { IDLE, STARTUP, ACTIVE, RECOVERY }
 

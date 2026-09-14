@@ -50,6 +50,15 @@ const CRITICAL := &"critical"
 
 # --- Targeting / interaction ------------------------------------------------
 const LOCK_ON := &"lock_on"
+## Cycle the lock to the next / previous valid target while a lock is held (Milestone 12).
+##
+## Right stick left/right on the controller, and mouse wheel up/down on keyboard and mouse. They are
+## separate gameplay actions from the camera's four look actions even though the controller presents
+## the SAME axis: while gameplay declares a lock the input layer suppresses the stick's horizontal
+## look component (see CascadiaInput.look_yaw_suppressed), so one physical axis never feeds two
+## consumers on the same frame.
+const TARGET_CYCLE_LEFT := &"target_cycle_left"
+const TARGET_CYCLE_RIGHT := &"target_cycle_right"
 const QUICK_ITEM := &"quick_item"
 const INTERACT := &"interact"
 ## X button. Reserved future behaviour, recorded but NOT implemented:
@@ -99,6 +108,8 @@ const BUFFERED_ACTIONS := [
 	QUICK_ACTION,
 	SECONDARY_ACTION,
 	LOCK_ON,
+	TARGET_CYCLE_LEFT,
+	TARGET_CYCLE_RIGHT,
 	ITEM_UP,
 	ITEM_DOWN,
 	ITEM_LEFT,
@@ -112,7 +123,7 @@ const GROUPS := {
 	"LOCOMOTION": [MOVE_FORWARD, MOVE_BACKWARD, MOVE_LEFT, MOVE_RIGHT, SPRINT, DODGE],
 	"CAMERA": [CAMERA_LOOK_LEFT, CAMERA_LOOK_RIGHT, CAMERA_LOOK_UP, CAMERA_LOOK_DOWN],
 	"COMBAT": [LIGHT_ATTACK, HEAVY_ATTACK, PARRY, CRITICAL],
-	"TARGETING": [LOCK_ON],
+	"TARGETING": [LOCK_ON, TARGET_CYCLE_LEFT, TARGET_CYCLE_RIGHT],
 	"ITEMS": [QUICK_ITEM, INTERACT, QUICK_ACTION, SECONDARY_ACTION],
 	"ITEM SELECTION": [ITEM_UP, ITEM_DOWN, ITEM_LEFT, ITEM_RIGHT],
 	"RESERVED - NO IMPLEMENTATION": [RANGED_ATTACK, JUMP],

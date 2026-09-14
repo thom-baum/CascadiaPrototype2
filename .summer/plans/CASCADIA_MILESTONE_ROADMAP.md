@@ -6,6 +6,195 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
+Read `# CURRENT STATE - READ THIS FIRST` immediately below. Everything after it is either
+the maintained acceptance table (section 0), standing rules, or HISTORICAL record. Where a
+historical section disagrees with the current-state section, the current-state section wins.
+
+---
+
+# CURRENT STATE - READ THIS FIRST
+
+Verified against the live project on 2026-09-14 during a documentation consolidation pass.
+Every statement here is present-tense and current. Evidence and detail live in the numbered
+sections; this block is the entry point, not a replacement for them.
+
+## Identity and phase
+
+- **Cascadia** - a THIRD-PERSON SOULSLIKE. Godot 4, GDScript.
+- **Phase: foundation / systems-first prototyping.** Systems are proven with primitive
+  geometry. There is NO animation system, no final art, and no real HUD.
+- **Standing rule:** gameplay is authoritative. Animation, models, effects and sound are
+  downstream adapters that conform to gameplay timing, never the reverse.
+
+## Milestone status
+
+- **Highest accepted milestone: 11 - READABLE PLAYER FACING INDICATOR.** CLOSED 2026-09-13 on a
+  HUMAN VISUAL READ of the shipped scene. The user's verbatim report: "everything seems visually
+  consistent and working properly. consider this step implemented". Full record: section 8O.15.
+- **Current active task: MILESTONE 12 - TARGET LOCK-ON.** APPROVED by the user 2026-09-14, scope
+  written into section 8P BEFORE implementation per section 15, and now IMPLEMENTED AND MEASURED:
+  `targeting_probe_debug` reports `RESULT: ALL CHECKS PASSED (78)`. It is NOT yet human-played, so
+  Milestone 11 remains the highest ACCEPTED milestone until the user reads the framing feel in play.
+  If the lock-on read is wrong, that is a FEELING no probe can grade - it is the user's call.
+- **Next milestone after this one: NOT selected and NOT approved.** The user's stated intended
+  direction is a minimal UI pass (credits / health / stamina, pause menu, save-load controls and
+  loaded-state feedback) and then save/load presentation, but NEITHER is started or approved. This
+  file, its milestone index and its deferred list do NOT authorise anything merely by existing.
+
+## What is implemented
+
+Milestones 0-11 are implemented and accepted, in order: input/camera (M0), grounded movement
+(M1), damage plumbing (M2), physical actor collision (M3), player attacks (M4), stamina (M5),
+dodge + i-frames (M6), parry (M7), one attacking test enemy (M8), credit economy (M9),
+save/load foundation (M10), facing indicator (M11) - plus the M8-family and later passes:
+death/reset circuit (8H), enemy death + persistence (8I), reusable actor death (8J), reusable
+actor combat readiness (8K), defeat coverage (8K.12), and dodge movement authority (8N).
+
+**Authoritative per-milestone status and the strongest evidence held for each: section 0.**
+It is not duplicated here on purpose.
+
+## Evidence ceiling per system
+
+- **CONFIRMED by measurement AND human play:** M0 and M1 (user playtests), M5, M6, M7, M8 and
+  the input pass (full-loop playtest, section 8G), and Milestone 11 (user visual acceptance,
+  8O.15).
+- **CONFIRMED by deterministic probe output only - no human has played it:** the M8-family
+  passes 8H / 8I / 8J / 8K, the 8N dodge authority pass, and Milestone 9.
+- **PARTIALLY VERIFIED - probe-measured but NOT human-played: Milestone 10 (save/load).** The
+  prototype F5 / F7 / F10 controls are built, bound and visible in a rendered frame, but a human
+  has never exercised save -> change -> load by hand. This is the largest unplayed item.
+- **PARTIALLY VERIFIED - feel never judged:** dodge i-frame timing for feel, attack timing and
+  hit feedback, damage-number legibility (12.3).
+- **PARTIAL - rendered evidence covers only part of the claim:** TargetA step seating (12.3); and
+  the two Milestone 11 MOTION reads - whether the markers visibly track yaw while moving, turning,
+  dodging and backstepping, and whether the swing colours read distinctly at the light attack's
+  0.16 s / 0.10 s timing. Both are COVERED BY the user's general visual acceptance, NOT separately
+  measured.
+- **NOT YET VERIFIED:** physical controller buttons were never pressed (Circle tap/hold, joypad
+  parry 9, restart) - only their InputMap bindings were read; a second defeated actor seen in a
+  rendered frame or by a human; `HurtboxComponent.damageable = false` on a scene-authored actor;
+  lock-on-relative dodge direction (not implemented, by explicit decision); directional dodge
+  ANIMATION selection (not implementable - no animation system exists).
+- **INFERRED (static read, never observed at runtime):** the standing claim in 12.1 that
+  `cascadia_input.gd` is well-formed and that `GameActions` resolves.
+
+## Known defects and open items
+
+- **`grounding_probe_debug` FAILS one check** - `TestAttacker` rests at -0.020 against the probe's
+  0.02 tolerance. PRE-EXISTING, surfaced by a regression re-run, left UNFIXED deliberately because
+  the fix is combat-actor collision height, outside that task (12.3).
+- **Group-order dependence in the arena reset** - `DeathComponent._resolve_attacker()` falls back to
+  group order when `attacker_path` is empty, so a second attacking enemy could silently change which
+  attacker the player reset restores. Fragile, NOT yet a defect (12.3).
+- **BACKSTEP ORIENTATION (2026-09-12 entry) - OUTSTANDING, reconcile before relying on it.** 12.3
+  still carries this as an OPEN confirmed defect, while the gameplay half was implemented and
+  measured by 8N (2026-09-13) and the presentation half was accepted as Milestone 11. That entry has
+  NOT been re-verified since. This consolidation deliberately did NOT flip it to fixed.
+- Tuning, NOT defects: dodge i-frame timing for feel; enemy windup readability and cadence; parry
+  window readability without animation.
+
+## Benign tooling noise (do not chase)
+
+- **Script errors in the diagnostics panel (12.1).** The historically reported `Identifier
+  "GameActions" not declared in the current scope` errors were scoped to `open_script_buffers` -
+  stale analysis of scripts held open as editor tabs. **Re-checked this pass: `state:diagnostics`
+  reports 0 errors and 38 warnings, and `state:script-errors` for `open_script_buffers` returns an
+  EMPTY list.** Never report this class of error as a defect without confirming it outside
+  `open_script_buffers`.
+- **38 case-mismatch import warnings (NEW this pass: real, non-blocking, unfixed).** Godot warns that
+  `assets/environments/Sci-Fi Essentials Kit[Standard]/` and `assets/environments/Modular SciFi
+  MegaKit[Standard]/` are requested with a lowercase `textures/` while stored as `Textures/`. The
+  files open on Windows but will NOT open when exported to a case-sensitive platform. Recorded in the
+  deletion manifest; not fixed.
+- **Console error `Resource file not found: res://.summer/plans`** - resolved once the directory
+  existed (12.2). Re-check before flagging it again.
+- **Duplicate `8M` section numbers - RESOLVED 2026-09-14 (NOT outstanding).** The two colliding pairs in
+  the M10.2 block are now `8M.17a` / `8M.17b`, with cross-references updated. Do not re-flag this.
+
+## Deferred
+
+Nothing deferred is authorised. Full list: section 13. Highest-signal deferred items: animation
+integration, enemy AI / pursuit / navigation, stored / spent / persistent Credits and progression,
+banking and shops, checkpoints and world persistence, inventory, ranged combat, jumping. Lock-on is
+NO LONGER on this list - it is the ACTIVE milestone (section 8P). Lock-on-RELATIVE dodge direction
+remains deferred even though lock-on itself is being built (8P.5).
+
+## Current open decision
+
+**None blocking Milestone 12.** The user selected and approved target lock-on on 2026-09-14 and its
+control contract was settled in the same exchange (toggle on the existing `lock_on` binding, separate
+cycle-left / cycle-right actions), so no open question prevents the work. The NEXT milestone after 12
+is still unselected and unapproved.
+
+---
+
+## DOCUMENT MAP
+
+| What you need | Where it is |
+| ------------- | ----------- |
+| Cascadia's current truth: identity, phase, highest accepted milestone, active task, approval state | `# CURRENT STATE - READ THIS FIRST` at the top of this file |
+| Per-milestone status + the strongest evidence held for each | Section 0 of this file |
+| Evidence vocabulary definitions | Section 0.1 of this file |
+| Milestone order and each milestone's scope record | MILESTONE INDEX below, then sections 4-8O |
+| Known defects, open items, tuning items | Section 12 of this file |
+| Deferred systems | Section 13 of this file |
+| Detailed historical verification evidence | Section 16 (append-only log) plus the per-milestone sections 8A-8O |
+| File hygiene rule and the automatic-update rule | Sections 14 and 15 of this file |
+| Cleanup candidates and deletion accounting | `res://CASCADIA_DELETION_MANIFEST.md` |
+| Editor / class-cache / import problems | `res://CASCADIA_DELETION_MANIFEST.md` (recurring-issue and process entries) |
+
+Two files, one responsibility each: **this roadmap owns development truth; the deletion manifest
+owns artifact cleanup accounting.** The manifest is not a second roadmap, and it is not proof that a
+deletion happened - nothing in this project has ever been deleted.
+
+---
+
+## MILESTONE INDEX
+
+Status vocabulary used here: ACCEPTED / CLOSED / IMPLEMENTED + MEASURED / CONFIRMED BY PLAY.
+Evidence behind each row is in section 0.
+
+| # | Milestone / pass | Section | Status |
+| - | ---------------- | ------- | ------ |
+| 0 | Project reconnaissance and test arena | 4 | ACCEPTED - user playtest |
+| 1 | Grounded player movement | 5 | ACCEPTED - user playtest |
+| 2 | Basic damage plumbing | 6 | ACCEPTED - measured |
+| 3 | Physical actor collision | 7 | ACCEPTED - measured |
+| 4 | Player attacks | 8 | ACCEPTED - measured; physical input path closed |
+| - | Target / test-actor grounding | 10 | CONFIRMED BY MEASUREMENT (historical pass) |
+| 5 | Stamina | 8A | IMPLEMENTED + HUMAN-PLAYED; pressure/feel still unjudged |
+| 6 | Dodge and i-frames | 8B, 11 | ACCEPTED 2026-09-12 (measured + played); 2 tuning items open |
+| 7 | Parry | 8C, 11A | IMPLEMENTED + MEASURED + HUMAN-PLAYED; window readability open |
+| 8 | Single attacking test enemy | 8D | IMPLEMENTED + MEASURED + HUMAN-PLAYED; readability open |
+| - | Sprint / Dodge / Backstep input pass | 8E | IMPLEMENTED + MEASURED + HUMAN-PLAYED |
+| - | Human playtest, full combat loop | 8G | USER-CONFIRMED 2026-09-12 |
+| - | Death / reset circuit | 8H | IMPLEMENTED + MEASURED |
+| - | Enemy death and persistence | 8I | IMPLEMENTED + MEASURED |
+| - | Reusable actor death capability | 8J | ACCEPTED 2026-09-12 (measured + user-verified) |
+| - | Reusable actor combat readiness | 8K | IMPLEMENTED + MEASURED; defect found in play and fixed |
+| - | Defeat coverage across the arena | 8K.12 | ACCEPTED 2026-09-12 (measured + user-verified) |
+| 9 | Soulslike credit economy and progression foundation | 8L | IMPLEMENTED + MEASURED; CARRIED Credits only |
+| 10 | Game-state saving and loading foundation | 8M | IMPLEMENTED + MEASURED; NOT human-played |
+| - | Dodge movement authority (the recorded 8F pass) | 8F, 8N | IMPLEMENTED + MEASURED 2026-09-13 |
+| 11 | Readable player facing indicator | 8O | CLOSED 2026-09-13 - user visual acceptance |
+| 12 | Target lock-on | 8P | IMPLEMENTED + MEASURED 2026-09-14 (probe 78/78); NOT human-played - awaiting the user's feel read |
+| 12 | Target lock-on | 8P | APPROVED 2026-09-14 - scope record written; NOT yet implemented or accepted |
+
+Delivered milestone sections 8N and 8O were appended at the END of the file, after section 16, so
+they do not follow numerical order. That is an ordering artifact, not a missing record.
+
+---
+
+## HISTORICAL PASS LOG (newest first) - SUPERSEDED AS CURRENT STATUS
+
+Everything from here down to section 0 is the rolling pass log, written at the time of each pass and
+kept for audit value. It is HISTORICAL, not current status. Several entries below are known to be out
+of date - one still reads "highest milestone reached: 8", and one still describes Milestone 5 as "not
+human-played". Where a log line disagrees with `# CURRENT STATE` above or section 0, the current-state
+section wins. Annotate these lines; do not delete them to tidy the file.
+
+The newest log entry starts on the next line.
+
 Last updated: 2026-09-13 (MILESTONE 11 CLOSED - THE FACING INDICATOR IS ACCEPTED BY THE USER. The user
 reviewed the running game and reported "everything seems visually consistent and working properly.
 consider this step implemented". That is a HUMAN VISUAL READ of the shipped scene, and it is the read
@@ -222,7 +411,12 @@ plus the deletion manifest.
 
 ---
 
-## 0. READ ME FIRST - CURRENT STATE IN ONE SCREEN
+## 0. MILESTONE ACCEPTANCE TABLE - STATUS AND STRONGEST EVIDENCE HELD
+
+Maintained status layer. The current-state entry point is `# CURRENT STATE - READ THIS FIRST`
+at the very top of this file; this section is the per-milestone evidence behind it. The bullet
+list at the END of this section is HISTORICAL pass narrative, not current status - the table
+above it wins.
 
 | # | Milestone | Status | Strongest evidence held |
 | - | --------- | ------ | ----------------------- |
@@ -240,7 +434,7 @@ plus the deletion manifest.
 | - | Sprint / Dodge / Backstep input pass | IMPLEMENTED, MEASURED, AND HUMAN-PLAYED; backstep orientation DEFECT FIXED 2026-09-13 by the 8F authority pass (the facing INDICATOR half is still open) | dodge_input_probe_debug: shared input tap->dodge / hold->sprint, release-after-sprint does NOT dodge, forward/right/backward resolve camera-relative (dot 1.00), a neutral tap produces a BACKSTEP travelling backwards along facing (dot 1.00), directional travel 1.688 m vs 3.375 m before, backstep 1.280 m, i-frames intact, exactly one 22-stamina charge and an unaffordable refusal counted by cause, RESULT: ALL CHECKS PASSED; all eight probes re-run and passed |
 | - | Reusable actor death capability | ACCEPTED 2026-09-12 (measured AND human-verified) | Roadmap section 8J written BEFORE implementation, per the user's instruction. Audit read from the live scenes: the reusable defeat path existed (`EnemyDeathComponent`) but only `TestAttacker` carried it, so the capability was NOT actually shared; `DummyActor` and `Targets/TargetA..C` had health and a hurtbox and no defeat path at all. `DummyActor` now carries the same component and is measured defeated exactly once; the immortal and non-damageable axes are measured as genuinely distinct; the player's reset did NOT revive it. `actor_death_probe_debug`: RESULT: ALL CHECKS PASSED, 0 runtime errors; all nine other probes re-run and passed. ACCEPTED after the user's manual playtest: the dummy takes damage, reaches 0/100, enters the dead state, tips and darkens, shows DEFEATED, and does not disturb the other actors. See 8J.10 and 8J.12 |
 | 9 | Soulslike credit economy and meaningful progression foundation | IMPLEMENTED AND MEASURED (CARRIED Credits only; banking/spending/persistence NOT built; feel not yet played) | MILESTONE 9, selected by the user and written into section 8L BEFORE implementation. `credit_economy_probe_debug` ENUMERATES the authoritative enemy population and kills each eligible enemy through the real `receive_hit -> apply_damage` chain: every one awards Credits exactly once, the reward equals the documented provisional amount, the carried balance equals the sum of eligible rewards, and the non-mortal and player archetypes are excluded by explicit rule. Duplicate, freed-actor and not-actually-defeated cases award nothing. STILL NOT BUILT: banking, spending, stats/items/gear progression, death-loss retrieval and save/load. See 8L |
-| 10 | Game-state saving and loading foundation | IMPLEMENTED AND MEASURED (probe-verified; NOT yet human-played; persists the carried balance ONLY). The reported physical-F9 failure was a HOST KEY COLLISION, NOT a save/load defect - see 8M.20. The load key is now F7 (F11 alternate); F9 and F8 are owned by the embedding host and cannot be used | MILESTONE 10, selected by the user and written into section 8M BEFORE implementation. `GameStateSave` writes a REAL save at `user://cascadia_save.json` carrying `schema_version`, `carried_credits` and `saved_at_unix`, reading the balance from `CreditLedger` and restoring it through the ledger's own controlled path (which is NOT `award_credits`, so a load can never be mistaken for a defeat). `game_state_save_load_probe_debug`: RESULT: ALL CHECKS PASSED, 0 debugger errors. Measured round trip: one real kill earned 100, a 250 top-up set the saved value to 350, the live balance was then changed, and the load restored 350 EXACTLY; a further post-load kill took it to 450. Every malformed case (missing, empty, not-an-object, unsupported version, missing field, text value, negative value) failed with its OWN result and left the balance untouched. `main.tscn` boots with 0 runtime errors and the F5/F9/F10 prototype panel plus the balance render in-game. STILL NOT BUILT: banking, spending, stats, items, gear, inventory, checkpoints, world-state persistence, defeated-enemy persistence, death currency loss, multiple slots, cloud saves. See 8M |
+| 10 | Game-state saving and loading foundation | IMPLEMENTED AND MEASURED (probe-verified; NOT yet human-played). SAVES THE RUN, not only the balance: `GameStateSave` also writes a `world.actors` snapshot (per-actor `health` / `dead` / `defeated` / `paid`, keyed by scene path) plus the player's recorded transform, health, stamina and camera orientation, and restores each through its own owner (M10.1-M10.4 records in section 8M; `scripts/core/game_state_save.gd`). The reported physical-F9 failure was a HOST KEY COLLISION, NOT a save/load defect - see 8M.20. The load key is now F7 (F11 alternate); F9 and F8 are owned by the embedding host and cannot be used | MILESTONE 10, selected by the user and written into section 8M BEFORE implementation. `GameStateSave` writes a REAL save at `user://cascadia_save.json` carrying `schema_version`, `carried_credits` and `saved_at_unix`, reading the balance from `CreditLedger` and restoring it through the ledger's own controlled path (which is NOT `award_credits`, so a load can never be mistaken for a defeat). `game_state_save_load_probe_debug`: RESULT: ALL CHECKS PASSED, 0 debugger errors. Measured round trip: one real kill earned 100, a 250 top-up set the saved value to 350, the live balance was then changed, and the load restored 350 EXACTLY; a further post-load kill took it to 450. Every malformed case (missing, empty, not-an-object, unsupported version, missing field, text value, negative value) failed with its OWN result and left the balance untouched. `main.tscn` boots with 0 runtime errors and the F5/F9/F10 prototype panel plus the balance render in-game. STILL NOT BUILT: banking, spending, stats, items, gear, inventory, checkpoints, world GEOMETRY and enemy POSITIONS (per-actor DEFEAT state IS persisted - M10.2), death currency loss, multiple slots, cloud saves. See 8M |
 | - | Defeat coverage across every enemy (defect fix) | ACCEPTED 2026-09-12 (measured AND user-verified) | User-reported DEFECT: an enemy reaching 0 health showed no defeated state because `TargetA/B/C` carried no death path at all and NO probe looked at them - so they processed nothing while every probe still passed. Fixed by wiring the EXISTING `EnemyDeathComponent` + presentation to all three, and by adding the test that was missing: `defeat_coverage_probe_debug` ENUMERATES the `damageable` group instead of naming actors, so a new enemy is covered the moment it exists. Measured: 5/5 enemies `is_defeated=true defeats=1 presentation=showing`, ALL CHECKS PASSED. All 13 probes re-run and passed. See 8K.12 |
 | - | Defeat coverage across the arena | ACCEPTED 2026-09-12 (measured AND user-verified) | The user reported that an enemy reaching 0 health did not show a defeated state, and that NO test asserted defeat coverage. Both were CORRECT: `TargetA/B/C` carried no death path at all, and every probe inspected actors BY NAME, so an unwired actor reaching zero health processed nothing while the whole suite still reported ALL CHECKS PASSED. Fix: `TargetA/B/C` wired to the EXISTING `EnemyDeathComponent` (mortal) + the EXISTING presentation adapter in `scenes/test_environment.tscn`; no new death system, no combat value or timing changed. The missing test now exists as `defeat_coverage_probe_debug`, driven by ENUMERATION of the `damageable` group so a newly added enemy is covered the moment it exists, and the player is excluded BY ARCHETYPE (`resets_actors`), not by name. `[DEFCOV] RESULT: ALL CHECKS PASSED`, 5/5 enemies each reading `is_defeated=true defeats=1 presentation=showing`; all 13 regression probes re-run and passed; `main.tscn` boots with 0 runtime errors. Rendered frame confirms red `DEFEATED` labels, tipped/darkened poses, and all five actors at `0/100 DEAD`. See 8K.12 |
 | - | Reusable actor combat readiness | IMPLEMENTED AND MEASURED; DEFECT FOUND IN PLAY AND FIXED (8K.12) | `defeat_coverage_probe_debug`: 5/5 damageable enemies reach the DEFEATED state with a VISIBLY showing presentation (TestAttacker, DummyActor, TargetA, TargetB, TargetC all `is_defeated=true defeats=1 presentation=showing`). The 8K.11 audit had wrongly concluded the static targets were intentional non-participants; they were a HOLE - no death path at all - and are now wired into the existing defeat component. `actor_combat_readiness_probe_debug`: ALL CHECKS PASSED. All 13 regression probes re-run and passed. Section 8K written BEFORE any implementation. Audit read from the live project: damageability (`HealthComponent` + `HurtboxComponent.damageable`), mortality (`EnemyDeathComponent.mortal`), attack capability (`EnemyAttacker`), per-actor debug presentation (`CombatDebugOverlay`) and group-based target selection (`EnemyAttacker.target_group`) ALREADY existed and were reused unchanged. The genuine gap was TARGET VALIDITY: `EnemyAttacker._get_target()` returned the first node in the group with no alive check, so a dead actor was still a valid target the attacker faced and swung at. `actor_combat_readiness_probe_debug`: RESULT: ALL CHECKS PASSED, 0 runtime errors - the dead target was refused with the DEAD cause (`target_refusals_dead 0 -> 2`) and NOT as out-of-range (`0 -> 0`), the attacker did not turn to face the corpse (`max drift 0.0000 rad`), a revived actor was targetable again, and a freed node was refused without raising. All twelve regression probes re-run and passed. See 8K.10 |
@@ -2238,7 +2432,10 @@ documentation-discipline rule.
 ---
 
 ## 8L. MILESTONE 9 - SOULSLIKE CREDIT ECONOMY AND MEANINGFUL PROGRESSION FOUNDATION
-## (SELECTED BY THE USER; roadmap written BEFORE implementation)
+
+SELECTED BY THE USER; this section was written BEFORE implementation. Note: section 0 once
+recorded "Milestone 9 = enemy pursuit". That was a MISLABEL - pursuit is still unstarted, and this
+section is M9's real delivered scope.
 
 MILESTONE 9 IS THE CURRENT MILESTONE. It was named and selected by the user, recorded here BEFORE any
 implementation as the project's documentation rule requires, and implemented in the same pass. The
@@ -2693,7 +2890,7 @@ Two NEW probes, both driven against the REAL scene and the REAL authorities, bot
 
 ---
 
-### 8M.15 M10.2 - THE MOUSE_FILTER HYPOTHESIS IS FALSIFIED (2026-09-12)
+### 8M.17a M10.2 - THE MOUSE_FILTER HYPOTHESIS IS FALSIFIED (2026-09-12)
 
 Reported live symptom: the overlay showed `load: OK (carried 100)` and the playable runtime appeared
 to stop functioning afterwards. A hypothesis was raised that the save/load debug panel consumes
@@ -2753,7 +2950,7 @@ F5/F9 keys by hand, with a real OS-level mouse, feels correct.
 
 ---
 
-### 8M.16 M10.2 - THE SAVE/LOAD STATE MODEL IS CORRECTED: SNAPSHOT, NOT TALLY (2026-09-12)
+### 8M.17b M10.2 - THE SAVE/LOAD STATE MODEL IS CORRECTED: SNAPSHOT, NOT TALLY (2026-09-12)
 
 **The user's diagnosis was right, and my earlier one was wrong.** Reported: the live game still shows
 `DEFEATED` over gameplay while the overlay says `load: OK (carried 100)`; the save/load is really a
@@ -2807,9 +3004,9 @@ world alive, kill enemies AND the player, then load.
 - the player **MOVES after the load** (travelled 1.3133 m) and enters combat
 - exactly ONE ledger and ONE save service exist after the load
 
-#### Honest note on the earlier 8M.15 falsification
+#### Honest note on the earlier 8M.17a falsification
 
-8M.15 proved the mouse_filter hypothesis wrong and it STAND. That work ruled out one explanation; it
+8M.17a proved the mouse_filter hypothesis wrong and it STAND. That work ruled out one explanation; it
 never claimed the game was playable. The stuck `DEFEATED` was a separate, real defect in the
 presentation adapter, and it is the one this pass fixes.
 
@@ -2895,9 +3092,12 @@ anywhere, every actor upright, and the SAVE/LOAD panel reading `F5 save  F9 load
 maximum (`reset()` assigns `max_health`; `apply_damage` clamps with `maxf(0.0, ...)`; there is no heal
 function and `max_health` is overridden in ZERO scenes). It was not reproduced and is NOT claimed fixed.
 
-**Doc defect recorded:** this file contains TWO sections numbered `8M.15` and TWO numbered `8M.16`
-(the M10.1 block and the M10.2 block each restarted the count). This pass used `8M.18` to avoid adding
-a third collision. Renumbering the older headings is left to manual review rather than done silently.
+**Doc defect RECORDED HERE, RESOLVED 2026-09-14:** this file contained TWO sections numbered `8M.15` and
+TWO numbered `8M.16`, because the M10.1 block and the M10.2 block each restarted the count. This pass
+avoided a third collision by using `8M.18`. In a later MANUAL renumbering pass the M10.2 pair became
+`8M.17a` / `8M.17b` - the file's own suffix pattern, as used by `8M.21a` / `8M.21b` - and every
+cross-reference to them was updated. No other section number was touched, and no historical content
+was changed by the renumber.
 
 **Not verified by hand.** The physical F5/F9 flow has not been exercised by the user since this fix.
 
@@ -3088,7 +3288,7 @@ Not implemented, and not to be implemented early:
 
 ---
 
-## 10. CURRENT TASK - TARGET / TEST-ACTOR GROUNDING
+## 10. HISTORICAL PASS - TARGET / TEST-ACTOR GROUNDING (delivered and measured; NOT the current task)
 
 **Status: COMPLETE BY MEASUREMENT. Rendered confirmation NOT achieved.**
 
@@ -3170,7 +3370,7 @@ playtest, not an agent task.
 
 ---
 
-## 11. CURRENT MILESTONE - MILESTONE 6: DODGE AND I-FRAMES (DELIVERED)
+## 11. HISTORICAL - MILESTONE 6 SCOPE RECORD (delivered; superseded as "current" by 8B and 8E)
 
 **Status: ACCEPTED 2026-09-12. Delivered, measured, and human-played. This section is now
 a closed record. The next milestone needs a NEW entry. No work is authorised.**
@@ -3321,7 +3521,7 @@ the input-layer rule that gameplay never reads raw devices.
 
 ---
 
-## 11A. NEXT MILESTONE - MILESTONE 7 (PARRY) SELECTED, APPROVED AND DELIVERED
+## 11A. HISTORICAL - MILESTONE 7 (PARRY) SCOPE RECORD (delivered; NOT a pending next milestone)
 
 RESOLVED 2026-09-12. The user selected and APPROVED Milestone 7 - Parry, and it was
 implemented and measured in the same pass: see section 8C for the architecture, the authored
@@ -3380,8 +3580,14 @@ after M7 is again the user's call.
 
 ### 12.1 Open script errors in the diagnostics panel (KNOWN, BENIGN, DO NOT CHASE)
 
-`state:diagnostics` currently reports `20` script errors and `5` warnings. All 20
-errors are ONE root cause:
+RE-CHECKED 2026-09-14 (documentation consolidation pass): `state:diagnostics` reports
+**0 errors and 38 warnings**, and `state:script-errors` for `open_script_buffers` returns an
+EMPTY list. The 38 warnings are case-mismatch import warnings from third-party asset kits,
+recorded in `CASCADIA_DELETION_MANIFEST.md` under "Recurring: case-mismatch import warnings".
+The GameActions symptom described below was NOT reproducible this pass.
+
+When it was first recorded, `state:diagnostics` reported `20` script errors and `5` warnings.
+All 20 errors were ONE root cause:
 
     Identifier "GameActions" not declared in the current scope.
     res://scripts/input/cascadia_input.gd, lines 56, 90-93, 119, 128-216
@@ -3457,6 +3663,13 @@ Re-check before flagging it again.
   turns during a backstep instead of retreating while facing forward, exactly as the static
   reading in section 8F.2 predicted. Found independently by the user in play (section 8G.2
   item 2). A facing indicator is needed to make the correction readable.
+  `[RECONCILE - NOT re-verified since 2026-09-13]` This entry was written 2026-09-12. Since then
+  the GAMEPLAY half was implemented and measured by the 8F authority pass (section 8N,
+  2026-09-13: `dodge_authority_probe_debug` ALL CHECKS PASSED) and the PRESENTATION half was
+  accepted as Milestone 11 (section 8O.15, the user's visual read). This entry has NOT been
+  updated to reflect that, and the 2026-09-14 consolidation deliberately did NOT flip it to
+  fixed - that needs a pass that re-verifies the specific claim. Treat the status above as
+  OUTSTANDING.
 - `[UNVERIFIED]` The physical parry CONTROLLER binding (joypad button 9) was never pressed.
   The probe drove the keyboard binding only, so the controller path is unproven.
 - `[PARTIAL]` Sprint / Dodge / Backstep pass: every acceptance criterion passed by measurement
@@ -3589,8 +3802,12 @@ The window remains hard to READ without animation, which is a readability item, 
 - Backstep facing preservation, plus a legible facing indicator on the player capsule (sections
   8F.2 and 8G.2 item 2). HUMAN-CONFIRMED in play. The guard alone is not enough: without a
   visible front marker the correction cannot be read, so the indicator is part of the fix.
-- Dodge movement-authority arbitration - orientation and position (section 8F). Bounded
-  gameplay/presentation pass. RECORDED, NOT STARTED. Orientation is now human-confirmed.
+  **DELIVERED: facing preservation by the 8F/8N authority pass (2026-09-13, measured) and the
+  indicator by Milestone 11 (section 8O, user-accepted 2026-09-13). No longer deferred.**
+- Dodge movement-authority arbitration - orientation and position (section 8F).
+  **DELIVERED 2026-09-13 as section 8N.** Measured: `dodge_authority_probe_debug` ALL CHECKS
+  PASSED, transcript on disk, 0 debugger errors; `step_probe_debug` re-run clean. No longer
+  deferred.
 - Dodge / Backstep animation integration, and the animation adapter and clip selection
   (sections 8E.6 and 8F). Requires an animation system, which does not exist yet.
 - SOCD-style input arbitration / cleanup, and a review of the secondary / click action bindings
@@ -3619,15 +3836,14 @@ When a file looks obsolete, temporary, duplicated or superseded, it is recorded 
 dependencies, safe-to-delete (yes / uncertain), date and notes. The user reviews and
 deletes manually, later. Do not repeatedly ask for deletion confirmation.
 
-The manifest is currently ~938 lines and already records, among others:
+The manifest is the CANONICAL accounting ledger for every cleanup candidate. Do not reproduce
+its inventory here - a duplicated list goes stale, and this section did: it read "~938 lines"
+while the file had grown to many times that size.
 
-- Cleanup candidates: `scripts/diagnostics/input_debug_overlay.gd`,
-  `scripts/player/player_stub.gd`, the step / damage / actor / attack / target-sweep
-  probe scripts and their scenes, `scenes/actors/dummy_actor.tscn`,
-  `scripts/diagnostics/hit_feedback_debug.gd`.
-- Environment notes: asset health, Unity `.meta` clutter, `assets/folder_tree.txt`.
-- Process notes: writes reported but absent from disk; new-directory registration
-  failures; the class-cache `open_script_buffers` issue; the camera mask drift.
+MEASURED 2026-09-14: the manifest holds 95 `##` sections, 40 of them `## Candidate:` entries, and **no file in this project has ever been
+deleted** - there is no `DELETED` status anywhere in it, and every candidate is still present on
+disk. Do not read the manifest as proof that a deletion happened. Its ENTRY INDEX lists every
+tracked entry with its recorded status.
 
 **Deleting anything listed there can break a probe that later verification depends on.
 Read the manifest entry's "Used By" before removing anything.**
@@ -5753,4 +5969,180 @@ in Milestone 11.
 - Physical Alt-Tab / OS pointer-lock behaviour remains unproven in this host (unchanged from 8M.24).
 - The windowed / fullscreen / borderless and capture-on-return policy remains deferred.
 - Milestone 10 save/load remains probe-measured but NOT human-played (section 0).
+
+---
+
+## 8P. MILESTONE 12 - TARGET LOCK-ON (selected and APPROVED by the user 2026-09-14; roadmap written BEFORE implementation)
+
+Per the standing rule in section 15, this section was written before any code. Nothing below is
+retro-fitted.
+
+### 8P.1 The user's decision
+
+The user selected the next milestone as **Combat Loop + Targeting**, sequenced as: (1) targeting /
+lock-on, (2) a minimal UI pass, (3) save/load presentation in a real UI. Only step 1 is authorised
+here. Steps 2 and 3 are recorded as the intended direction but are NOT started and NOT approved.
+
+Control contract, chosen by the user from three options: lock-on is **acquired/toggled with the
+existing `lock_on` binding**, and while locked, **two NEW separate actions cycle left/right through
+valid targets** - the Bloodborne/Souls convention. Right-stick left/right on the controller, with
+appropriate keyboard/mouse equivalents. Auto-release on target death, invalid target, excessive
+range, or player death.
+
+### 8P.2 What already exists (read from disk this pass - do NOT rebuild these)
+
+- `lock_on` is ALREADY bound: TAB (keycode 4194306) and joypad button 8 (R3 / right-stick click).
+- `CascadiaInput.consume_lock_on()` ALREADY exists and is currently UNUSED.
+- `LOCK_ON` is already in `GameActions.BUFFERED_ACTIONS` and in the `TARGETING` group. It is NOT in
+  `RESERVED_ACTIONS` (that list is `RANGED_ATTACK`, `JUMP` only), so it is already a legitimately
+  consumable action.
+- `CombatParticipant.is_usable_target()` and `CombatParticipant.target_refusal()` ALREADY exist and
+  are the established validity predicates. Reuse them. Target validity must keep ONE owner.
+- `HealthComponent.GROUP_DAMAGEABLE` is the enumerable enemy population; `EnemyDeathComponent`
+  exposes `is_defeated()`; the player's death circuit exposes `is_dead()`.
+- The camera rig is `CameraRig / CameraYaw / CameraPitch / SpringArm3D / Camera3D`, horizontal orbit
+  on `CameraYaw`, vertical on `CameraPitch`, **roll is always zero**, and the SpringArm mask is
+  `GameLayers.WORLD` only.
+
+### 8P.3 The one real design tension, stated up front
+
+On the controller the right stick's X axis (axis 2) ALREADY drives `camera_look_left` / `camera_look_right`.
+Binding `target_cycle_left` / `target_cycle_right` to the same axis is the Soulslike convention, but it
+means one physical axis would feed two consumers at once.
+
+Resolve it through the EXISTING precedent, not a new mechanism: gameplay already declares look INTENT to
+the input layer via `mouse_look_enabled` (owned by Escape alone, amended by the focus rules in
+`.summerrules`). While locked, targeting declares an equivalent intent (`look_yaw_suppressed`), the input
+layer then excludes the horizontal component from the look delta and reports the cycle presses instead.
+The intent flag is gameplay's DECLARED STATE; the input layer must never derive lock state itself, and
+the camera must never become the authority. No system may add its own focus or capture rules.
+
+### 8P.4 In scope
+
+- A `TargetingComponent` (own module, its own script) that owns lock state: current target, locked
+  flag, acquire, cycle, release, and the four auto-release conditions.
+- NEW actions `target_cycle_left` / `target_cycle_right` added to `GameActions` and bound in the
+  InputMap, plus a `CascadiaInput.consume_*` accessor for each and the declared-intent flag from 8P.3.
+- Camera integration: while locked, the rig frames the target. **Roll stays zero**, the existing
+  hierarchy is preserved, and the rig only READS targeting state.
+- Release-range tuning as a single exported number.
+- Retention of `lock_on` as the toggle; no new acquire binding.
+
+### 8P.5 Explicitly OUT of scope (not built, not partially built)
+
+- **Lock-on-relative dodge direction.** The `.summerrules` gate said not to build it until lock-on was
+  its own milestone; this is now that milestone, so it becomes *permitted* - but the user did not ask
+  for it and it is deliberately NOT in this pass. Dodge stays CAMERA-relative.
+- HUD / reticle / target marker or any other presentation of the lock.
+- Enemy targeting. `EnemyAttacker.target_group` ("player_actor") is the ENEMY choosing the PLAYER - a
+  DIFFERENT concern that happens to share the word "target". Do not conflate them, and do not change
+  the attacker.
+- Cycling VISUALS or ANIMATION (there is no animation system), the full UI/keybinding pass, save/load
+  persistence of a locked target, lock-on during committed attacks or dodges beyond respecting them.
+- Any retuning of combat, stamina, parry, dodge, save/load or camera sensitivity values.
+
+### 8P.6 Acceptance criteria and evidence plan
+
+Static and deterministic checks (probes CANNOT grade feel, and no probe may be claimed to):
+
+1. `TargetingComponent` exists and is the single owner of lock state; target validity delegates to
+   `CombatParticipant`.
+2. `target_cycle_left` / `target_cycle_right` exist in `GameActions` and are bound in `project.godot`;
+   keyboard/mouse equivalents chosen to NOT collide with existing bindings (note: R is already bound
+   twice) and recorded in `.summerrules`.
+3. Each of the four auto-release conditions is implemented and exercised deterministically.
+4. A new `targeting_probe_debug` measures: acquire, cycle wraps and skips invalid targets, that a
+   DEFEATED target is refused as invalid (not as out-of-range, counted by cause), that release-on-death
+   and release-on-range actually release, and that the player's death releases.
+5. The two existing regression probes still pass: `retarget_state_probe_debug` (Alt-Tab retargeting,
+   unaffected by this work) and `focus_input_routing_probe_debug`. NOTE: that probe's own COMMENT
+   describes `lock_on` as "a RESERVED action with no targeting system (roadmap 8E.5)" - that comment
+   becomes stale once this milestone lands and should be corrected, but its ASSERTION is delivery-only
+   and must still pass.
+6. No gameplay, combat, stamina, camera-sensitivity or save/load VALUE is retuned; no milestone-11
+   facing marker or existing binding is disturbed.
+
+Rendered and human evidence: a lock-on read is a matter of FEEL and cannot be graded from a still
+frame. The user plays it and says whether the camera framing, the cycle order and the release
+behaviour read correctly.
+
+### 8P.7 Milestone 12 - status
+
+**IMPLEMENTED AND MEASURED 2026-09-14. NOT YET HUMAN-PLAYED - awaiting the user's read of the
+framing feel.**
+
+#### What was built
+
+- `scripts/player/targeting_component.gd` (`class_name TargetingComponent`) - NEW. The single owner
+  of lock state: the candidate list, the current target and the acquire/cycle order. Validity is
+  delegated to the EXISTING `CombatParticipant.is_usable_target()` / `target_refusal()`, so no second
+  validity authority was created. Defeat is read from the target's own defeat authority; player death
+  from `DeathComponent.is_dead()`. The four release causes are enumerated and counted separately.
+- `scripts/input/cascadia_input.gd` - added `look_yaw_suppressed`, a gameplay-DECLARED intent and the
+  established analogue of `mouse_look_enabled`; plus `consume_target_cycle_left()` /
+  `consume_target_cycle_right()`. `_update_look()` drops ONLY the horizontal stick component while the
+  intent is set. The input layer never derives lock state, and focus transitions never clear the intent.
+- `scripts/core/game_actions.gd` - `TARGET_CYCLE_LEFT` / `TARGET_CYCLE_RIGHT` added to the TARGETING
+  group and to `BUFFERED_ACTIONS`.
+- `scripts/camera/third_person_camera.gd` - `_frame_locked_target()` plus `lock_yaw_smoothing`. Yaws
+  onto the target on the shortest arc, never writes pitch, keeps roll zero by construction, and only
+  READS the lock. Hierarchy unchanged.
+- `project.godot` - both cycle actions bound to joypad axis 2 (-1.0 / +1.0) plus mouse wheel. Nothing
+  new on R, F8 or F9; `lock_on` untouched.
+- `main.tscn` - the `Targeting` node added.
+- `scripts/diagnostics/targeting_probe_debug.gd` and `scenes/diagnostics/targeting_probe_debug.tscn` -
+  the probe and its entry scene.
+
+#### Measured result
+
+`targeting_probe_debug`: **RESULT: ALL CHECKS PASSED (78)**, 0 debugger errors, measured by running
+the probe scene. Coverage includes: acquire through the REAL bound TAB event; cycle through the REAL
+wheel events including wrap and round-trip; right cycling visiting every valid target exactly once;
+the actor never being a candidate for its own lock; a refusal with no valid targets raising nothing
+and declaring no intent; the declared intent measured on the camera from BOTH sides
+(6.160 deg unsuppressed vs **0.0000 deg** suppressed); mouse motion still turning the camera while
+locked; framing the target, following it when it moves, pitch unchanged, roll zero, hierarchy intact;
+and all four auto-release causes each filed under its own cause - defeated, freed/invalid, refused as
+a target, out of range - plus player death.
+
+The probe also proves it leaves no trace: no arena actor damaged or defeated, carried balance
+unchanged, `awards` unchanged, no lock and no look intent left held.
+
+#### Three probe defects found and fixed in THIS pass (all three in the probe, none in the module)
+
+1. `_resolve()` resolved the camera rig BEFORE assigning `_camera`, and `_find_camera_rig()` returns
+   null when `_camera` is null - so the rig could never be found and the probe aborted before running
+   a single check (`1 of 0 FAILED`).
+2. `_spawn_target()` pre-registered its temporary actor with `CreditLedger.handle_defeat()` believing
+   that would BLOCK a later reward. It does not: that call refuses and returns BEFORE `_rewarded[id]`
+   is set, and the ledger re-scans the damageable group every physics frame, so defeating a temporary
+   actor WOULD have minted Credits and broken the cleanup assertions. Replaced with
+   `EnemyDeathComponent.restore_defeated(true)`, which sets the authoritative defeated state WITHOUT
+   emitting `defeated` - the documented reason Milestone 10 uses it for loads, and the reason a probe
+   can use it without paying a reward.
+3. The look-intent stick measurement was taken WHILE a lock was held, so TWO yaw authorities were
+   active at once (the stick, and the rig framing the target). It reported a FALSE FAILURE of
+   0.8644 deg that was entirely the framing transient - the rig's yaw had been restored off-target,
+   and framing pulled it back. The measurement is now taken with no lock held, with
+   `is_framing_lock()` asserted false, and the re-run measures exactly **0.0000 deg**. The lock is
+   re-acquired immediately afterwards for the mouse and framing checks.
+
+#### Evidence vocabulary, applied honestly
+
+- The module's behaviour above is **CONFIRMED by deterministic probe measurement**.
+- Camera framing, cycle order and release feel are **NOT YET VERIFIED** - they are a matter of feel
+  and cannot be graded from a probe or a still frame. This is why the milestone is not called
+  accepted: **if a lock-on read is wrong, it is a feeling that only the player can report.**
+- The two regression probes named in 8P.6 item 5 were NOT re-run in this pass, so they are neither
+  claimed to pass nor to fail. `lock_on`'s path through the input layer IS covered by the new probe,
+  which exercises the real `lock_on` binding end to end.
+- The two `TARGET_CYCLE_*` script errors reported by `state:diagnostics` under scope
+  `open_script_buffers` are the KNOWN stale open-buffer false positive, not real: both constants are
+  present on disk in `game_actions.gd` (lines 60-61) and the probe exercised BOTH actions
+  successfully at runtime. Recorded in the deletion manifest's recurring-issue section.
+
+#### Not built, by explicit scope decision
+
+Lock-on-RELATIVE dodge direction (dodge stays camera-relative), any animation, VFX, reticle or sound.
+`EnemyAttacker.target_group` - the ENEMY targeting the PLAYER - was not modified.
 
