@@ -6,7 +6,22 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (8O.14 - ATTACK-PHASE COLOUR FEEDBACK ADDED TO THE FACING MARKER. The user
+Last updated: 2026-09-13 (MILESTONE 11 CLOSED - THE FACING INDICATOR IS ACCEPTED BY THE USER. The user
+reviewed the running game and reported "everything seems visually consistent and working properly.
+consider this step implemented". That is a HUMAN VISUAL READ of the shipped scene, and it is the read
+that 8E, 8F, 8N and all three 8O refinements were carrying forward: the capsule now communicates its
+facing by eye, which CLOSES the presentation half of the 8G.2 backstep defect. Milestone 11 shipped a
+`FacingMarker` under `Player` in `scenes/test_environment.tscn` - an amber FORWARD disc on local -Z and a
+blue REAR disc on local +Z, scene-authored, no `CollisionShape3D` - plus ONE new read-only presentation
+adapter, `scripts/diagnostics/facing_marker_feedback_debug.gd`, which tints the amber marker by attack
+phase (amber IDLE, pale-yellow STARTUP, red ACTIVE, blue-grey RECOVERY) so a committed swing is visible
+on the body for the first time. NO gameplay value, script, camera, input, stamina, save/load or HUD file
+was touched by any part of Milestone 11. Still open, recorded and NOT closed by that acceptance: the two
+specific MOTION reads - markers tracking yaw while moving/dodging/backstepping, and whether the swing
+colours read distinctly at the light attack's timing - are covered by the general acceptance rather than
+separately measured; physical Alt-Tab remains unproven in this host; and Milestone 10 save/load is still
+probe-measured but not human-played. Current active task remains NONE. See 8O.15.)
+Previous: 2026-09-13 (8O.14 - ATTACK-PHASE COLOUR FEEDBACK ADDED TO THE FACING MARKER. The user
 approved SWING FEEDBACK on the capsule: the amber marker now changes COLOUR with the attack phase - amber
 IDLE, pale-yellow STARTUP, red ACTIVE, blue-grey RECOVERY - so a committed swing is visible on the body
 for the first time, because there is still no animation system (the presentation boundary in 8G.2 item
@@ -230,9 +245,12 @@ plus the deletion manifest.
 | - | Defeat coverage across the arena | ACCEPTED 2026-09-12 (measured AND user-verified) | The user reported that an enemy reaching 0 health did not show a defeated state, and that NO test asserted defeat coverage. Both were CORRECT: `TargetA/B/C` carried no death path at all, and every probe inspected actors BY NAME, so an unwired actor reaching zero health processed nothing while the whole suite still reported ALL CHECKS PASSED. Fix: `TargetA/B/C` wired to the EXISTING `EnemyDeathComponent` (mortal) + the EXISTING presentation adapter in `scenes/test_environment.tscn`; no new death system, no combat value or timing changed. The missing test now exists as `defeat_coverage_probe_debug`, driven by ENUMERATION of the `damageable` group so a newly added enemy is covered the moment it exists, and the player is excluded BY ARCHETYPE (`resets_actors`), not by name. `[DEFCOV] RESULT: ALL CHECKS PASSED`, 5/5 enemies each reading `is_defeated=true defeats=1 presentation=showing`; all 13 regression probes re-run and passed; `main.tscn` boots with 0 runtime errors. Rendered frame confirms red `DEFEATED` labels, tipped/darkened poses, and all five actors at `0/100 DEAD`. See 8K.12 |
 | - | Reusable actor combat readiness | IMPLEMENTED AND MEASURED; DEFECT FOUND IN PLAY AND FIXED (8K.12) | `defeat_coverage_probe_debug`: 5/5 damageable enemies reach the DEFEATED state with a VISIBLY showing presentation (TestAttacker, DummyActor, TargetA, TargetB, TargetC all `is_defeated=true defeats=1 presentation=showing`). The 8K.11 audit had wrongly concluded the static targets were intentional non-participants; they were a HOLE - no death path at all - and are now wired into the existing defeat component. `actor_combat_readiness_probe_debug`: ALL CHECKS PASSED. All 13 regression probes re-run and passed. Section 8K written BEFORE any implementation. Audit read from the live project: damageability (`HealthComponent` + `HurtboxComponent.damageable`), mortality (`EnemyDeathComponent.mortal`), attack capability (`EnemyAttacker`), per-actor debug presentation (`CombatDebugOverlay`) and group-based target selection (`EnemyAttacker.target_group`) ALREADY existed and were reused unchanged. The genuine gap was TARGET VALIDITY: `EnemyAttacker._get_target()` returned the first node in the group with no alive check, so a dead actor was still a valid target the attacker faced and swung at. `actor_combat_readiness_probe_debug`: RESULT: ALL CHECKS PASSED, 0 runtime errors - the dead target was refused with the DEAD cause (`target_refusals_dead 0 -> 2`) and NOT as out-of-range (`0 -> 0`), the attacker did not turn to face the corpse (`max drift 0.0000 rad`), a revived actor was targetable again, and a freed node was refused without raising. All twelve regression probes re-run and passed. See 8K.10 |
 
-- **Highest milestone reached: 8.** This input pass is a REFINEMENT of Milestone 6's
-  locomotion and is deliberately NOT numbered - Milestone 9 remains enemy pursuit and was
-  NOT started.
+- **Highest milestone reached: 11.** This bullet read "8" until 2026-09-13, when the wrap-up pass found
+  it CONTRADICTING the table above: Milestone 9 was DELIVERED as the credit economy (8L), Milestone 10
+  as game-state saving/loading (8M), and Milestone 11 as the readable facing indicator (8O). The old
+  wording also described M9 as "enemy pursuit", which is a DIFFERENT system that is still unstarted -
+  M9's ACTUAL delivered scope is section 8L and is unrelated to pursuit. Lock-on, pursuit, navigation
+  and real enemy AI all remain deferred (section 13).
 - **Milestones 0-4: ACCEPTED.** All four were re-audited against the live project this
   pass and every probe was re-run rather than carried forward. No contradictory evidence
   was found and no defect in milestones 0-4 was discovered, so no repair was required.
@@ -334,8 +352,10 @@ plus the deletion manifest.
   HAND**: the corrected evasion uses the player's last movement orientation and keeps that orientation
   committed for the whole evasion. The OTHER half - the capsule having no front-facing marker, so the fix
   cannot be judged by eye - was a PRESENTATION item, and **it is now CLOSED.**
-- **MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED AND IMPLEMENTED (2026-09-13).** The
-  capsule now carries a `FacingMarker` with an amber FORWARD marker on local **-Z** and a blue REAR
+- **MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED, IMPLEMENTED, AND CLOSED (2026-09-13).**
+  The user reviewed the running game and accepted it: "everything seems visually consistent and working
+  properly. consider this step implemented". That closes the presentation half of the 8G.2 backstep
+  defect. The capsule now carries a `FacingMarker` with an amber FORWARD marker on local **-Z** and a blue REAR
   marker on local **+Z** (the side the default camera sees), both scene-authored primitives in
   `res://scenes/test_environment.tscn`, NO new script, and NO `CollisionShape3D`. **REFINED (8O.12) after
   the user reviewed the first result**: the amber marker is now a compact **ORB** (`SphereMesh`,
@@ -354,12 +374,16 @@ plus the deletion manifest.
   script, `scripts/diagnostics/facing_marker_feedback_debug.gd`, tints the amber marker by attack phase -
   amber IDLE, pale-yellow STARTUP, red ACTIVE, blue-grey RECOVERY - so a committed swing is finally
   visible on the capsule. It READS `PlayerCombat.state` and writes only a material colour; it starts,
-  cancels, delays and redirects nothing, and NO gameplay file was changed. What remains OPEN is the human
-  read of BOTH the yaw-following and the colour transitions, neither of which a still frame can settle.
-- **Current active task: NONE.** Milestone 10 is complete and measured. Milestone 11 is implemented -
-  including the user-approved attack-phase COLOUR FEEDBACK (8O.14) - and is awaiting the user's playtest
-  read of the facing marker and of the swing colours in motion. The 8F authority pass is implemented and
-  measured. No further work is authorised; the next milestone must be named and approved before anything
+  cancels, delays and redirects nothing, and NO gameplay file was changed. **The user's visual read is
+  IN** (see 8O.15), so the human-acceptance item this bullet was waiting on is CLOSED. Recorded as still
+  open and NOT closed by that acceptance: the two specific MOTION reads - the markers tracking yaw while
+  moving, turning, dodging and backstepping, and whether the swing colours read distinctly at the light
+  attack's 0.16 s / 0.10 s timing - are COVERED BY the user's general acceptance rather than separately
+  measured.
+- **Current active task: NONE.** Milestone 10 is complete and measured. **Milestone 11 is CLOSED** -
+  approved by the user, implemented, refined twice, and ACCEPTED on the user's own visual read of the
+  running game (see 8O.15). The 8F authority pass is implemented and measured. No further work is
+  authorised; the next milestone must be named and approved before anything
   begins.
 
 ### Evidence vocabulary used in this file
@@ -5661,4 +5685,72 @@ save/load were **not modified**. No gameplay file changed hands in this pass.
 - `scenes/test_environment.tscn` - the script assigned to `FacingMarker`.
 - `CASCADIA_DELETION_MANIFEST.md` - the new file recorded as a cleanup candidate.
 - `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this section, the header and section 0.
+
+---
+
+### 8O.15 Milestone 11 ACCEPTED by the user - the facing-indicator step is CLOSED (2026-09-13)
+
+**The user reviewed the running game and accepted the step.** Verbatim report: "everything seems
+visually consistent and working properly. consider this step implemented".
+
+Recorded for what it actually is: a HUMAN VISUAL READ of the shipped scene, and precisely the read that
+8O.11, 8O.12, 8O.13 and 8O.14 were each waiting on. It CLOSES the presentation half of the 8G.2 backstep
+defect that 8E, 8F and 8N carried forward - the capsule now communicates its facing by eye.
+
+#### What this acceptance covers
+
+- The facing markers render and are visually consistent on the actor.
+- The amber FORWARD marker (local **-Z**) and the blue REAR disc (local **+Z**) are both present and
+  distinguishable in the shipped scene.
+- The attack-phase colour feedback from 8O.14 did not break the authored look.
+- No visual regression in the arena, the capsule, the camera or the debug overlay.
+
+#### Classified by this file's own evidence vocabulary
+
+- The markers EXIST with the recorded geometry and materials: **CONFIRMED** (read from
+  `scenes/test_environment.tscn` on disk, plus rendered frames).
+- They read correctly to the user's eye: **CONFIRMED** (the user's visual report, above).
+- The read was a GENERAL visual acceptance, not a per-behaviour checklist. The two specific motion reads
+  listed below are therefore recorded as COVERED BY that acceptance, NOT as independently measured.
+
+#### Deliberately NOT re-run
+
+- No probe was written or re-run for this pass. A probe cannot grade visual readability, and no gameplay
+  value changed - the 8N evasion measurements stand unaltered.
+- The already-closed 8F dodge movement-authority work was NOT reopened.
+
+#### Milestone 11 - final state
+
+**CLOSED. Approved by the user, implemented, refined twice, and accepted on a user visual read.**
+
+The marker CONTRACT never changed across any of the three refinements:
+
+- amber marker = FORWARD, on local **-Z**;
+- blue marker = REAR, on local **+Z** (the side the default behind-and-above camera sees);
+- both are children of the body transform, so both inherit `rotation.y` with no code;
+- **no `CollisionShape3D`** anywhere beneath `FacingMarker`, so `_capsule_radius()` cannot pick up a
+  stray shape and the player's physical collision is untouched;
+- one read-only presentation adapter (`facing_marker_feedback_debug.gd`) tints the amber marker by attack
+  phase, reading `PlayerCombat.state` and writing one material colour and nothing else.
+
+#### Files changed across the whole of Milestone 11
+
+- `scenes/test_environment.tscn` - `FacingMarker` with `Nose` and `Tail`, their meshes and materials, and
+  the feedback script assigned to `FacingMarker`.
+- `scripts/diagnostics/facing_marker_feedback_debug.gd` - NEW: the read-only attack-phase colour adapter.
+- `CASCADIA_DELETION_MANIFEST.md` - the new script recorded as a cleanup candidate.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - sections 8O.11 to 8O.15, the header and section 0.
+
+No gameplay script, combat value, camera, input, stamina, save/load or HUD file was touched at any point
+in Milestone 11.
+
+#### Open items that REMAIN - recorded, NOT closed by this acceptance
+
+- The two specific MOTION reads: whether the markers visibly track yaw while moving, turning, dodging and
+  backstepping, and whether the STARTUP / ACTIVE / RECOVERY colours read distinctly at the light attack's
+  0.16 s startup and 0.10 s active timing. Covered by the user's general acceptance, not separately
+  called out. If a swing ever looks unreadable in play, this is the thing to revisit.
+- Physical Alt-Tab / OS pointer-lock behaviour remains unproven in this host (unchanged from 8M.24).
+- The windowed / fullscreen / borderless and capture-on-return policy remains deferred.
+- Milestone 10 save/load remains probe-measured but NOT human-played (section 0).
 
