@@ -14,11 +14,14 @@ IMPLEMENTED as section 8O proposed - a `FacingMarker` Node3D under `Player` in
 (rear), scene-authored, SCRIPT-FREE, and with NO CollisionShape3D beneath it so `_capsule_radius()`
 cannot pick up a stray shape. Two rendered frames confirm it: the blue tail reads on the camera-facing
 side and the amber nose stands above the capsule dome, so front and rear are distinguishable from the
-default third-person view. The first frame is why the nose was RAISED from local y=2.0 to y=2.3: at the
-dome tip it fell inside the capsule silhouette from a camera that sits behind and above. NO gameplay
-file was touched - no script changed, and the evasion contract measured in 8N is untouched. STILL
-PENDING: the user's own read of it while MOVING, dodging and backstepping, which no still frame can
-settle. See 8O.11.)
+default third-person view. NO gameplay file was touched - no script changed, and the evasion contract
+measured in 8N is untouched. THEN REFINED (8O.12) after the user saw the first result: the amber marker
+became a compact ORB (`SphereMesh`) instead of a tall brick-like box, and the blue marker became a flat
+DISC BADGE sitting flush against the rear of the body instead of a detached floating cube. The contract
+is unchanged - amber still FORWARD on local -Z, blue still REAR on local +Z, still scene-authored, still
+script-free, still NO `CollisionShape3D`. The blue badge is presentation-only design language: NO
+backstab mechanic, rear-hit detection or damage multiplier exists. STILL PENDING: the user's own read of
+it while MOVING, turning, dodging and backstepping, which no still frame can settle. See 8O.11 and 8O.12.)
 Previous: 2026-09-13 (8F IMPLEMENTED - DODGE MOVEMENT AUTHORITY. The recorded future pass in section
 8F was the sensible next task: it was the last open gameplay defect a HUMAN had actually confirmed in
 play (the backstep turning the body around), and it was written up and scoped long before this session,
@@ -307,12 +310,17 @@ plus the deletion manifest.
   committed for the whole evasion. The OTHER half - the capsule having no front-facing marker, so the fix
   cannot be judged by eye - was a PRESENTATION item, and **it is now CLOSED.**
 - **MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED AND IMPLEMENTED (2026-09-13).** The
-  capsule now carries a `FacingMarker` with an amber NOSE on local **-Z** (forward) and a blue TAIL on
-  local **+Z** (rear, the side the default camera sees), both scene-authored primitives in
-  `res://scenes/test_environment.tscn`, NO new script, and NO `CollisionShape3D`. Measured: `main.tscn`
-  boots with 0 debugger errors; two rendered frames confirm both markers are readable from the default
-  camera. **The one thing still open is the human read**: a still frame cannot show that the markers track
-  yaw while moving, dodging or backstepping. See section 8O.11.
+  capsule now carries a `FacingMarker` with an amber FORWARD marker on local **-Z** and a blue REAR
+  marker on local **+Z** (the side the default camera sees), both scene-authored primitives in
+  `res://scenes/test_environment.tscn`, NO new script, and NO `CollisionShape3D`. **REFINED (8O.12) after
+  the user reviewed the first result**: the amber marker is now a compact **ORB** (`SphereMesh`,
+  radius 0.28) rather than a tall brick-like box, and the blue marker is a flat **DISC BADGE**
+  (`CylinderMesh`, radius 0.22, height 0.08, laid flat) sitting flush against the rear of the body rather
+  than a detached floating cube. The blue badge is presentation-only design language - there is NO
+  backstab mechanic, rear-hit detection or damage multiplier. Measured: `main.tscn` boots with 0 debugger
+  errors; the rendered frame confirms both markers are readable from the default camera. **The one thing
+  still open is the human read**: a still frame cannot show that the markers track yaw while moving,
+  turning, dodging or backstepping. See sections 8O.11 and 8O.12.
 - **Current active task: NONE.** Milestone 10 is complete and measured, Milestone 11 is implemented and
   awaiting the user's playtest read of the facing indicator, and the 8F authority pass is implemented and
   measured. No further work is authorised; the next milestone must be named and approved before anything
@@ -5373,4 +5381,68 @@ with no gameplay effect; the total footprint is two boxes and two materials.
 - `res://scenes/test_environment.tscn` - the only implementation change (`FacingMarker`, `Nose`, `Tail`,
   two `StandardMaterial3D` and two `BoxMesh` sub-resources).
 - `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this section, the header, section 0 and 8N.6.
+
+### 8O.12 Presentation refinement - final marker geometry (2026-09-13)
+
+A follow-up presentation pass, requested by the user after seeing the first result. The markers were
+FUNCTIONALLY correct but read as debug geometry: the amber nose was a tall brick-like box and the blue
+tail was a cube floating clear of the body. Both were reshaped into compact, attached icons.
+
+**Nothing about the marker CONTRACT changed.** The amber marker is still the FORWARD indicator on local
+**-Z**, the blue marker is still the REAR indicator on local **+Z**, both are still children of
+`Player/FacingMarker` under the body transform (so both inherit `rotation.y` with no code), and there is
+still **no script** and still **no `CollisionShape3D` anywhere beneath `FacingMarker`**.
+
+#### Final geometry (read from disk)
+
+| Node | Local transform | Mesh | Colour |
+| ---- | --------------- | ---- | ------ |
+| `Player/FacingMarker/Nose` | `position = (0, 2.2, -0.36)` | `SphereMesh` radius `0.28`, height `0.56` | amber `Color(1, 0.62, 0.12, 1)` |
+| `Player/FacingMarker/Tail` | rotated 90 deg about X, `position = (0, 1.3, 0.44)` | `CylinderMesh` top/bottom radius `0.22`, height `0.08` | blue `Color(0.15, 0.75, 0.95, 1)` |
+
+- **Amber = a compact ORB.** The elongated box is gone; it is now a sphere sitting at the capsule crown
+  on the forward axis. It is deliberately at the crown rather than on the capsule's front face because
+  the default camera looks down from behind and above (8O.3), so a front-face marker would be hidden by
+  the capsule. It reads over the top of the silhouette instead of obscuring it.
+- **Blue = a flat BADGE on the body.** The cube is gone; it is now a thin disc (0.08 deep) sitting
+  essentially flush against the capsule's rear surface, so it reads as an icon attached to the actor
+  rather than a detached floating block. This is the marker the default camera actually faces, so it
+  carries the primary read: seeing the blue badge means forward is away from the camera.
+- The blue badge **suggests** a rear/backstab affordance as visual design language ONLY. **No backstab
+  mechanic, rear-hit detection, damage multiplier, targeting rule or combat state exists or was
+  implemented.** It is a picture of a direction, nothing more.
+
+#### Verification performed
+
+- `test_environment.tscn` re-read from disk after every write batch. Final state confirmed: Nose is a
+  `SphereMesh` at local `(0, 2.2, -0.36)` on **-Z**; Tail is a `CylinderMesh` at local `(0, 1.3, 0.44)`
+  on **+Z** with its 90-degree X rotation baked into the node transform.
+- Sub-resources confirmed on disk with the values in the table above, and each mesh node referencing the
+  material declared for it.
+- Confirmed by searching the saved scene text that **NO `CollisionShape3D`** exists beneath
+  `FacingMarker`, so `PlayerController._capsule_radius()` cannot pick up a stray shape. Only `Node3D` and
+  `MeshInstance3D` nodes are present.
+- `main.tscn` launched: **0 debugger errors**, no parse or load failures, no console errors. The 20
+  reported script errors remain the KNOWN stale `open_script_buffers` `CreditLedger` false positives
+  (section 12.1) - unchanged in count and in files this pass never touched.
+- One rendered frame from the default camera confirms the intended result: the amber orb reads as a
+  compact sphere at the crown (no longer a pillar) and the blue disc reads as a flat badge attached to
+  the camera-facing surface (no longer a floating cube).
+
+#### Limitation - what this pass still does NOT prove
+
+- **A still frame cannot show yaw-following.** Nothing here proves the markers track the actor's rotation
+  while MOVING, TURNING, DODGING or BACKSTEPPING, and nothing here proves the facing reads correctly in
+  motion. That is the same human playtest 8O.11 recorded, and it REMAINS PENDING.
+- No gameplay value changed, so the 8N measurements stand unaltered and were deliberately NOT re-run. No
+  probe was written: a probe cannot grade visual readability.
+
+#### One tooling error encountered (recorded so it is not repeated)
+
+The first attempt to build the disc used `SetResourceProperty` with sub-property `radius` on a
+`CylinderMesh`. That op was **REJECTED** (`unknown subProperty "radius" ... did you mean: top_radius,
+bottom_radius`), which correctly skipped the remaining ops in that batch. `CylinderMesh` has NO `radius`
+property - it has `top_radius` and `bottom_radius` separately. The retry used both and succeeded. The
+scene was re-read afterwards rather than trusting the receipt, because a partially-applied batch is
+exactly the case where a write receipt is not proof of the saved state.
 
