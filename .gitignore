@@ -6,3 +6,6 @@
 .summer/local/
 
 /assets/
+
+# Godot/editor temporary files
+*.tmp
