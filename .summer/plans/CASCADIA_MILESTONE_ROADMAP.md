@@ -21,7 +21,14 @@ DISC BADGE sitting flush against the rear of the body instead of a detached floa
 is unchanged - amber still FORWARD on local -Z, blue still REAR on local +Z, still scene-authored, still
 script-free, still NO `CollisionShape3D`. The blue badge is presentation-only design language: NO
 backstab mechanic, rear-hit detection or damage multiplier exists. STILL PENDING: the user's own read of
-it while MOVING, turning, dodging and backstepping, which no still frame can settle. See 8O.11 and 8O.12.)
+it while MOVING, turning, dodging and backstepping, which no still frame can settle. THEN REFINED AGAIN
+(8O.13) at the user's request: the amber marker became a flat DISC like the blue one, moved closer to the
+capsule with its top flush at the capsule top. THAT FOUND A REAL CONFLICT - the capsule ends at local
+y = 2.0, the disc's top is exactly 2.00, and from the default BEHIND-and-above camera the opaque capsule
+now hides the amber marker COMPLETELY. "Flush with the top" and "visible from behind" cannot both hold;
+the options went back to the user rather than being guessed at. The user's other request - swing/attack
+visual feedback - was RECORDED but NOT built, because it needs new code consuming `PlayerCombat`'s phase
+and the project has no animation system yet. See 8O.11, 8O.12 and 8O.13.)
 Previous: 2026-09-13 (8F IMPLEMENTED - DODGE MOVEMENT AUTHORITY. The recorded future pass in section
 8F was the sensible next task: it was the last open gameplay defect a HUMAN had actually confirmed in
 play (the backstep turning the body around), and it was written up and scoped long before this session,
@@ -320,7 +327,9 @@ plus the deletion manifest.
   backstab mechanic, rear-hit detection or damage multiplier. Measured: `main.tscn` boots with 0 debugger
   errors; the rendered frame confirms both markers are readable from the default camera. **The one thing
   still open is the human read**: a still frame cannot show that the markers track yaw while moving,
-  turning, dodging or backstepping. See sections 8O.11 and 8O.12.
+  turning, dodging or backstepping. See sections 8O.11, 8O.12 and 8O.13. **8O.13 records a MEASURED
+  CONFLICT: the amber marker is now a disc flush with the capsule top, and from the default behind-and-above
+  camera that makes it INVISIBLE** - the capsule occludes it. That choice is back with the user.**
 - **Current active task: NONE.** Milestone 10 is complete and measured, Milestone 11 is implemented and
   awaiting the user's playtest read of the facing indicator, and the 8F authority pass is implemented and
   measured. No further work is authorised; the next milestone must be named and approved before anything
@@ -5445,4 +5454,83 @@ bottom_radius`), which correctly skipped the remaining ops in that batch. `Cylin
 property - it has `top_radius` and `bottom_radius` separately. The retry used both and succeeded. The
 scene was re-read afterwards rather than trusting the receipt, because a partially-applied batch is
 exactly the case where a write receipt is not proof of the saved state.
+
+---
+
+### 8O.13 Presentation refinement 2 - amber disc, and an occlusion finding (2026-09-13)
+
+Requested by the user after seeing 8O.12: make the amber marker the SAME KIND of marker as the blue one -
+a flat DISC rather than a sphere - move it CLOSER to the capsule, and align its top with the capsule top
+so it sits FLUSH and not above the capsule, "so the user can see it clearly".
+
+#### What changed
+
+| Node | Local transform | Mesh | Colour |
+| ---- | --------------- | ---- | ------ |
+| `Player/FacingMarker/Nose` | rotated 90 deg about X, `position = (0, 1.78, -0.40)` | `CylinderMesh` top/bottom radius `0.22`, height `0.08` | amber `Color(1, 0.62, 0.12, 1)` |
+| `Player/FacingMarker/Tail` | unchanged from 8O.12 - rotated 90 deg about X, `position = (0, 1.3, 0.44)` | `CylinderMesh` top/bottom radius `0.22`, height `0.08` | blue `Color(0.15, 0.75, 0.95, 1)` |
+
+The amber marker is now the same KIND of marker as the blue one - a thin disc - and no longer a sphere.
+No script, no `CollisionShape3D`, hierarchy unchanged, and both markers still inherit `rotation.y`
+because they are children of the body transform.
+
+#### THE FINDING - "flush with the top" and "visible from behind" CONFLICT
+
+Read from the scene, then confirmed in a rendered frame:
+
+- `Player/Mesh` is a `CapsuleMesh` with `radius = 0.4` and the DEFAULT `height` of 2.0, sitting at local
+  `(0, 1, 0)`. The capsule therefore occupies local y = 0.0 to 2.0, and its top is local y = 2.0.
+- The amber disc's top edge is at `1.78 + 0.22 = 2.00` - EXACTLY flush with the capsule top, which is
+  precisely what was asked for.
+- The default camera sits BEHIND the actor and slightly above it (`spring_length = 4.5`, see 8O.3). From
+  that side the opaque capsule hides anything mounted on its FORWARD face below the silhouette line.
+- **Measured in the rendered frame: the blue rear disc is clearly visible, and the amber forward disc is
+  NOT VISIBLE AT ALL** from the default behind-and-above view.
+
+The previous sphere was only visible because it protruded ABOVE the dome (local y = 2.2) - which is
+exactly what this refinement was asked to remove. So the two goals in the request cannot both hold from
+the default camera. This is recorded as a real conflict rather than papered over, and the fix was put to
+the user instead of being guessed at. The options are:
+
+1. Keep the top flush as it is now, and accept that the forward marker is only readable when the camera
+   is orbited to the front or the side.
+2. Raise the disc so it clears the silhouette again - at this camera angle that means several
+   centimetres above local y = 2.0.
+3. Widen the disc so its edges extend past the capsule's narrower dome at that height. The capsule radius
+   at local y = 1.78 is about `0.357`, so a disc radius above roughly `0.36` would show as amber flanks
+   either side of the silhouette while the top stays flush.
+
+#### Requested but NOT started - swing / attack visual feedback
+
+The user also asked to "tie in the animation state for swinging/attacks to the capsule so the user has a
+visual feedback mechanism for swings".
+
+RECORDED, NOT BUILT. Three things make this different from the marker work above and they are why it was
+not started in this pass:
+
+- There is NO animation system in the project (the presentation boundary recorded in 8G.2 item 3, and
+  animation is deferred to Milestone 15). The only real state available today is the attack PHASE machine
+  in `PlayerCombat` (`state_name()` returns IDLE / STARTUP / ACTIVE / RECOVERY).
+- It cannot be done scene-only. Unlike the facing markers, reacting to an attack requires NEW CODE - a
+  read-only presentation consumer of `PlayerCombat`'s phase. That crosses the combat / presentation
+  boundary this project governs carefully, so the form was put to the user rather than chosen here.
+- The user's visual intent for it (what should change, and how) was not specified, and this user gives
+  precise visual direction - so a guess would likely be discarded.
+
+#### Verification
+
+- `test_environment.tscn` re-read from disk AFTER the writes and confirmed: `Nose` is a `CylinderMesh`
+  (top/bottom radius `0.22`, height `0.08`) at local `(0, 1.78, -0.40)` on **-Z**; `Tail` unchanged on
+  **+Z**; still NO `CollisionShape3D` anywhere beneath `FacingMarker`.
+- `main.tscn` launched from a STOPPED state. **Trap recorded:** an earlier capture this pass was taken
+  from a REUSED instance (`playGame` reported "Game was already running ... No restart was performed"),
+  so that frame did NOT reflect the saved scene and was discarded as evidence. Always stop before
+  starting when the scene has changed.
+- 0 debugger errors, no parse or load failures.
+- One frame from the default camera: blue disc visible, amber disc not visible - the finding above.
+
+#### Still UNVERIFIED
+
+- The yaw-following read during movement, turning, dodge and backstep. Still a human playtest, unchanged
+  from 8O.11 and 8O.12.
 
