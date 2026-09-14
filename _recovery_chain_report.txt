@@ -1,0 +1,230 @@
+[CHAIN] === recovery chains: which step leaves the state wrong? ===
+[CHAIN] baseline (no chain run yet):
+[CHAIN] baseline                           focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=0 byClick=0 reasserts=0 lost=0 gained=0
+[CHAIN] --- CHAIN 1 (Escape -> click back) ---
+[CHAIN] 1a after Escape                    focus=true  mouse=0 intent=false active=true  suppress=false pending=(0.0,0.0) clicks=0 byClick=0 reasserts=0 lost=0 gained=0
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): Escape turns the capture INTENT off
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): Escape RELEASES the cursor (mouse=0)
+[CHAIN] CHAIN 1 (Escape -> click back) (intent off) look: yaw changed 0.0000 deg (active=true mouse=0)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): mouse motion does NOT turn the camera while the cursor is free
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the time scale is 1.0 (got 1.000)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=1 byClick=1 reasserts=0 lost=0 gained=0
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): capture STAYS held across 20 frames
+[CHAIN] CHAIN 1 (Escape -> click back) look: yaw changed 245.2645 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): mouse look turns the camera after the chain
+[CHAIN] CHAIN 1 (Escape -> click back) move: travelled 0.2750 m in 0.142 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 1 (Escape -> click back): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 2 (Escape -> click -> Escape -> click) ---
+[CHAIN] 2-1 after Escape                   focus=true  mouse=0 intent=false active=true  suppress=false pending=(0.0,0.0) clicks=1 byClick=1 reasserts=0 lost=0 gained=0
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): pass 1 - Escape turns the INTENT off
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): pass 1 - Escape releases the cursor
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 1: the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 1: the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 1: the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 1: that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN] 2-2 after Escape                   focus=true  mouse=0 intent=false active=true  suppress=true  pending=(0.0,0.0) clicks=2 byClick=2 reasserts=0 lost=0 gained=0
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): pass 2 - Escape turns the INTENT off
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): pass 2 - Escape releases the cursor
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 2: the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 2: the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 2: the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click) pass 2: that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=3 byClick=3 reasserts=0 lost=0 gained=0
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): capture STAYS held across 20 frames
+[CHAIN] CHAIN 2 (Escape -> click -> Escape -> click) look: yaw changed 245.2645 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): mouse look turns the camera after the chain
+[CHAIN] CHAIN 2 (Escape -> click -> Escape -> click) move: travelled 0.2750 m in 0.142 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 2 (Escape -> click -> Escape -> click): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 3 (Alt-Tab away -> back) ---
+[CHAIN] 3a focus OUT                       focus=true  mouse=0 intent=true  active=false suppress=false pending=(0.0,0.0) clicks=3 byClick=3 reasserts=0 lost=1 gained=0
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the focus-out SUSPENDS gameplay input
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the cursor is RELEASED on focus-out (mouse=0)
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the capture INTENT is KEPT across focus loss - Escape owns the intent, not focus
+[CHAIN]    focus IN                        focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=3 byClick=3 reasserts=0 lost=1 gained=1
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the focus-in RESUMES gameplay input
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the focus-in re-took the cursor with NO click (mouse=2)
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the press that brought the window back is SUPPRESSED
+[CHAIN] CHAIN 3 (Alt-Tab away -> back): the focus-in ran 8 re-assert frame(s) and 1 focus-gain handler(s)
+[CHAIN]    +10 frames                      focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=3 byClick=3 reasserts=8 lost=1 gained=1
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): capture is STILL held 10 frames after the return
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=3 byClick=3 reasserts=8 lost=1 gained=1
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): capture STAYS held across 20 frames
+[CHAIN] CHAIN 3 (Alt-Tab away -> back) look: yaw changed 245.2645 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): mouse look turns the camera after the chain
+[CHAIN] CHAIN 3 (Alt-Tab away -> back) move: travelled 0.2750 m in 0.142 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 3 (Alt-Tab away -> back): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) ---
+[CHAIN] 4a focus OUT                       focus=true  mouse=0 intent=true  active=false suppress=false pending=(0.0,0.0) clicks=3 byClick=3 reasserts=8 lost=2 gained=1
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (while unfocused): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (while unfocused): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (while unfocused): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (while unfocused): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN] 4b focus OUT again                 focus=true  mouse=0 intent=true  active=false suppress=true  pending=(0.0,0.0) clicks=4 byClick=3 reasserts=8 lost=3 gained=2
+[CHAIN]    focus IN                        focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=4 byClick=3 reasserts=8 lost=3 gained=3
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (second return): the focus-in RESUMES gameplay input
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (second return): the focus-in re-took the cursor with NO click (mouse=2)
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (second return): the press that brought the window back is SUPPRESSED
+[CHAIN] CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (second return): the focus-in ran 8 re-assert frame(s) and 1 focus-gain handler(s)
+[CHAIN]    +10 frames                      focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=4 byClick=3 reasserts=16 lost=3 gained=3
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) (second return): capture is STILL held 10 frames after the return
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=4 byClick=3 reasserts=16 lost=3 gained=3
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): capture STAYS held across 20 frames
+[CHAIN] CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) look: yaw changed 239.4709 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): mouse look turns the camera after the chain
+[CHAIN] CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return) move: travelled 0.2750 m in 0.138 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 4 (Alt-Tab away -> click -> Alt-Tab again -> return): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 5 (Alt-Tab away -> Escape -> click back) ---
+[CHAIN] 5a after Escape                    focus=true  mouse=0 intent=false active=true  suppress=true  pending=(0.0,0.0) clicks=4 byClick=3 reasserts=16 lost=4 gained=4
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): Escape while unfocused turns the INTENT off
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the cursor stays released (mouse=0)
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=5 byClick=4 reasserts=16 lost=4 gained=4
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): capture STAYS held across 20 frames
+[CHAIN] CHAIN 5 (Alt-Tab away -> Escape -> click back) look: yaw changed 239.4709 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): mouse look turns the camera after the chain
+[CHAIN] CHAIN 5 (Alt-Tab away -> Escape -> click back) move: travelled 0.2750 m in 0.151 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 5 (Alt-Tab away -> Escape -> click back): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 6 (Escape -> Alt-Tab -> return -> click) ---
+[CHAIN] 6a after Escape                    focus=true  mouse=0 intent=false active=true  suppress=false pending=(0.0,0.0) clicks=5 byClick=4 reasserts=24 lost=4 gained=4
+[CHAIN] 6b focus OUT                       focus=true  mouse=0 intent=false active=false suppress=false pending=(0.0,0.0) clicks=5 byClick=4 reasserts=24 lost=5 gained=4
+[CHAIN]    focus IN                        focus=true  mouse=0 intent=false active=true  suppress=true  pending=(0.0,0.0) clicks=5 byClick=4 reasserts=24 lost=5 gained=5
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click) (return with the intent still off): the focus-in RESUMES gameplay input
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click) (return with the intent still off): the focus-in correctly did NOT capture - the player had released the cursor with Escape (mouse=0)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click) (return with the intent still off): the press that brought the window back is SUPPRESSED
+[CHAIN] CHAIN 6 (Escape -> Alt-Tab -> return -> click) (return with the intent still off): the focus-in ran 0 re-assert frame(s) and 1 focus-gain handler(s)
+[CHAIN]    +10 frames                      focus=true  mouse=0 intent=false active=true  suppress=false pending=(0.0,0.0) clicks=5 byClick=4 reasserts=24 lost=5 gained=5
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click) (return with the intent still off): capture is still correctly NOT held 10 frames after the return (mouse=0)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=6 byClick=5 reasserts=24 lost=5 gained=5
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): capture STAYS held across 20 frames
+[CHAIN] CHAIN 6 (Escape -> Alt-Tab -> return -> click) look: yaw changed 239.4709 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): mouse look turns the camera after the chain
+[CHAIN] CHAIN 6 (Escape -> Alt-Tab -> return -> click) move: travelled 0.2750 m in 0.137 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 6 (Escape -> Alt-Tab -> return -> click): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 7 (click away -> click back -> Escape -> click back) ---
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (first click back): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (first click back): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (first click back): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (first click back): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN] 7a after Escape                    focus=true  mouse=0 intent=false active=true  suppress=true  pending=(0.0,0.0) clicks=7 byClick=5 reasserts=24 lost=6 gained=6
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (second click back): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (second click back): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (second click back): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back) (second click back): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=8 byClick=6 reasserts=24 lost=6 gained=6
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): capture STAYS held across 20 frames
+[CHAIN] CHAIN 7 (click away -> click back -> Escape -> click back) look: yaw changed 239.4709 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): mouse look turns the camera after the chain
+[CHAIN] CHAIN 7 (click away -> click back -> Escape -> click back) move: travelled 0.2750 m in 0.158 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 7 (click away -> click back -> Escape -> click back): the time scale is 1.0 (got 1.000)
+[CHAIN] --- CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) ---
+[CHAIN]    focus IN                        focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=8 byClick=6 reasserts=32 lost=7 gained=7
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (first return): the focus-in RESUMES gameplay input
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (first return): the focus-in re-took the cursor with NO click (mouse=2)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (first return): the press that brought the window back is SUPPRESSED
+[CHAIN] CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (first return): the focus-in ran 8 re-assert frame(s) and 1 focus-gain handler(s)
+[CHAIN]    +10 frames                      focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=8 byClick=6 reasserts=40 lost=7 gained=7
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (first return): capture is STILL held 10 frames after the return
+[CHAIN] 8a after Escape                    focus=true  mouse=0 intent=false active=true  suppress=false pending=(0.0,0.0) clicks=8 byClick=6 reasserts=40 lost=7 gained=7
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): the click restored the capture INTENT
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN] 8b focus OUT                       focus=true  mouse=0 intent=true  active=false suppress=true  pending=(0.0,0.0) clicks=9 byClick=7 reasserts=40 lost=8 gained=7
+[CHAIN]    focus IN                        focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=9 byClick=7 reasserts=40 lost=8 gained=8
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (second return): the focus-in RESUMES gameplay input
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (second return): the focus-in re-took the cursor with NO click (mouse=2)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (second return): the press that brought the window back is SUPPRESSED
+[CHAIN] CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (second return): the focus-in ran 8 re-assert frame(s) and 1 focus-gain handler(s)
+[CHAIN]    +10 frames                      focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=9 byClick=7 reasserts=48 lost=8 gained=8
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) (second return): capture is STILL held 10 frames after the return
+[CHAIN]    end of chain                    focus=true  mouse=2 intent=true  active=true  suppress=false pending=(0.0,0.0) clicks=9 byClick=7 reasserts=48 lost=8 gained=8
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): capture is HELD at the end of the chain (mouse=2)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): the capture INTENT is ON at the end of the chain
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): gameplay input is ACTIVE at the end of the chain
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): capture STAYS held across 20 frames
+[CHAIN] CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) look: yaw changed 239.4709 deg (active=true mouse=2)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): mouse look turns the camera after the chain
+[CHAIN] CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return) move: travelled 0.2750 m in 0.147 s (start=(0.0, 0.0, 12.0) floor=true vel=(0.0, 0.0, -3.3))
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): movement works after the chain (0.2750 m)
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): the scene tree is NOT paused
+[CHAIN]   PASS  CHAIN 8 (Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return): the time scale is 1.0 (got 1.000)
+[CHAIN] --- the reported pattern: first recovery does not hook, a later transition does ---
+[CHAIN] P1 after Escape                    focus=true  mouse=0 intent=false active=true  suppress=false pending=(0.0,0.0) clicks=9 byClick=7 reasserts=48 lost=8 gained=8
+[CHAIN]   PASS  P2 first click back: the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  P2 first click back: the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  P2 first click back: the click restored the capture INTENT
+[CHAIN]   PASS  P2 first click back: that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN] PATTERN: the game SAW the first click: true (+1 request(s))
+[CHAIN] PATTERN: that click asked for a real capture TRANSITION: true (+1)
+[CHAIN] P2 after the first recovery        focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=10 byClick=8 reasserts=48 lost=8 gained=8
+[CHAIN] P3 after a second Escape           focus=true  mouse=0 intent=false active=true  suppress=true  pending=(0.0,0.0) clicks=10 byClick=8 reasserts=48 lost=8 gained=8
+[CHAIN]   PASS  P4 second click back: the game SAW the click (it is not lost to the host here)
+[CHAIN]   PASS  P4 second click back: the click RE-TOOK the cursor (mouse=2)
+[CHAIN]   PASS  P4 second click back: the click restored the capture INTENT
+[CHAIN]   PASS  P4 second click back: that click is SUPPRESSED - it asked for the window, not a swing
+[CHAIN] P4 after the second recovery       focus=true  mouse=2 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=11 byClick=9 reasserts=48 lost=8 gained=8
+[CHAIN] PATTERN: the internal state after the FIRST recovery and after the SECOND are IDENTICAL.
+[CHAIN] PATTERN: -> nothing in the game's state differs, so the game cannot be what made the
+[CHAIN] PATTERN:    second transition work. That points OUTSIDE the game (the host's grant of
+[CHAIN] PATTERN:    pointer lock, or a first click the host consumed to activate the window).
+[CHAIN]   PASS  PATTERN: the game's capture belief returned on the first click
+[CHAIN] P5 host dropped the lock behind the game's back focus=true  mouse=0 intent=true  active=true  suppress=true  pending=(0.0,0.0) clicks=11 byClick=9 reasserts=48 lost=8 gained=8
+[CHAIN] PATTERN (control): the game restored its OWN capture BELIEF 1 frame(s) after the drop
+[CHAIN] PATTERN (limit): whether the OS actually granted the lock is NOT observable in here.
+[CHAIN] --- FINAL BATTERY: attack, dodge, stamina ---
+[CHAIN]   PASS  FINAL BATTERY: attacks work
+[CHAIN] FINAL BATTERY backstep dodge(backstep (shared-command tap) via Shift): running=true stamina=82.0 cost=22.0 busy=false floor=true refusals { "stamina": 0, "attacking": 0, "direction": 0, "dodging": 0, "parrying": 0 } -> { "stamina": 0, "attacking": 0, "direction": 0, "dodging": 0, "parrying": 0 }
+[CHAIN]   PASS  FINAL BATTERY: a backstep works
+[CHAIN] FINAL BATTERY directional dodge(directional via Space): running=true stamina=60.0 cost=22.0 busy=false floor=true refusals { "stamina": 0, "attacking": 0, "direction": 0, "dodging": 0, "parrying": 0 } -> { "stamina": 0, "attacking": 0, "direction": 0, "dodging": 0, "parrying": 0 }
+[CHAIN]   PASS  FINAL BATTERY: a directional dodge works
+[CHAIN] FINAL BATTERY stamina: 60.0 -> 60.1 (grew_after=181 f, regen_enabled=true block=0.000 max=100.0 processing=true)
+[CHAIN]   PASS  FINAL BATTERY: stamina REGENERATES (60.0 -> 60.1, regen_enabled=true block=0.000)
+[CHAIN] --- summary ---
+[CHAIN] RESULT: ALL CHECKS PASSED

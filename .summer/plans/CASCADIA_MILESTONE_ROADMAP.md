@@ -6,7 +6,21 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (M10.9 - INPUT / CAPTURE HARDENING PASS: NO PRODUCTION DEFECT FOUND, NO
+Last updated: 2026-09-13 (M10.10 - RECOVERY CHAINS MEASURED END TO END, AND THE "SECOND TRANSITION"
+IS NOT THE GAME. The reported problem is a CHAIN, not a state: Escape releases the cursor, the click
+back sometimes does not re-hook, and a LATER transition (another Escape, another Alt-Tab, another click)
+makes it work. Every individual state had already been measured, so this pass built a chain-level probe
+that runs all EIGHT reported sequences back to back, recording focus, cursor mode, capture intent,
+input-active, the pending look delta and the capture counters at EVERY step. RESULT: ALL CHECKS PASSED -
+all 8 chains end with the cursor captured, intent on, input active, capture stable across 20 further
+frames, look turning the camera and movement working. THE DECISIVE MEASUREMENT: the game's internal
+state after the FIRST recovery and after the SECOND recovery are IDENTICAL, so the game cannot be what
+makes the second transition work - the difference is OUTSIDE it (the host granting pointer lock, or a
+first click spent activating the window). NO PRODUCTION CODE WAS CHANGED. The three defects found and
+fixed this pass were all in the PROBE's own measurement (frame counts used as time in an uncapped scene,
+a backstep tap held past MOBILITY_TAP_MAX so it resolved as a sprint HOLD, and an assumed stamina-regen
+wait). See 8M.24.)
+Previous: 2026-09-13 (M10.9 - INPUT / CAPTURE HARDENING PASS: NO PRODUCTION DEFECT FOUND, NO
 PRODUCTION CODE CHANGED, TWO EDGE CASES MEASURED FOR THE FIRST TIME. This pass was asked to review
 and harden the existing mouse/focus/camera implementation without redesigning it, and to say plainly
 what is proven and what is not. The working routing fix from 8M.22 was CONFIRMED INTACT on disk
@@ -4826,3 +4840,121 @@ and mouse-capture behaviour under EACH window mode, whether return should recapt
 require a click, and player-facing feedback when capture is lost or restored. The current behaviour is
 accepted as a development test bed: playable, recoverable in normal testing, with the state transitions
 understood - not final shipping behaviour.
+
+---
+
+### 8M.24 M10.10 - RECOVERY CHAINS, MEASURED END TO END (2026-09-13)
+
+The user reframed the problem usefully: it is not one broken STATE, it is a broken CHAIN. Escape releases
+the cursor; the click back sometimes does not re-hook; and a later transition fixes it. Every individual
+state had already been measured (8M.21b, 8M.22, 8M.23), so this pass measured the transitions BETWEEN
+them instead.
+
+#### The probe
+
+`scripts/diagnostics/recovery_chain_probe_debug.gd` (scene
+`scenes/diagnostics/recovery_chain_probe_debug.tscn`, transcript `res://_recovery_chain_report.txt`) runs
+the eight reported chains in one session:
+
+    1 Escape -> click back
+    2 Escape -> click -> Escape -> click
+    3 Alt-Tab away -> back
+    4 Alt-Tab away -> click -> Alt-Tab again -> return
+    5 Alt-Tab away -> Escape -> click back
+    6 Escape -> Alt-Tab -> return -> click
+    7 click away -> click back -> Escape -> click back
+    8 Alt-Tab -> return -> Escape -> click -> Alt-Tab -> return
+
+After EVERY step it records: engine focus, `Input.mouse_mode`, capture intent, `is_input_active()`, the
+pending look delta, and the layer's own counters (`capture_requests_on_press`,
+`capture_reasserted_by_click`, `focus_reasserts`, `focus_lost_count`, `focus_gained_count`). After every
+chain it additionally asserts that capture STAYS held across 20 further frames, that look turns the
+camera, and that movement works. It ends with the reported-pattern investigation and a full attack /
+dodge / stamina battery.
+
+Escape and Alt-Tab are injected as REAL events and REAL notifications - `ui_cancel` through the engine's
+input pipeline, and the focus transitions by propagating the engine's own FOCUS_IN / FOCUS_OUT
+notifications through the live tree - so the project's own handlers run rather than being simulated away.
+
+#### The decisive finding
+
+    PATTERN: the internal state after the FIRST recovery and after the SECOND are IDENTICAL.
+    PATTERN: -> nothing in the game's state differs, so the game cannot be what made the
+    PATTERN:    second transition work. That points OUTSIDE the game (the host's grant of
+    PATTERN:    pointer lock, or a first click the host consumed to activate the window).
+
+That is the answer to "what state is wrong or inconsistent", and it is a MEASURED one: after the first
+click back the game already has the cursor captured, the intent on, input active and look working -
+read byte-for-byte identical to the reading the second transition produces. So the flakiness the user
+feels is NOT a half-completed state inside Cascadia. It is the host's own pointer-lock grant / window
+activation, which the game cannot observe and cannot force.
+
+#### Measured results
+
+- `recovery_chain_probe_debug` - RESULT: ALL CHECKS PASSED, 231 transcript lines, 0 debugger errors. All
+  8 chains pass; every chain ends captured / intent-on / active, capture stable for 20 frames, look
+  turning the camera, and movement working (0.2750 m in ~0.14 s at a steady 3.3 m/s walk speed,
+  `floor=true`, on every chain).
+- `focus_input_routing_probe_debug` - RESULT: ALL CHECKS PASSED, 132 lines, 0 debugger errors
+  (unchanged by this pass - regression control).
+- `mouse_look_routing_probe_debug` - RESULT: ALL CHECKS PASSED, 0 debugger errors, camera turns
+  245.2645 deg.
+- Shipped game (`res://main.tscn`) - boots the arena with 0 runtime errors; the rendered frame shows the
+  ground, the red target pillars with their world labels, and both debug overlays.
+
+#### Three PROBE defects found and fixed (NOT production defects)
+
+Every failure this pass started with was the probe's own measurement, and each is recorded because each
+is a trap that would mislead a future session:
+
+1. **Frame counts are not time in this scene.** It renders uncapped, so `await _frames(20)` was ~0.09 s
+   of simulated time. Movement was therefore measured DURING the acceleration ramp from a dead stop
+   (`_reset_to_clear_ground` zeroes velocity first), reading 0.08-0.12 m and FAILING all 8 chains while
+   the player was demonstrably walking - the same line printed `floor=true` and a live velocity vector.
+   Movement now holds the key until walk speed stops rising, then measures over a WALL-CLOCK window.
+2. **A "tap" held too long is a HOLD.** The backstep is the shared tap/hold command (Left Shift). Holding
+   it for a fixed 250 ms poll window exceeded `MOBILITY_TAP_MAX` (0.20 s), so the input layer CORRECTLY
+   resolved it as a SPRINT HOLD and no dodge ever began. MEASURED as `running=false` with EVERY refusal
+   counter still 0 - the signature of a command that was never a dodge at all. The probe now presses,
+   RELEASES, and only then polls.
+3. **Stamina regeneration was assumed, not waited for.** `regen_delay` is 0.8 s and frames do not cover it
+   here, so a fixed 90-frame wait read flat stamina (60.0 -> 60.0). The check now polls until the pool
+   GROWS and reports how long that took (`grew_after=181` frames). `regen_enabled` was true and
+   `_regen_block` 0.000 throughout - the pool was healthy; only the measurement was wrong.
+
+#### Files changed by this pass
+
+- `scripts/diagnostics/recovery_chain_probe_debug.gd` - NEW chain-level probe.
+- `scenes/diagnostics/recovery_chain_probe_debug.tscn` - its entry scene.
+- `CASCADIA_DELETION_MANIFEST.md` - both new files recorded as deletion candidates.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this section.
+
+NO production file was touched. `cascadia_input.gd`, `input_debug_overlay.gd`, `third_person_camera.gd`
+and `main.tscn` are all unchanged from 8M.22, and the look-consumption contract still holds: the overlay
+reads `peek_look_delta()` and `get_look_delta()` has exactly one production consumer, the camera.
+
+#### Newly confirmed
+
+- All eight reported recovery chains end in a playable state - capture held, intent on, input active,
+  look working, movement working - measured end to end rather than state by state.
+- The first-click-vs-second-transition difference is NOT in the game's state. Whatever makes the second
+  action work lives in the host, not in Cascadia.
+
+#### Newly unverified / still open (do not read this pass as closing them)
+
+- The PHYSICAL mouse, a real OS pointer-lock drop and a genuine OS-level window unfocus remain UNPROVEN
+  here, exactly as 8M.21b, 8M.22 and 8M.23 recorded. `Window.has_focus()` keeps reporting true in this
+  host, so the focus transition is simulated by propagating the engine's own notifications. That runs the
+  project's REAL handlers, but it cannot make the OS actually take the window away. The reported
+  "Alt-Tab sometimes needs the window selected again" therefore REMAINS the user's hands-on playtest to
+  prove or disprove. The evidence says it is host-side; only a real Alt-Tab can confirm it.
+- Not re-measured this pass: quicksave, the save/load probes, the other debug panels, the InputMap
+  host-key entries, and the combat probes. No change was made to any of them.
+
+#### Deferred to a future production concern (recorded, NOT implemented)
+
+Unchanged from 8M.23 and still explicitly out of scope for the input passes: windowed vs fullscreen vs
+borderless, resolution and display-change behaviour, focus and mouse-capture behaviour under EACH window
+mode, whether a return should recapture automatically or require a click, and player-facing feedback when
+capture is lost or restored. The current behaviour is accepted as a development test bed: playable,
+recoverable in normal testing, with the state transitions understood - not final shipping behaviour.

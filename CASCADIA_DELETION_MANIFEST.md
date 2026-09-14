@@ -3178,3 +3178,77 @@ Nothing to delete. Not a real trap.
 
 Date Flagged:
 2026-09-13
+
+---
+
+## Candidate: scripts/diagnostics/recovery_chain_probe_debug.gd
+
+Status: Candidate for manual deletion
+
+Reason:
+Temporary diagnostic for the M10.10 recovery-chain pass. It measures the eight reported recovery chains
+END TO END - focus, cursor mode, capture intent, input-active, the pending look delta and the layer's
+capture counters at every step - rather than one state at a time.
+
+Replacement:
+Nothing. Its findings are recorded in roadmap section 8M.24.
+
+Used By:
+`scenes/diagnostics/recovery_chain_probe_debug.tscn` is its only entry point.
+
+Safe To Delete:
+Uncertain
+
+Date Flagged:
+2026-09-13
+
+Notes:
+Keep while the recovery chains need to stay re-testable: it is currently the ONLY test that measures a
+whole recovery SEQUENCE rather than a single transition. It writes the durable transcript
+`res://_recovery_chain_report.txt`, which is evidence and is NOT proposed for deletion. Three defects
+were found and fixed in ITS OWN measurement during this pass (frame counts used as time in an uncapped
+scene, a backstep tap held past `MOBILITY_TAP_MAX` so it resolved as a sprint HOLD, and an assumed
+stamina-regeneration wait). None of the three was a production defect.
+
+---
+
+## Candidate: scenes/diagnostics/recovery_chain_probe_debug.tscn
+
+Status: Candidate for manual deletion
+
+Reason:
+Entry scene for the temporary M10.10 recovery-chain diagnostic above.
+
+Replacement:
+Nothing.
+
+Used By:
+Nothing.
+
+Safe To Delete:
+Uncertain
+
+Date Flagged:
+2026-09-13
+
+Notes:
+Delete only together with its script, or the script loses its entry point.
+
+---
+
+## Recurring: stale open-buffer linter false positive (UNCHANGED, sixth confirmation)
+
+Status: Known false positive, do NOT "fix" by editing the named files
+
+Reason:
+The diagnostics panel still reports 20 phantom `Identifier "CreditLedger" not declared` errors in
+`combat_debug_overlay.gd` and `credit_economy_probe_debug.gd` under scope `open_script_buffers`, while a
+per-file `state:script-errors` query returns 0 for EVERY file involved and both scripts run and print in
+full. Re-confirmed 2026-09-13 during M10.10, alongside a newly written probe whose per-file errors were
+also 0 while the panel reported the same class of stale error elsewhere.
+
+Safe To Delete:
+Nothing to delete. Judge the affected files by a RUN or a per-file query, never by the open-tab linter.
+
+Date Flagged:
+2026-09-12 (re-confirmed 2026-09-13)
