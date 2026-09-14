@@ -3585,3 +3585,89 @@ at runtime, so this is the stale open-buffer linter false positive recorded abov
   deliberately NOT implemented" while the same file charges it was corrected.
 - The inverted `float(+)/sunk(-)` label in `scripts/diagnostics/grounding_probe_debug.gd` was
   corrected: negative means the collider bottom is BELOW the surface (sunk), positive means above it.
+
+---
+
+## MILESTONE 13 - MINIMAL UI (HUD, LOCK-ON INDICATOR, PAUSE, SAVE/LOAD CONTROLS) (2026-09-14)
+
+Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion
+stays manual. Roadmap record: section 8Q.
+
+### New SHIPPED UI files (NOT deletion candidates)
+
+These are the shipped game's interface, not tooling. They are recorded here so the inventory is
+complete and so a future reader does not mistake them for cleanup candidates.
+
+- `scripts/ui/game_hud.gd` (`class_name GameHUD`) - the minimal HUD: carried Credits, player Health
+  and player Stamina. Owns NO gameplay value; it declares no `credits`, `health` or `stamina` field
+  and stores only the text it is already displaying. Reads `CreditLedger.get_credits()`,
+  `HealthComponent.current_health` and `StaminaComponent.current_stamina`, and connects each owner's
+  own change signal. Every Control is `MOUSE_FILTER_IGNORE` because attacks are bound to MOUSE BUTTONS.
+- `scripts/ui/lock_on_indicator.gd` (`class_name LockOnIndicator`) - a presentation marker driven by
+  `TargetingComponent`'s signals. It is hidden while unlocked and on ALL FOUR release causes, and it
+  reads lock state without ever writing it. `TargetingComponent` remains the only lock authority.
+- `scripts/ui/pause_menu.gd` (`class_name PauseMenu`) - pause plus the save/load controls. Pause is
+  `get_tree().paused = true` and nothing else. Owns one boolean derived from the tree plus its own
+  visibility; it calls the existing `GameStateSave` and displays the `Result` code that service
+  RETURNS, so a refusal can never be shown as a success. The panel is `visible = false` while unpaused
+  and only its Buttons take `MOUSE_FILTER_STOP`, and only while open.
+
+### New diagnostic files (cleanup candidates, delete with their scene)
+
+- `scripts/diagnostics/ui_hud_probe_debug.gd` - deterministic probe for the UI pass. It drives REAL
+  Escape presses and REAL Button signals rather than calling shortcuts, asserts each owner value AT
+  REST as well as after a change, exercises all four lock-on release paths through the indicator, and
+  proves a load leaves the HUD showing the RESTORED value rather than a stale one. Re-run result:
+  `RESULT: ALL CHECKS PASSED (114)`.
+- `scenes/diagnostics/ui_hud_probe_debug.tscn` - the probe's standalone entry scene.
+- `_ui_hud_probe_report.txt` - the probe's durable transcript, written on finish under the same
+  convention as `_focus_probe_report.txt`. Overwritten by each run; it is regenerable evidence, so it
+  is a low-value cleanup candidate rather than a record worth preserving.
+
+### Recorded changes to existing files
+
+- `main.tscn`: added the `GameHUD` (CanvasLayer), `LockOnIndicator` (Node3D) and `PauseMenu`
+  (CanvasLayer) nodes with their ext_resources.
+- `scripts/player/player_controller.gd`: the carried-over ORIENTATION tweak - while a lock is held and
+  no committed action owns the body, the body turns toward the locked target. A committed action
+  (dodge, backstep, attack, parry) keeps its own facing for its whole duration and is never overwritten
+  by the lock, per the project's recorded MOVEMENT AUTHORITY rule. With no lock, orientation is exactly
+  as it was.
+- `scripts/diagnostics/save_load_debug_controls.gd`: moved DOWN out of the HUD's top-right corner, and
+  the panel now toggles with the SAME key that toggles the other debug overlays, so one press clears
+  the whole debug layer. Direct fix for the user's report that the panel sat over the Credits readout.
+- `scripts/diagnostics/focus_input_routing_probe_debug.gd`: aligned with the new Escape contract, and
+  two measurement-integrity fixes (below).
+
+### Process defects found and fixed this pass (recorded, not worked around)
+
+- THE PROBE PASSED WHILE THE SHIPPED GAME WAS WRONG, and this is the most important entry here.
+  `game_hud.gd` only refreshed on owner signals, but Godot runs `_ready()` in TREE ORDER and
+  `main.tscn` places the HUD BEFORE `TestEnvironment`. The HUD therefore read Health and Stamina
+  before those components had run their own `_ready()`, which is where they reset themselves to full;
+  the `health_changed` emission went into a signal with no listener, the HUD then connected and
+  correctly stood its per-frame fallback down, and the display kept `0 / 100` indefinitely. Seen on
+  screen as `HEALTH 0 / 100` beside a combat overlay reading `player 100/100`. Fixed by refreshing once
+  at the moment the owner connections land. MEASURED LESSON: every HUD assertion measured a CHANGE, so
+  a display that started stale and caught up on the first damage event satisfied all 111 of them. Three
+  at-rest assertions were added to the probe (now 114), because a change-only assertion cannot see this.
+- TWO YAW AUTHORITIES IN ONE MEASUREMENT, AGAIN. `focus_input_routing_probe_debug` measured "mouse
+  motion does NOT turn the camera while the cursor is free" while Milestone 12's targeting module was
+  left holding a lock from its own delivery check, so the rig was ALSO framing a target. The reading was
+  a real 28.4337 deg that belonged to the framing, not the mouse. The delivery check now silences the
+  gameplay consumer while it measures (the same pattern `fkey_host_ownership_probe_debug` uses), and the
+  lock is explicitly released and asserted before the camera phase. Re-measured: exactly 0.0000 deg.
+  This is the THIRD instance of this class in the project (see `targeting_probe_debug`'s 0.8644 deg).
+- A probe expectation was internally inconsistent: `ui_hud_probe_debug` asserted stamina DID advance
+  after a drain while the tree was expected to be paused. Stamina's `regen_delay` is 0.8 s, so the
+  measurement also had to outlive that delay rather than assume a short wait. Reordered so the
+  drain happens while playing and the regeneration is measured on resume.
+
+### Documentation corrections carried out in the same pass
+
+- The five pre-existing root `_*_report.txt` transcripts previously carried status UNRESOLVED at path
+  level. They are RESOLVED as a class: each is a `REPORT_PATH` const opened `FileAccess.WRITE` by its
+  own probe, so each is overwritten by the next run of that probe and is regenerable evidence rather
+  than a preserved record. Nothing in the project reads any of them.
+- The Escape contract in `.summerrules` now records that Escape PAUSES ON ITS FIRST PRESS, amending the
+  earlier reading that its only job was to own `mouse_look_enabled`.

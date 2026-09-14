@@ -1,68 +1,68 @@
 [i0 p0] [RETARGET] === what blocks the game after a retarget? ===
-[i70 p30] [RETARGET] --- PHASE 1: baseline, focused ---
-[i70 p30] [RETARGET] BASELINE           mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=70 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=0 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=100.0
-[i82 p33] [RETARGET] BASELINE look: yaw changed 74.7243 deg
-[i82 p33] [RETARGET]   PASS  BASELINE: the camera turns (the control for every later camera claim)
-[i167 p55] [RETARGET] BASELINE move: travelled 1.0950 m over 20 frames
-[i167 p55] [RETARGET]   PASS  BASELINE: the player MOVES (1.0950 m)
-[i403 p114] [RETARGET] BASELINE light attack: button=1 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
-[i403 p114] [RETARGET]   PASS  BASELINE: a LIGHT attack starts
-[i403 p114] [RETARGET]   PASS  BASELINE: the light attack reaches its ACTIVE phase
-[i639 p173] [RETARGET] BASELINE heavy attack: button=2 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
-[i639 p173] [RETARGET]   PASS  BASELINE: a HEAVY attack starts
-[i639 p173] [RETARGET]   PASS  BASELINE: the heavy attack reaches its ACTIVE phase
-[i639 p173] [RETARGET] --- PHASE 2: RETARGET (alt-tab away, click the window, come back) ---
-[i639 p173] [RETARGET]   PASS  RETARGET: the layer saw focus LEAVE
-[i639 p173] [RETARGET]   PASS  RETARGET: the layer saw focus RETURN
-[i639 p173] [RETARGET]   PASS  RETARGET: the click ASKED the host for the cursor (2 -> 3)
-[i639 p173] [RETARGET] --- PHASE 3: state immediately after the retarget (20 frames) ---
-[i639 p173] [RETARGET] POST-RETARGET 00   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=639 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=57.6
-[i642 p174] [RETARGET] POST-RETARGET 01   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=642 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=57.9
-[i646 p175] [RETARGET] POST-RETARGET 02   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=646 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=58.3
-[i650 p176] [RETARGET] POST-RETARGET 03   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=650 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=58.7
-[i654 p177] [RETARGET] POST-RETARGET 04   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=654 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=59.0
-[i658 p178] [RETARGET] POST-RETARGET 05   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=658 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=59.4
-[i662 p179] [RETARGET] POST-RETARGET 06   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=662 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=59.8
-[i666 p180] [RETARGET] POST-RETARGET 07   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=666 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=60.1
-[i670 p181] [RETARGET] POST-RETARGET 08   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=670 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=60.5
-[i674 p182] [RETARGET] POST-RETARGET 09   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=674 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=60.9
-[i678 p183] [RETARGET] POST-RETARGET 10   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=678 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=61.2
-[i682 p184] [RETARGET] POST-RETARGET 11   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=682 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=61.6
-[i686 p185] [RETARGET] POST-RETARGET 12   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=686 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=62.0
-[i690 p186] [RETARGET] POST-RETARGET 13   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=690 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=62.3
-[i694 p187] [RETARGET] POST-RETARGET 14   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=694 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=62.7
-[i698 p188] [RETARGET] POST-RETARGET 15   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=698 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=63.1
-[i702 p189] [RETARGET] POST-RETARGET 16   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=702 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=63.4
-[i706 p190] [RETARGET] POST-RETARGET 17   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=706 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=63.8
-[i710 p191] [RETARGET] POST-RETARGET 18   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=710 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=64.2
-[i714 p192] [RETARGET] POST-RETARGET 19   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=714 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=64.5
-[i718 p193] [RETARGET] --- PHASE 4: the reported failures, re-tested after the retarget ---
-[i718 p193] [RETARGET]   PASS  POST-RETARGET: the mouse is CAPTURED (mode=2)
-[i718 p193] [RETARGET]   PASS  POST-RETARGET: the input layer is ACTIVE, so movement is NOT refused by the focus gate
-[i806 p215] [RETARGET] POST-RETARGET move: travelled 1.0950 m over 20 frames
-[i806 p215] [RETARGET]   PASS  POST-RETARGET: the player MOVES (1.0950 m)
-[i818 p218] [RETARGET] POST-RETARGET look: yaw changed 74.7243 deg
-[i818 p218] [RETARGET]   PASS  POST-RETARGET: the camera still turns
-[i1054 p277] [RETARGET] POST-RETARGET light attack: button=1 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
-[i1054 p277] [RETARGET]   PASS  POST-RETARGET: a LIGHT attack starts
-[i1054 p277] [RETARGET]   PASS  POST-RETARGET: the light attack reaches ACTIVE
-[i1290 p336] [RETARGET] POST-RETARGET heavy attack: button=2 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
-[i1290 p336] [RETARGET]   PASS  POST-RETARGET: a HEAVY attack starts
-[i1290 p336] [RETARGET]   PASS  POST-RETARGET: the heavy attack reaches ACTIVE
-[i1290 p336] [RETARGET] --- PHASE 5: no stale gameplay lock survived the retarget ---
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: the combat state machine is back to IDLE (IDLE)
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: combat is NOT busy
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: no dodge is stuck ACTIVE
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: no parry is stuck ACTIVE
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: the player is alive
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: the player is not defeated
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: the scene tree is NOT paused
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: the clock is RUNNING (scale=1.000) - a 0.000 freezes movement and every attack phase
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: the layer never had to put the clock back (0 resume(s)) - a NON-ZERO count means something OUTSIDE stops the clock and no in-game code can win
-[i1530 p396] [RETARGET]   PASS  POST-RETARGET: stamina is not permanently drained (54.0)
-[i1530 p396] [RETARGET] --- PHASE 6: systems the report assumes, measured rather than assumed ---
-[i1530 p396] [RETARGET] animation nodes on the player: 0 (AnimationPlayer + AnimationTree)
-[i1530 p396] [RETARGET]   PASS  PHASE 6: this build has NO animation system on the player, so 'no attack animation plays' is expected and is not a separate defect - the attack PHASES above are what gameplay promises
-[i1530 p396] [RETARGET]   PASS  PHASE 6: `is_stunned` does not exist on PlayerCombat - reported, not invented
-[i1530 p396] [RETARGET]   PASS  PHASE 6: `can_control` does not exist on the player - reported, not invented
-[i1530 p396] [RETARGET] RESULT: ALL CHECKS PASSED
+[i69 p30] [RETARGET] --- PHASE 1: baseline, focused ---
+[i69 p30] [RETARGET] BASELINE           mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=69 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=0 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=100.0
+[i77 p33] [RETARGET] BASELINE look: yaw changed 63.8254 deg
+[i77 p33] [RETARGET]   PASS  BASELINE: the camera turns (the control for every later camera claim)
+[i165 p55] [RETARGET] BASELINE move: travelled 1.0950 m over 20 frames
+[i165 p55] [RETARGET]   PASS  BASELINE: the player MOVES (1.0950 m)
+[i401 p114] [RETARGET] BASELINE light attack: button=1 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
+[i401 p114] [RETARGET]   PASS  BASELINE: a LIGHT attack starts
+[i401 p114] [RETARGET]   PASS  BASELINE: the light attack reaches its ACTIVE phase
+[i637 p173] [RETARGET] BASELINE heavy attack: button=2 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
+[i637 p173] [RETARGET]   PASS  BASELINE: a HEAVY attack starts
+[i637 p173] [RETARGET]   PASS  BASELINE: the heavy attack reaches its ACTIVE phase
+[i637 p173] [RETARGET] --- PHASE 2: RETARGET (alt-tab away, click the window, come back) ---
+[i637 p173] [RETARGET]   PASS  RETARGET: the layer saw focus LEAVE
+[i637 p173] [RETARGET]   PASS  RETARGET: the layer saw focus RETURN
+[i637 p173] [RETARGET]   PASS  RETARGET: the click ASKED the host for the cursor (2 -> 3)
+[i637 p173] [RETARGET] --- PHASE 3: state immediately after the retarget (20 frames) ---
+[i637 p173] [RETARGET] POST-RETARGET 00   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=637 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=57.5
+[i639 p174] [RETARGET] POST-RETARGET 01   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=639 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=57.7
+[i641 p175] [RETARGET] POST-RETARGET 02   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=641 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=58.1
+[i643 p176] [RETARGET] POST-RETARGET 03   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=643 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=58.5
+[i645 p177] [RETARGET] POST-RETARGET 04   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=645 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=58.9
+[i648 p178] [RETARGET] POST-RETARGET 05   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=648 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=59.4
+[i650 p179] [RETARGET] POST-RETARGET 06   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=650 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=59.7
+[i653 p180] [RETARGET] POST-RETARGET 07   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=653 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=60.1
+[i656 p181] [RETARGET] POST-RETARGET 08   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=656 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=60.4
+[i660 p182] [RETARGET] POST-RETARGET 09   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=660 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=60.8
+[i664 p183] [RETARGET] POST-RETARGET 10   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=664 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=61.2
+[i669 p184] [RETARGET] POST-RETARGET 11   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=669 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=61.6
+[i673 p185] [RETARGET] POST-RETARGET 12   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=673 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=61.9
+[i678 p186] [RETARGET] POST-RETARGET 13   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=678 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=62.3
+[i682 p187] [RETARGET] POST-RETARGET 14   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=682 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=62.6
+[i687 p188] [RETARGET] POST-RETARGET 15   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=687 clock_resumes=0 look_intent=true | combat=RECOVERY busy=true attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=true | phys_process=true mode=0 | attack_buffer=0.00 stam=63.0
+[i691 p189] [RETARGET] POST-RETARGET 16   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=691 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=63.4
+[i696 p190] [RETARGET] POST-RETARGET 17   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=696 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=63.8
+[i700 p191] [RETARGET] POST-RETARGET 18   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=700 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=64.1
+[i704 p192] [RETARGET] POST-RETARGET 19   mouse=2 focus=true input_active=true scale=1.000 paused=false | ticks=704 clock_resumes=0 look_intent=true | combat=IDLE busy=false attacks=2 | dodge=false parry=false dead=false defeated=false | move=(0.00,-0.00) committed=false | phys_process=true mode=0 | attack_buffer=0.00 stam=64.5
+[i708 p193] [RETARGET] --- PHASE 4: the reported failures, re-tested after the retarget ---
+[i708 p193] [RETARGET]   PASS  POST-RETARGET: the mouse is CAPTURED (mode=2)
+[i708 p193] [RETARGET]   PASS  POST-RETARGET: the input layer is ACTIVE, so movement is NOT refused by the focus gate
+[i796 p215] [RETARGET] POST-RETARGET move: travelled 1.0950 m over 20 frames
+[i796 p215] [RETARGET]   PASS  POST-RETARGET: the player MOVES (1.0950 m)
+[i808 p218] [RETARGET] POST-RETARGET look: yaw changed 63.8254 deg
+[i808 p218] [RETARGET]   PASS  POST-RETARGET: the camera still turns
+[i1044 p277] [RETARGET] POST-RETARGET light attack: button=1 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
+[i1044 p277] [RETARGET]   PASS  POST-RETARGET: a LIGHT attack starts
+[i1044 p277] [RETARGET]   PASS  POST-RETARGET: the light attack reaches ACTIVE
+[i1280 p336] [RETARGET] POST-RETARGET heavy attack: button=2 started=1 phases=["IDLE", "STARTUP", "ACTIVE", "RECOVERY"]
+[i1280 p336] [RETARGET]   PASS  POST-RETARGET: a HEAVY attack starts
+[i1280 p336] [RETARGET]   PASS  POST-RETARGET: the heavy attack reaches ACTIVE
+[i1280 p336] [RETARGET] --- PHASE 5: no stale gameplay lock survived the retarget ---
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: the combat state machine is back to IDLE (IDLE)
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: combat is NOT busy
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: no dodge is stuck ACTIVE
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: no parry is stuck ACTIVE
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: the player is alive
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: the player is not defeated
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: the scene tree is NOT paused
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: the clock is RUNNING (scale=1.000) - a 0.000 freezes movement and every attack phase
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: the layer never had to put the clock back (0 resume(s)) - a NON-ZERO count means something OUTSIDE stops the clock and no in-game code can win
+[i1520 p396] [RETARGET]   PASS  POST-RETARGET: stamina is not permanently drained (53.9)
+[i1520 p396] [RETARGET] --- PHASE 6: systems the report assumes, measured rather than assumed ---
+[i1520 p396] [RETARGET] animation nodes on the player: 0 (AnimationPlayer + AnimationTree)
+[i1520 p396] [RETARGET]   PASS  PHASE 6: this build has NO animation system on the player, so 'no attack animation plays' is expected and is not a separate defect - the attack PHASES above are what gameplay promises
+[i1520 p396] [RETARGET]   PASS  PHASE 6: `is_stunned` does not exist on PlayerCombat - reported, not invented
+[i1520 p396] [RETARGET]   PASS  PHASE 6: `can_control` does not exist on the player - reported, not invented
+[i1520 p396] [RETARGET] RESULT: ALL CHECKS PASSED

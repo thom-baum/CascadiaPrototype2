@@ -1,0 +1,120 @@
+[s32] [UIHUD] --- PHASE 1: the new UI is live in the shipped scene and reads the real owners ---
+[s32] [UIHUD]   PASS  the HUD is instantiated in the shipped main scene (/root/UiHudProbeRun/Main/GameHUD)
+[s32] [UIHUD]   PASS  the lock-on indicator is instantiated in the shipped main scene
+[s32] [UIHUD]   PASS  the pause menu is instantiated in the shipped main scene
+[s32] [UIHUD]   PASS  the HUD resolved the SAME CreditLedger the rest of the project uses
+[s32] [UIHUD]   PASS  the HUD resolved the player's OWN HealthComponent
+[s32] [UIHUD]   PASS  the HUD resolved the player's OWN StaminaComponent
+[s32] [UIHUD]   PASS  the indicator resolved the SAME TargetingComponent the rest of the project uses
+[s32] [UIHUD]   PASS  the pause menu takes save/load from GameStateSave rather than owning any of it
+[s32] [UIHUD]   PASS  the HUD exposes the three readouts it displays
+[s32] [UIHUD]   PASS  the pause panel exposes its status line and its save/load controls
+[s32] [UIHUD]   PASS  the pause panel starts HIDDEN - not transparent, not off-centre
+[s32] [UIHUD] --- PHASE 2: the displayed text follows the real owners ---
+[s35] [UIHUD]   PASS  at rest the HUD ALREADY shows the owner's health, not a value read before its owner was ready (HEALTH  100 / 100)
+[s35] [UIHUD]   PASS  at rest the HUD ALREADY shows the owner's stamina (STAMINA  100 / 100)
+[s35] [UIHUD]   PASS  at rest the HUD ALREADY shows the owner's credits (CREDITS  0)
+[s35] [UIHUD] --- PHASE 3: the lock-on indicator ---
+[s38] [UIHUD]   PASS  damage was really applied to the player (100.0 -> 91.0)
+[s38] [UIHUD]   PASS  the HUD health text changed after the damage (HEALTH  100 / 100 -> HEALTH  91 / 100)
+[s38] [UIHUD]   PASS  and it shows the owner's NEW value: HEALTH  91 / 100
+[s38] [UIHUD]   PASS  a real stamina cost was paid (63.0 spent, 37.0 left)
+[s38] [UIHUD]   PASS  the HUD stamina text changed after the spend (STAMINA  100 / 100 -> STAMINA  37 / 100)
+[s38] [UIHUD]   PASS  and it shows the owner's NEW value: STAMINA  37 / 100
+[s38] [UIHUD]   PASS  the HUD credits text changed after the award (CREDITS  0 -> CREDITS  25)
+[s38] [UIHUD]   PASS  and it shows the owner's NEW value: CREDITS  25
+[s38] [UIHUD]   PASS  the ledger's carried balance is the value the HUD is showing
+[s38] [UIHUD]   PASS  UNLOCKED: the indicator is hidden
+[s38] [UIHUD]   PASS  UNLOCKED: the indicator is marking nothing (it holds no target of its own)
+[s45] [UIHUD]   PASS  a lock was taken on the first probe target
+[s48] [UIHUD]   PASS  ACQUIRED: the indicator became visible
+[s48] [UIHUD]   PASS  ACQUIRED: the indicator is marking the CURRENT target (ProbeUiTarget_A)
+[s48] [UIHUD]   PASS  ACQUIRED: the marker stands on the target, 0.00 m above it
+[s48] [UIHUD]   PASS  the lock cycled to the right
+[s51] [UIHUD]   PASS  CYCLE RIGHT: the indicator moved to the new target (ProbeUiTarget_B)
+[s51] [UIHUD]   PASS  CYCLE RIGHT: the marker names the target it moved to (ProbeUiTarget_B)
+[s51] [UIHUD]   PASS  the move is counted as a new mark, not as the old one drifting
+[s51] [UIHUD]   PASS  the lock cycled to the left
+[s54] [UIHUD]   PASS  CYCLE LEFT: the indicator moved back to the original target (ProbeUiTarget_A)
+[s61] [UIHUD]   PASS  RELEASE 1: the lock is taken on the probe target
+[s61] [UIHUD]   PASS  RELEASE 1: the probe target carries a defeat authority
+[s61] [UIHUD]   PASS  RELEASE 1: the target is in its authoritative DEFEATED state
+[s64] [UIHUD]   PASS  RELEASE 1 (DEFEATED): the lock ended
+[s64] [UIHUD]   PASS  RELEASE 1: recorded as defeated, not as something else
+[s64] [UIHUD]   PASS  RELEASE 1: and NOT filed as invalid
+[s64] [UIHUD]   PASS  RELEASE 1 (DEFEATED): the indicator is hidden
+[s71] [UIHUD]   PASS  RELEASE 2: the lock is taken on a second probe target
+[s74] [UIHUD]   PASS  RELEASE 2 (FREED): the lock ended
+[s74] [UIHUD]   PASS  RELEASE 2: recorded as invalid
+[s74] [UIHUD]   PASS  RELEASE 2 (FREED): the indicator is hidden
+[s81] [UIHUD]   PASS  RELEASE 3: the lock is taken on a third probe target
+[s84] [UIHUD]   PASS  RELEASE 3 (OUT OF RANGE): the lock ended
+[s84] [UIHUD]   PASS  RELEASE 3: recorded as out-of-range
+[s84] [UIHUD]   PASS  RELEASE 3 (OUT OF RANGE): the indicator is hidden
+[s91] [UIHUD]   PASS  RELEASE 4: the lock is taken on a fourth probe target
+[s94] [UIHUD]   PASS  RELEASE 4 (PLAYER DEATH): the lock ended
+[s94] [UIHUD]   PASS  RELEASE 4: recorded as player-dead
+[s94] [UIHUD]   PASS  RELEASE 4 (PLAYER DEATH): the indicator is hidden
+[s97] [UIHUD]   PASS  the player was restored by its own death circuit
+[s100] [UIHUD]   PASS  no release path left the indicator visible
+[s100] [UIHUD] --- PHASE 4: pause ---
+[s100] [UIHUD]   PASS  the tree is NOT paused before the pause checks
+[s100] [UIHUD]   PASS  the pause panel is hidden before the pause checks
+[s108] [UIHUD]   PASS  ESCAPE: a real Escape press PAUSED the tree on the FIRST press
+[s108] [UIHUD]   PASS  and the pause panel is now visible
+[s108] [UIHUD]   PASS  the capture intent is OFF while paused - the release Escape always did still happens
+[s108] [UIHUD]   PASS  the pause state was applied exactly once (0 -> 1)
+[s108] [UIHUD]   PASS  and this is the FIRST pause state this session has applied
+[s108] [UIHUD]   PASS  the cursor is free while paused, so the panel can be used
+[s108] [UIHUD]   PASS  the pause layer is PROCESS_MODE_ALWAYS, so it stays interactive while the tree is paused
+[s108] [UIHUD]   PASS  PAUSED CHECK: stamina was spent to make room for regeneration
+[s168] [UIHUD]   PASS  PAUSED: a frame-driven gameplay value did NOT advance (10.0 -> 10.0)
+[s168] [UIHUD]   PASS  PAUSED: pressing the panel's Save button ran a save (action=save)
+[s168] [UIHUD]   PASS  PAUSED: and it went through the GameStateSave service (saves 0 -> 1)
+[s171] [UIHUD]   PASS  the panel's Resume button cleared the pause
+[s171] [UIHUD]   PASS  and hid the panel
+[s243] [UIHUD]   PASS  RESUMED: the same gameplay value advances again (10.0 -> 19.7)
+[s243] [UIHUD]   PASS  exactly one pause panel node exists (1)
+[s243] [UIHUD]   PASS  cycle 1: open paused the game
+[s243] [UIHUD]   PASS  cycle 1: still exactly one panel
+[s243] [UIHUD]   PASS  cycle 1: close resumed the game
+[s243] [UIHUD]   PASS  cycle 1: still exactly one panel
+[s243] [UIHUD]   PASS  cycle 2: open paused the game
+[s243] [UIHUD]   PASS  cycle 2: still exactly one panel
+[s243] [UIHUD]   PASS  cycle 2: close resumed the game
+[s243] [UIHUD]   PASS  cycle 2: still exactly one panel
+[s243] [UIHUD]   PASS  repeated toggling applied exactly four state changes, not more (2 -> 6)
+[s243] [UIHUD]   PASS  the pause checks left the tree unpaused
+[s243] [UIHUD]   PASS  every visible Control in the new UI is MOUSE_FILTER_IGNORE while unpaused ([])
+[s243] [UIHUD]   PASS  no visible Control anywhere can take a click at the centre of the view ([])
+[s243] [UIHUD] --- PHASE 5: save, load, and loaded-state freshness ---
+[s246] [UIHUD]   PASS  the panel's save ran on the GameStateSave service (its own `saves` counter 1 -> 2)
+[s246] [UIHUD]   PASS  and the panel reported that service's returned code (OK)
+[s252] [UIHUD]   PASS  a save was written through the existing service (OK)
+[s255] [UIHUD]   PASS  before the load the HUD shows the LIVE balance 30 (CREDITS  30)
+[s260] [UIHUD]   PASS  the load reported OK (0: OK)
+[s260] [UIHUD]   PASS  and it ran on the GameStateSave service (its own `loads` counter 0 -> 1)
+[s260] [UIHUD]   PASS  the ledger restored the SAVED balance 525 (now 525)
+[s260] [UIHUD]   PASS  AFTER THE LOAD the HUD shows the RESTORED value, not the pre-load one (CREDITS  525, was CREDITS  30)
+[s260] [UIHUD]   PASS  and the displayed number really did change across the load
+[s260] [UIHUD]   PASS  the panel's status line reports the load as OK (LOAD OK  (carried 525 Credits))
+[s266] [UIHUD]   PASS  a save of a dead run is refused by the service with PLAYER_DEAD (player-dead)
+[s266] [UIHUD]   PASS  the panel reports the refusal code the service returned
+[s266] [UIHUD]   PASS  and the refusal does NOT read the same as the success (SAVE REFUSED: player-dead - the player is dead or mid-reset: refusing to save a run that is not playable versus LOAD OK  (carried 525 Credits))
+[s266] [UIHUD]   PASS  the refusal is worded as a refusal (SAVE REFUSED: player-dead - the player is dead or mid-reset: refusing to save a run that is not playable)
+[s269] [UIHUD]   PASS  the player was restored after the refusal check
+[s272] [UIHUD]   PASS  no lock is left held
+[s272] [UIHUD]   PASS  no indicator is left visible
+[s275] [UIHUD]   PASS  no pause is left applied
+[s275] [UIHUD]   PASS  no pause panel is left visible
+[s278] [UIHUD]   PASS  the carried balance is back at 0 - no Credits were minted
+[s278] [UIHUD]   PASS  and the HUD followed it back (CREDITS  0)
+[s281] [UIHUD]   PASS  the player is alive at the end of the probe
+[s281] [UIHUD]   PASS  the player's health is back at 100.0 (now 100.0)
+[s281] [UIHUD]   PASS  the player's stamina is back at 100.0 (now 100.0)
+[s281] [UIHUD]   PASS  the player is back where it started
+[s286] [UIHUD]   PASS  every probe target was freed ([])
+[s286] [UIHUD]   PASS  no ARENA actor was damaged or defeated by this probe ([])
+[s286] [UIHUD]   PASS  the economy granted no awards except the probe's own controlled one (0 -> 1)
+[s286] [UIHUD]   PASS  the arena's own targets are still usable
+[s286] [UIHUD] RESULT: ALL CHECKS PASSED (114)

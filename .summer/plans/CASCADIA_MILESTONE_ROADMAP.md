@@ -28,25 +28,32 @@ sections; this block is the entry point, not a replacement for them.
 
 ## Milestone status
 
-- **Highest accepted milestone: 11 - READABLE PLAYER FACING INDICATOR.** CLOSED 2026-09-13 on a
-  HUMAN VISUAL READ of the shipped scene. The user's verbatim report: "everything seems visually
-  consistent and working properly. consider this step implemented". Full record: section 8O.15.
-- **Current active task: MILESTONE 12 - TARGET LOCK-ON.** APPROVED by the user 2026-09-14, scope
-  written into section 8P BEFORE implementation per section 15, and now IMPLEMENTED AND MEASURED:
-  `targeting_probe_debug` reports `RESULT: ALL CHECKS PASSED (78)`. It is NOT yet human-played, so
-  Milestone 11 remains the highest ACCEPTED milestone until the user reads the framing feel in play.
-  If the lock-on read is wrong, that is a FEELING no probe can grade - it is the user's call.
+- **Highest accepted milestone: 12 - TARGET LOCK-ON.** ACCEPTED by the user 2026-09-14 after a MANUAL
+  PLAYTEST of the live game. The user's verdict: the lock-on "works fine". Full record: section 8P.
+  Milestone 11 (facing indicator) was the previous highest accepted, and its own record stands at 8O.15.
+- **Current active task: MILESTONE 13 - MINIMAL UI.** APPROVED by the user 2026-09-14 with the scope
+  record written into section 8Q BEFORE implementation per section 15, and now IMPLEMENTED AND
+  MEASURED: `ui_hud_probe_debug` reports `RESULT: ALL CHECKS PASSED (114)`, and the three existing
+  probes were re-run and pass. It is **NOT yet human-accepted**, so MILESTONE 12 remains the highest
+  ACCEPTED milestone until the user reads the HUD, the indicator, the pause and the save/load feedback.
 - **Next milestone after this one: NOT selected and NOT approved.** The user's stated intended
-  direction is a minimal UI pass (credits / health / stamina, pause menu, save-load controls and
-  loaded-state feedback) and then save/load presentation, but NEITHER is started or approved. This
-  file, its milestone index and its deferred list do NOT authorise anything merely by existing.
+  direction after the UI pass is save/load presentation work, but it is NOT started and NOT approved.
+  This file, its milestone index and its deferred list do NOT authorise anything merely by existing.
+- **The carried-over lock-on ORIENTATION tweak is DONE** (part of 8Q, implemented in
+  `player_controller.gd`). The accepted M12 mechanics were not reopened: release paths, cycle order,
+  validity rules, bindings and camera framing are all unchanged, and `targeting_probe_debug` still
+  reports 78/78.
+- **Escape's meaning CHANGED this pass, on the user's instruction.** It used to free the cursor on the
+  first press and open the panel on the second; ONE press now does both. `res://.summerrules` records
+  the amended contract, and `focus_input_routing_probe_debug` was updated to measure it.
 
 ## What is implemented
 
-Milestones 0-11 are implemented and accepted, in order: input/camera (M0), grounded movement
+Milestones 0-12 are implemented and accepted, in order: input/camera (M0), grounded movement
 (M1), damage plumbing (M2), physical actor collision (M3), player attacks (M4), stamina (M5),
 dodge + i-frames (M6), parry (M7), one attacking test enemy (M8), credit economy (M9),
-save/load foundation (M10), facing indicator (M11) - plus the M8-family and later passes:
+save/load foundation (M10), facing indicator (M11), target lock-on (M12) - plus the M8-family and
+later passes:
 death/reset circuit (8H), enemy death + persistence (8I), reusable actor death (8J), reusable
 actor combat readiness (8K), defeat coverage (8K.12), and dodge movement authority (8N).
 
@@ -177,8 +184,8 @@ Evidence behind each row is in section 0.
 | 10 | Game-state saving and loading foundation | 8M | IMPLEMENTED + MEASURED; NOT human-played |
 | - | Dodge movement authority (the recorded 8F pass) | 8F, 8N | IMPLEMENTED + MEASURED 2026-09-13 |
 | 11 | Readable player facing indicator | 8O | CLOSED 2026-09-13 - user visual acceptance |
-| 12 | Target lock-on | 8P | IMPLEMENTED + MEASURED 2026-09-14 (probe 78/78); NOT human-played - awaiting the user's feel read |
-| 12 | Target lock-on | 8P | APPROVED 2026-09-14 - scope record written; NOT yet implemented or accepted |
+| 12 | Target lock-on (toggle, cycle, auto-release, camera framing) | 8P | ACCEPTED 2026-09-14 - user playtest; probe 78/78 |
+| 13 | Minimal UI pass (HUD, lock-on indicator, pause, save/load controls) | 8Q | IMPLEMENTED + MEASURED 2026-09-14 (probe 114/114); NOT human-accepted |
 
 Delivered milestone sections 8N and 8O were appended at the END of the file, after section 16, so
 they do not follow numerical order. That is an ordering artifact, not a missing record.
@@ -6068,8 +6075,15 @@ behaviour read correctly.
 
 ### 8P.7 Milestone 12 - status
 
-**IMPLEMENTED AND MEASURED 2026-09-14. NOT YET HUMAN-PLAYED - awaiting the user's read of the
-framing feel.**
+**ACCEPTED BY THE USER 2026-09-14 after a MANUAL PLAYTEST of the live game.** The user's verdict: the
+lock-on "works fine". Probe evidence stands at `targeting_probe_debug` `RESULT: ALL CHECKS PASSED
+(78)`, and the shipped `main.tscn` boots at 0 runtime errors.
+
+Accepted as it stands, and NOT reopened. ONE bounded TWEAK was raised in the same playtest and is
+carried into Milestone 13 (section 8Q) instead: the player character does not maintain its
+ORIENTATION towards the locked target, as a Soulslike does. That is an ADDITION to presentation and
+facing, not a defect in the accepted mechanics - no release path, cycle order, validity rule, input
+binding or camera framing behaviour is being redesigned.
 
 #### What was built
 
@@ -6130,9 +6144,9 @@ unchanged, `awards` unchanged, no lock and no look intent left held.
 #### Evidence vocabulary, applied honestly
 
 - The module's behaviour above is **CONFIRMED by deterministic probe measurement**.
-- Camera framing, cycle order and release feel are **NOT YET VERIFIED** - they are a matter of feel
-  and cannot be graded from a probe or a still frame. This is why the milestone is not called
-  accepted: **if a lock-on read is wrong, it is a feeling that only the player can report.**
+- Camera framing, cycle order and release feel could NOT be graded by a probe or a still frame - they
+  are a matter of feel. They are now **CONFIRMED BY THE USER'S MANUAL PLAYTEST** (2026-09-14), which
+  is the only evidence that could have settled them. See 8P.7 and 8Q.
 - The two regression probes named in 8P.6 item 5 were NOT re-run in this pass, so they are neither
   claimed to pass nor to fail. `lock_on`'s path through the input layer IS covered by the new probe,
   which exercises the real `lock_on` binding end to end.
@@ -6145,4 +6159,194 @@ unchanged, `awards` unchanged, no lock and no look intent left held.
 
 Lock-on-RELATIVE dodge direction (dodge stays camera-relative), any animation, VFX, reticle or sound.
 `EnemyAttacker.target_group` - the ENEMY targeting the PLAYER - was not modified.
+
+---
+
+## 8Q. MILESTONE 13 - MINIMAL UI (HUD, LOCK-ON INDICATOR, PAUSE, SAVE/LOAD CONTROLS) (approved by the user 2026-09-14; roadmap written BEFORE implementation)
+
+Purpose: make the current playable prototype READABLE AND USABLE during repeated combat testing.
+This is NOT final art and NOT a UI framework. The test of scope is "does this help the user test the
+game", not "does this look finished".
+
+### 8Q.1 The user's stated deliverables
+
+1. A minimal HUD: carried Credits, player Health, player Stamina.
+2. A lock-on indicator: visible when locked, identifies the current target, follows cycling, gone on
+   release, correct on all four release paths.
+3. Pause functionality and a pause panel.
+4. Save/load controls using the EXISTING save/load service.
+5. Clear loaded-state feedback, reflecting the ACTUAL returned result.
+6. CARRIED OVER FROM THE ACCEPTED M12 PLAYTEST: the player character maintains ORIENTATION towards a
+   locked target, and releases that orientation when not locked on.
+
+### 8Q.2 Owners - read from disk this pass. The UI OBSERVES these; it must not duplicate any of them
+
+| What | Single owner | How the UI reads it |
+| ---- | ------------ | ------------------- |
+| Carried Credits | `CreditLedger` | `get_credits()`; signal `credits_changed(credits, delta)` |
+| Player Health | `HealthComponent` (on the Player) | `current_health` / `max_health`; signal `health_changed(current, maximum)` |
+| Player Stamina | `StaminaComponent` ("Stamina" node on the Player) | `current_stamina` / `max_stamina`; signal `stamina_changed(current, maximum)` |
+| Lock state + current target | `TargetingComponent` (group `targeting`) | `is_locked()`, `get_current_target()`; signals `target_acquired(target)`, `target_released(target, reason)`, `target_changed(target)` |
+| Save/load | `GameStateSave` | `save_game()` / `load_game()` returning a `Result` code; `has_save()`; `last_result`, `last_error`; signals `game_saved`, `game_loaded`, `new_run_started` |
+| Pause | NEW, and deliberately minimal | A UI/flow concern ONLY. It is NOT a gameplay authority and owns no gameplay state. |
+
+### 8Q.3 Constraints MEASURED on disk this pass - breaking these breaks a passing probe or a rule
+
+- ATTACKS ARE MOUSE BUTTONS (`light_attack` = LMB, `heavy_attack` = RMB). A visible Control with a
+  non-IGNORE mouse filter can silently EAT AN ATTACK. Every HUD Control must be
+  `Control.MOUSE_FILTER_IGNORE`. Mouse filter is PER CONTROL, not inherited - set it on each one.
+- `focus_input_routing_probe_debug._controls_that_steal_gameplay_mouse()` enumerates EVERY visible
+  Control under EVERY CanvasLayer and FAILS if one with a non-IGNORE filter overlaps the viewport
+  centre. Consequence: the pause panel must be HIDDEN (not merely transparent or off-centre) while
+  unpaused, and the HUD's own controls must be IGNORE. The indicator must therefore be a
+  world-anchored marker or an IGNORE-filter Control, never a focusable panel.
+- Escape is ALREADY wired: `CascadiaInput._unhandled_input` maps `ui_cancel` to `set_mouse_look(false)`,
+  which releases the cursor. Pause must COOPERATE with that path rather than fight it, and must not
+  leave the cursor captured while paused or free while playing.
+- The `menu` action EXISTS but is bound to joypad button 6 ONLY - there is no keyboard key on it.
+  `ui_cancel` (Escape) is the only already-working keyboard pause gesture.
+- F8 and F9 are HOST-OWNED and unusable. Do NOT rebind anything to them.
+- `CascadiaInput`'s clock reconciliation already skips its work when `get_tree().paused` is true, so a
+  real `get_tree().paused` pause is already tolerated by the input layer.
+- NO PAUSE SYSTEM EXISTS TODAY: `get_tree().paused` is never set anywhere in the project.
+- `project.godot.bak` is rewritten by the editor whenever project settings are saved. It is already a
+  tracked deletion candidate; do not treat its mtime change as a new file.
+- A new UI scene must not be wired through the debug overlays (`InputDebugOverlay`,
+  `CombatDebugOverlay`, `SaveLoadDebugControls`). Those are development tooling and are tracked
+  deletion candidates. The new UI is SEPARATE from them and must not depend on debug mode.
+
+### 8Q.4 In scope
+
+- ONE new HUD `CanvasLayer` reading Credits / Health / Stamina from the owners above.
+- ONE lock-on indicator: a marker on the CURRENT TARGET, driven by `TargetingComponent`'s signals,
+  hidden when unlocked, repositioned on cycle, hidden on every release cause.
+- ONE pause panel: pause, resume, save, load, and a status line. Hidden while unpaused.
+- The player-orientation tweak, integrated with the EXISTING movement-authority rule: while a lock is
+  held and NO committed action owns the body, the body faces the target; a COMMITTED action (dodge,
+  backstep, attack, parry) keeps its own locked facing for its whole duration and is never overridden
+  by the lock. Presentation must not become the accidental authority.
+- A probe that measures the mechanical claims below.
+- Recording any new file in `CASCADIA_DELETION_MANIFEST.md`.
+
+### 8Q.5 Explicitly OUT of scope (not built, not partially built)
+
+Settings, graphics options, audio menus, key rebinding, inventory screens, title screen, confirmation
+flows, animation, final HUD art, damage numbers, status-effect UI, and any new gameplay system.
+Milestone 12 mechanics are NOT reopened: no change to release paths, cycle order, validity rules,
+input bindings or camera framing.
+
+### 8Q.6 Acceptance criteria and evidence plan
+
+The user's own checklist, plus the following, which a probe CAN carry:
+
+1. HUD values TRACE TO THE REAL OWNERS, measured by CHANGING a real value (apply damage, spend
+   stamina, award Credits) and asserting the displayed text changed accordingly - not by asserting a
+   label merely exists.
+2. The indicator is HIDDEN when unlocked, FOLLOWS the target after a cycle, and is hidden after EACH
+   of the four release causes, each by its own cause.
+3. Pause actually stops gameplay (a movement or combat measurement taken while paused does not
+   advance), the panel stays interactive, resume restores gameplay, and pausing twice does not stack
+   panels or states.
+4. Save and load call the EXISTING service, and the status message reflects the RETURNED `Result`
+   code, distinguishing success from every refusal. No invented success and no swallowed failure.
+5. After a load, the HUD shows the LOADED values - no stale pre-load numbers.
+6. The three existing probes touching this surface still pass: `focus_input_routing_probe_debug`,
+   `targeting_probe_debug`, `retarget_state_probe_debug`.
+7. No gameplay value is retuned (attack costs 18/32, dodge 22, parry 20, save schema, rewards).
+
+Rendered and human evidence: HUD READABILITY, indicator CLARITY, pause feel, and whether the status
+feedback is legible are the user's read. A probe cannot grade them and must not be claimed to.
+
+### 8Q.7 Milestone 13 - status
+
+**IMPLEMENTED AND MEASURED 2026-09-14. NOT YET HUMAN-ACCEPTED - awaiting the user's read of the HUD,
+the indicator, the pause and the save/load feedback. Milestone 12 remains the highest ACCEPTED
+milestone.**
+
+#### What was built
+
+- `scripts/ui/game_hud.gd` (`class_name GameHUD`) - NEW. Carried Credits, player Health and player
+  Stamina, each read from its existing owner. It declares no `credits`, `health`, `stamina`,
+  `is_locked` or `current_target`: the only thing it stores is the text it is already displaying.
+  Owner signals are connected `CONNECT_DEFERRED` so a read happens after the owner finishes its
+  change; the per-frame pass is only a fallback while a connection is missing.
+- `scripts/ui/lock_on_indicator.gd` (`class_name LockOnIndicator`) - NEW. A `Node3D` marker driven by
+  `TargetingComponent`; hidden while unlocked, shown on the current target, follows cycling, and
+  hidden on all four release causes. It READS the lock and never writes it.
+- `scripts/ui/pause_menu.gd` (`class_name PauseMenu`) - NEW. Real pause (`get_tree().paused`), a
+  centred panel with Resume / Save / Load / New run, and a status line whose wording comes from the
+  RETURNED `GameStateSave.Result` code. `PROCESS_MODE_ALWAYS` so it stays interactive while paused.
+- `main.tscn` - `GameHUD`, `LockOnIndicator` and `PauseMenu` instantiated as siblings, so the UI is
+  live in the shipped game with no debug mode.
+- `scripts/player/player_controller.gd` - the carried-over ORIENTATION tweak: while a lock is held
+  and no committed action owns the body, the body turns toward the locked target. A committed action
+  keeps its own locked facing for its whole duration, per the project's recorded movement authority.
+- `scripts/diagnostics/ui_hud_probe_debug.gd` + `scenes/diagnostics/ui_hud_probe_debug.tscn` - NEW.
+
+#### Four defects found and fixed during this pass, all by measurement
+
+1. **The HUD showed stale values on first frame - a REAL shipped defect, caught from a rendered
+   frame.** `main.tscn` places `GameHUD` BEFORE `TestEnvironment` in tree order, so the HUD's
+   `_ready()` ran before the player's `HealthComponent`/`StaminaComponent` ran theirs and reset to
+   full. It read the raw `0.0` defaults, then connected, then stood its per-frame fallback down - so
+   the shipped game displayed `HEALTH 0 / 100` and `STAMINA 0 / 100` beside a combat overlay reading
+   `100/100`. Fixed by refreshing once at the moment the owner connections land. The probe did NOT
+   catch this because every HUD assertion measured a CHANGE, so a display that started stale and
+   caught up on the first damage event passed. Three at-rest assertions were added, and the probe now
+   reports 114 checks instead of 111.
+2. **`focus_input_routing_probe_debug` went from passing to 2 FAILED** once Milestone 12's targeting
+   module became live in `main.tscn`. Both were measurement artifacts, not gameplay defects. Its
+   `lock_on` delivery check let the REAL consumer spend the press first, reporting "the action never
+   arrived"; it now silences the consumer for the measurement and restores it - this project's
+   established pattern for a delivery check (`fkey_host_ownership_probe_debug` does the same to the
+   save/load consumer). Its camera-motion check then read 28.43 deg because a lock left held by that
+   same press gave the rig a SECOND yaw authority; with no lock held it measures exactly 0.0000 deg.
+3. **The probe's pause phase was internally inconsistent.** It expected a frame-driven value to
+   REGENERATE "while the tree was running" immediately after asserting the tree was PAUSED. Reordered
+   so the playing measurement happens while playing and the paused measurement while paused, and the
+   resume check now waits past `StaminaComponent.regen_delay` (0.8 s) - the 0.4 s wait was too short
+   once the drain moved inside the pause.
+4. **The debug save/load panel covered the new Credits readout**, both anchored to the top-right. The
+   panel now sits BELOW the credits panel and toggles with the existing `toggle_debug_overlay` (F1)
+   alongside the other debug overlays, so one press clears the whole debug layer.
+
+#### The Escape / pause contract CHANGED, and the project rules were amended to match
+
+Escape used to be layered: the first press only released the cursor (the input layer's own
+`set_mouse_look(false)`) and the panel opened on the SECOND press. The user asked for one press.
+`PauseMenu` now performs the release itself through the input layer's own API and opens the panel in
+the same press, marking the event handled so the layer does not repeat the work. **The release
+behaviour is unchanged - only the number of presses is.** A short section was appended to
+`res://.summerrules` recording this, and `focus_input_routing_probe_debug` was updated to measure the
+new contract rather than the old one.
+
+#### Measured evidence
+
+- `ui_hud_probe_debug`: **RESULT: ALL CHECKS PASSED (114)** - HUD at rest and after change, the
+  indicator on acquire / cycle / all four release causes, pause stopping a frame-driven value and
+  resume restarting it, no panel stacking, save and load through the real service, the status line
+  differing between success and a refusal, and the HUD showing the RESTORED value after a load
+  (`CREDITS 525, was CREDITS 30`) rather than a stale one.
+- `focus_input_routing_probe_debug`: **RESULT: ALL CHECKS PASSED**.
+- `targeting_probe_debug`: **RESULT: ALL CHECKS PASSED (78)** - Milestone 12 is UNREGRESSED with the
+  orientation tweak in place.
+- `retarget_state_probe_debug`: **RESULT: ALL CHECKS PASSED**.
+- The shipped `main.tscn` boots with 0 runtime errors and 0 debugger errors, and a rendered frame
+  confirms `CREDITS 0`, `HEALTH 100 / 100` and `STAMINA 100 / 100`.
+
+#### Evidence vocabulary, applied honestly
+
+- The behaviour above is **CONFIRMED by deterministic probe measurement**.
+- HUD **readability**, indicator **clarity**, and whether the pause and save/load flow feel right are
+  **NOT YET VERIFIED** - they are a matter of reading the screen, which no probe grades. This is why
+  the milestone is not called accepted: **the user reads it and says.**
+- The two `TARGET_CYCLE_*` script errors reported under scope `open_script_buffers` remain the KNOWN
+  stale open-buffer false positive: both constants are present in `game_actions.gd` (lines 60-61) and
+  the probes exercise both actions successfully at runtime.
+
+#### Not built, by explicit scope decision
+
+No settings, graphics, audio or key-rebinding menus; no title screen; no inventory; no animation, VFX
+or sound; no lock-on-relative dodge direction; no checkpoint or respawn work. The three existing debug
+overlays were NOT replaced - the new UI is separate and works with no debug mode.
 

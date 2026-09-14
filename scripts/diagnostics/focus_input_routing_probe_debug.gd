@@ -318,6 +318,11 @@ func _run() -> void:
 		"PHASE 4: the targeting group still resolves to the player")
 	_check(_retargeting_is_unchanged(), "PHASE 4: retargeting behaviour is unchanged by a focus change")
 
+	# A LOCK LEFT HELD WOULD MAKE PHASE 5 UNMEASURABLE. Milestone 12's targeting module is live in this
+	# scene, and while it holds a lock the camera rig yaws to frame the target - so a camera-motion
+	# measurement taken then has TWO yaw authorities writing the same value and cannot attribute the
+	# turn to either. That is the same false reading already recorded against `targeting_probe_debug`,
+	# and the fix is the same: leave exactly one authority active before measuring motion.
 	var stealing := _controls_that_steal_gameplay_mouse()
 	_check(stealing.is_empty(),
 		"PHASE 4: no debug-panel Control consumes gameplay mouse input (%s)"
@@ -328,6 +333,20 @@ func _run() -> void:
 			% ("none" if focus_owner == null else String((focus_owner as Node).name)))
 
 	_check_no_pause("PHASE 4")
+
+	# NO LOCK MAY BE LEFT HELD INTO PHASE 5, and this is a measurement-integrity guard, not tidiness.
+	# The targeting module is live in this scene now, so a press it consumed can leave a lock held - and
+	# a held lock gives the camera rig a SECOND yaw authority (it frames the locked target). Phase 5
+	# measures whether mouse motion turns the camera while the cursor is free, and with two authorities
+	# writing yaw a non-zero reading cannot be attributed to the mouse at all. That exact false reading
+	# is already on the record in `targeting_probe_debug` (0.8644 deg, entirely a framing transient), so
+	# the state is cleared and asserted here rather than measured around.
+	var targeting_now := get_tree().get_first_node_in_group(TargetingComponent.GROUP_TARGETING)
+	if targeting_now != null and targeting_now.has_method("release"):
+		targeting_now.call("release")
+		await _frames(3)
+		_check(not bool(targeting_now.call("is_locked")),
+			"PHASE 4: no lock is left held before the camera-motion phase")
 
 	# --- PHASE 5: ESCAPE, and the ONE-CONSUMER look contract ---------------------------
 	# Escape is the player's OWN release, and it is NOT the state PHASE 3b produces. There the host
@@ -381,6 +400,25 @@ func _run() -> void:
 	_check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE,
 		"ESCAPE: the cursor is RELEASED (mode=%d)" % Input.mouse_mode)
 	_key(KEY_ESCAPE, false)
+	Input.flush_buffered_events()
+
+	# ESCAPE NOW OWNS THE PAUSE (Milestone 13), so the press just measured ALSO paused the tree. The two
+	# things it always did are unchanged, because `open()` performs that same release intent - and those
+	# are exactly what the two checks above assert. Everything below needs gameplay to be PROCESSING
+	# again, and a real pause stops that by design, so the pause is closed with the same key here.
+	_key(KEY_ESCAPE, true)
+	Input.flush_buffered_events()
+	_key(KEY_ESCAPE, false)
+	Input.flush_buffered_events()
+	_check(not get_tree().paused,
+		"ESCAPE: the same key RESUMES - the pause is escapable, not a trap")
+
+	# 5c measures the CLICK recovery, whose precondition is "the cursor is free and gameplay still WANTS
+	# it captured". That precondition is now established EXPLICITLY through the input layer's own API
+	# rather than as a side effect of Escape: Escape's part in this flow is what 5b above asserts, and
+	# forcing the state here keeps 5c measuring the click instead of re-testing the pause.
+	_input.set_mouse_look(false)
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Input.flush_buffered_events()
 
 	# A free cursor must not be able to turn the camera. Measured at the rig, so this is the effect
@@ -528,7 +566,14 @@ func _swing() -> void:
 
 
 ## Does the `lock_on` ACTION still arrive at the input layer? `CascadiaInput` is the only place that
-## buffers it, and it is the deliberate observation point: no targeting system exists to ask.
+## buffers it, and it remains the deliberate observation point for DELIVERY.
+##
+## THE REAL CONSUMER IS TURNED OFF FOR THE MEASUREMENT, and that is this project's established pattern
+## for a delivery check - `fkey_host_ownership_probe_debug` does the same to the save/load consumer.
+## Milestone 12 gave `lock_on` a real gameplay consumer, so leaving the targeting module running would
+## let it spend the press first and this check would report a FALSE NEGATIVE: "the action never
+## arrived" when what actually happened is that something else legitimately took it. Turning the
+## consumer off is what makes the question "did the action reach the LAYER?" answerable.
 func _lock_on_reaches_the_layer() -> bool:
 	if not InputMap.has_action(&"lock_on"):
 		_say("[FOCUS] lock_on ACTION IS NOT IN THE INPUTMAP")
@@ -540,11 +585,18 @@ func _lock_on_reaches_the_layer() -> bool:
 		elif event is InputEventJoypadButton:
 			bindings.append("PadBtn%d" % (event as InputEventJoypadButton).button_index)
 	_say("[FOCUS] lock_on bindings: %s" % str(bindings))
+
+	# Silence the gameplay consumer, measure, then hand it back. Restored on every path below.
+	var targeting := get_tree().get_first_node_in_group(TargetingComponent.GROUP_TARGETING)
+	if targeting != null:
+		targeting.set_physics_process(false)
 	Input.action_press(&"lock_on")
 	await _frames(2)
 	Input.action_release(&"lock_on")
 	await _frames(2)
 	var delivered := _input.consume_lock_on()
+	if targeting != null:
+		targeting.set_physics_process(true)
 	_say("[FOCUS] lock_on delivered to the input layer: %s" % str(delivered))
 	return delivered
 

@@ -13,7 +13,10 @@ extends CharacterBody3D
 ##   - acceleration and deceleration, at different rates on purpose
 ##   - facing: the body turns toward its movement direction, EXCEPT while a
 ##     committed evasion owns the body, when it holds the locked gameplay facing
-##     instead of re-deriving yaw from the evasion's own velocity
+##     instead of re-deriving yaw from the evasion's own velocity, and EXCEPT
+##     while a target is locked and no committed action owns the body, when the
+##     body faces the locked target (Milestone 13 - see _sync_lock_orientation
+##     and _apply_facing)
 ##   - gravity and floor settling
 ##   - slopes (up to floor_max_angle) and low steps (max_step_height), outside a
 ##     committed evasion, which owns its own displacement
@@ -114,6 +117,10 @@ var _stamina: StaminaComponent
 var _dodge: DodgeComponent
 var _parry: ParryComponent
 var _death: DeathComponent
+## The targeting module this actor's lock belongs to. Resolved through the module's own group, so no
+## scene path is hard-coded and a scene with no targeting module simply never locks. READ-ONLY: this
+## controller never takes, cycles or releases a lock - it only faces what the module says is locked.
+var _targeting: TargetingComponent
 
 
 func _ready() -> void:
@@ -132,6 +139,10 @@ func _physics_process(delta: float) -> void:
 	# while the actor still owned its own orientation, so it is refreshed here and
 	# never re-derived from the evasion's own velocity further down the frame.
 	_sync_evasion_authority()
+	# Lock-on orientation is settled next, and both calls are deliberately at the TOP of the step:
+	# the facing a committed action holds must be the facing that was authored while the actor still
+	# owned its own orientation, never one re-derived after the action has begun.
+	_sync_lock_orientation()
 
 	# A dead actor is not asked for input at all. Gating HERE rather than inside each
 	# reader is deliberate: there is then no input path that can be forgotten, so a
@@ -385,6 +396,15 @@ func _apply_facing(delta: float) -> void:
 	if _is_evading():
 		rotation.y = _locked_yaw
 		return
+	# While a target is locked and NO committed action owns the body, the body faces
+	# the locked target (Milestone 13 - the tweak carried over from the Milestone 12
+	# playtest). This branch sits BELOW the evasion branch on purpose: a committed
+	# action's facing outranks the lock, and this line is never reached while one is
+	# running. The yaw itself was resolved at the top of the step by
+	# _sync_lock_orientation(), so there is exactly one place that decides it.
+	if _is_locked_on():
+		rotation.y = _locked_yaw
+		return
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
 	if horizontal.length_squared() < 0.01:
 		return
@@ -416,6 +436,12 @@ func _is_evading() -> bool:
 ##      backstep it points the wrong way, so the actor would visibly turn around
 ##      after an evasion that is already over and already paid for.
 func _sync_evasion_authority() -> void:
+	# A dead actor authors no orientation, so nothing here may hand one back while the body belongs to
+	# the death state. Without this, the reconcile below would stamp the dead actor's current yaw back
+	# over the transform the death circuit is restoring, and a respawned player would face wherever it
+	# happened to fall rather than the facing its own reset authored.
+	if _is_dead():
+		return
 	if _is_evading():
 		_was_dodging = true
 		return
@@ -424,6 +450,43 @@ func _sync_evasion_authority() -> void:
 		velocity.x = 0.0
 		velocity.z = 0.0
 	_locked_yaw = rotation.y
+
+
+## Milestone 13 - the facing yardstick while a target is locked, integrated with the project's
+## MOVEMENT AUTHORITY rule rather than layered on top of it.
+##
+## While a lock is held AND no committed action owns the body, the body faces what it is locked onto.
+## The facing is written through `_locked_yaw` - the SAME yardstick a committed evasion already holds
+## - so there is one facing contract in this file and not a second rotation path that could disagree
+## with the first.
+##
+## A COMMITTED action (dodge, backstep, attack, parry) is never re-oriented by the lock. That is the
+## whole reason this function returns immediately while `_is_committed()` is true: the yardstick then
+## keeps the yaw it had when the action began, which is the lock-facing the body already held. This
+## uses the project's EXISTING commitment arbitration as its definition of "an action owns the body";
+## a lock must not invent a second one.
+##
+## Order matters and is deliberate: `_is_committed()` is checked before anything else, because the
+## general refusal is the honest one. A committed action owns its facing; a dodge is committed; the
+## dodge-specific check in `_sync_evasion_authority()` handles the end-of-evasion handoff.
+##
+## With NO lock - or with no targeting module in the scene - this returns immediately and `_locked_yaw`
+## goes on being exactly what it was before this milestone: the yaw this controller authored for
+## itself. Nothing about ordinary locomotion changes.
+func _sync_lock_orientation() -> void:
+	if _is_committed():
+		return
+	var target := _get_lock_target()
+	if target == null:
+		return
+	var to_target := target.global_position - global_position
+	to_target.y = 0.0
+	if to_target.length_squared() < 0.0001:
+		# Directly overhead: there is no horizontal direction to face, so the current facing stands
+		# rather than snapping to a value derived from a zero-length vector.
+		return
+	# Godot's convention is that -basis.z is world forward, matching _apply_facing()'s own formula.
+	_locked_yaw = atan2(-to_target.x, -to_target.z)
 
 
 ## Climb ledges no taller than max_step_height. CharacterBody3D does not climb
@@ -587,6 +650,32 @@ func _get_parry() -> ParryComponent:
 			return null
 		_parry = get_node_or_null(parry_path) as ParryComponent
 	return _parry
+
+
+# --- Lock-on access (Milestone 13) ------------------------------------------
+
+## The actor currently locked by the targeting module, or null when no lock is held. Read through the
+## module's own query, so this is the module's state and never a copy of it. A scene with no targeting
+## module answers null, and the controller then behaves exactly as it did before this milestone.
+func _get_lock_target() -> Node3D:
+	var targeting := _get_targeting()
+	if targeting == null or not targeting.is_locked():
+		return null
+	return targeting.get_current_target()
+
+
+## Whether a usable locked target exists right now.
+func _is_locked_on() -> bool:
+	return _get_lock_target() != null
+
+
+func _get_targeting() -> TargetingComponent:
+	if _targeting == null or not is_instance_valid(_targeting):
+		var tree := get_tree()
+		if tree == null:
+			return null
+		_targeting = tree.get_first_node_in_group(TargetingComponent.GROUP_TARGETING) as TargetingComponent
+	return _targeting
 
 
 # --- Death access -----------------------------------------------------------

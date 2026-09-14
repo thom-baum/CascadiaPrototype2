@@ -39,11 +39,11 @@
 [s101] [TARGETING]   PASS  locked: the SAME axis does NOT turn the camera (0.0000 deg) - one axis, one consumer
 [s106] [TARGETING]   PASS  the lock is re-acquired for the mouse and framing checks
 [s106] [TARGETING]   PASS  and the look intent is declared again
-[s109] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (99.753 deg)
+[s109] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (36.541 deg)
 [s109] [TARGETING]   PASS  a target is locked for the framing checks
 [s154] [TARGETING]   PASS  the camera's own forward points at the locked target (0.00 deg off centre)
 [s154] [TARGETING]   PASS  PITCH is unchanged by lock-on (-12.000 -> -12.000)
-[s154] [TARGETING]   PASS  ROLL stays zero (camera right vector has no vertical part: -0.000000)
+[s154] [TARGETING]   PASS  ROLL stays zero (camera right vector has no vertical part: 0.000000)
 [s154] [TARGETING]   PASS  the rig hierarchy is intact and unrenamed: ["Camera3D", "SpringArm3D", "CameraPitch", "CameraYaw", "CameraRig"]
 [s154] [TARGETING]   PASS  the camera READ the lock and changed nothing about it
 [s199] [TARGETING]   PASS  the camera FOLLOWS when the target moves (0.01 deg off centre)

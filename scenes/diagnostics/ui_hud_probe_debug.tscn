@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://b2sl2e47acruw"]
+
+[ext_resource type="PackedScene" uid="uid://bfbf3uq4w4kmk" path="res://main.tscn" id="1_main"]
+[ext_resource type="Script" uid="uid://cuh0th45bap0v" path="res://scripts/diagnostics/ui_hud_probe_debug.gd" id="2_probe"]
+
+[node name="UiHudProbeRun" type="Node3D" unique_id=612219303]
+
+[node name="Main" parent="." unique_id=2004558672 instance=ExtResource("1_main")]
+
+[node name="UiHudProbe" type="Node3D" parent="." unique_id=996130013]
+script = ExtResource("2_probe")

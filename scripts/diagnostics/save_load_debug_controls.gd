@@ -66,6 +66,10 @@ const TEXT_OK := Color(0.44, 0.85, 0.5, 1)
 const TEXT_BAD := Color(0.9, 0.35, 0.32, 1)
 const TEXT_VALUE := Color(0.95, 0.85, 0.45, 1)
 
+## The panel this prototype draws. Kept as a member so the debug toggle can hide it: it shares the
+## top-right corner with the gameplay HUD's Credits readout and sits on a HIGHER layer, so it is both
+## positioned clear of that readout and switchable off with the same key as the other debug overlays.
+var _panel: PanelContainer
 var _label: Label
 var _save: GameStateSave
 var _ledger: CreditLedger
@@ -81,6 +85,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	_sync_debug_visibility()
 	if _save == null or _ledger == null:
 		_resolve()
 	if _save == null or _ledger == null:
@@ -99,6 +104,17 @@ func _process(_delta: float) -> void:
 		_status = _describe("new run", code, _ledger.get_credits())
 
 	_refresh()
+
+
+## The same key that toggles the other debug overlays also toggles THIS one, so a single press clears
+## the whole debug layer off the screen. That is the direct fix for the reported problem: the HUD's
+## Credits readout shares the top-right corner, and this panel used to sit on top of it permanently.
+## The two toggle together, so they cannot drift out of sync with each other.
+func _sync_debug_visibility() -> void:
+	if _panel == null:
+		return
+	if _pressed(GameActions.TOGGLE_DEBUG_OVERLAY):
+		_panel.visible = not _panel.visible
 
 
 ## True only when the action exists AND was pressed, so a project without the binding shows a
@@ -161,10 +177,15 @@ func _key_text(action: StringName) -> String:
 func _build_ui() -> void:
 	var panel := PanelContainer.new()
 	panel.name = "Panel"
+	_panel = panel
 	panel.anchor_left = 1.0
 	panel.anchor_right = 1.0
 	panel.offset_left = -330.0
-	panel.offset_top = 8.0
+	# BELOW the HUD's Credits readout, NOT on top of it. The HUD's credits panel occupies the top-right
+	# corner from y = 10 down to roughly y = 54 (its label plus margins), and this panel is on a higher
+	# layer, so at the original offset_top of 8 it covered the credits number completely. 62 clears it
+	# on any viewport height, and costs nothing: this is a prototype readout, not placed gameplay UI.
+	panel.offset_top = 62.0
 	panel.offset_right = -8.0
 	# CONTROL, DO NOT CONSUME. A Control defaults to MOUSE_FILTER_STOP, which would swallow every
 	# mouse click landing inside this rectangle - and Cascadia's light and heavy attacks are bound to
