@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="10_2qg6i"]
 [ext_resource type="PackedScene" uid="uid://dh4v6csv04oel" path="res://scenes/actors/test_attacker.tscn" id="11_ut5rl"]
 [ext_resource type="Script" uid="uid://cja2f2pcslpdn" path="res://scripts/player/death_component.gd" id="12_death"]
+[ext_resource type="Script" uid="uid://dqwiaem1vs08o" path="res://scripts/diagnostics/facing_marker_feedback_debug.gd" id="13_0hxc1"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.32, 0.42, 0.58, 1)
@@ -542,6 +543,7 @@ script = ExtResource("10_2qg6i")
 attack_path = NodePath("../Combat")
 
 [node name="FacingMarker" type="Node3D" parent="Player" unique_id=1239214627]
+script = ExtResource("13_0hxc1")
 
 [node name="Nose" type="MeshInstance3D" parent="Player/FacingMarker" unique_id=1229904054]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 1.78, -0.4)

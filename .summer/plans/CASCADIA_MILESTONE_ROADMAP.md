@@ -6,7 +6,25 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED BY THE USER, THEN
+Last updated: 2026-09-13 (8O.14 - ATTACK-PHASE COLOUR FEEDBACK ADDED TO THE FACING MARKER. The user
+approved SWING FEEDBACK on the capsule: the amber marker now changes COLOUR with the attack phase - amber
+IDLE, pale-yellow STARTUP, red ACTIVE, blue-grey RECOVERY - so a committed swing is visible on the body
+for the first time, because there is still no animation system (the presentation boundary in 8G.2 item
+3). ONE NEW FILE: `scripts/diagnostics/facing_marker_feedback_debug.gd`, attached to `Player/FacingMarker`
+in `scenes/test_environment.tscn` and recorded in the deletion manifest. It is STRICTLY READ-ONLY on
+gameplay: it reads `PlayerCombat.state` and writes exactly ONE thing, a material `albedo_color`. It never
+starts, cancels, delays, extends or redirects an attack, imposes no timing of its own, and owns no
+gameplay state - the colour FOLLOWS the phase, never the reverse. It duplicates the material on first use
+so it can never mutate a resource another node draws with. It reads the continuous PHASE rather than
+listening for signals, so a mid-swing load cannot leave the marker stuck on a stale colour. Also settled
+this pass: the user chose to LEAVE the flush amber disc EXACTLY AS IT IS, so the 8O.13 occlusion
+trade-off is DECIDED, not a defect - 8O.14 CORRECTS the stronger "INVISIBLE" wording recorded in 8O.13,
+because from the same camera an amber sliver IS visible at the silhouette edge. Verified: 0 debugger
+errors; the script resolved both its nodes (no disabled warning was emitted); the rendered frame shows the
+marker still amber with the combat overlay reading `phase=IDLE`, and the blue rear disc intact. STILL
+PENDING: the human read of the yaw-following AND of the colour transitions in motion, neither of which a
+still frame can settle. See 8O.14.)
+Previous: 2026-09-13 (MILESTONE 11 - READABLE PLAYER FACING INDICATOR: APPROVED BY THE USER, THEN
 IMPLEMENTED. The last open item from the 8G.2 backstep defect was PRESENTATION: the capsule is
 rotationally symmetric, so the already-corrected committed evasion facing could not be judged by eye.
 IMPLEMENTED as section 8O proposed - a `FacingMarker` Node3D under `Player` in
@@ -327,11 +345,20 @@ plus the deletion manifest.
   backstab mechanic, rear-hit detection or damage multiplier. Measured: `main.tscn` boots with 0 debugger
   errors; the rendered frame confirms both markers are readable from the default camera. **The one thing
   still open is the human read**: a still frame cannot show that the markers track yaw while moving,
-  turning, dodging or backstepping. See sections 8O.11, 8O.12 and 8O.13. **8O.13 records a MEASURED
-  CONFLICT: the amber marker is now a disc flush with the capsule top, and from the default behind-and-above
-  camera that makes it INVISIBLE** - the capsule occludes it. That choice is back with the user.**
-- **Current active task: NONE.** Milestone 10 is complete and measured, Milestone 11 is implemented and
-  awaiting the user's playtest read of the facing indicator, and the 8F authority pass is implemented and
+  turning, dodging or backstepping. **8O.13 then matched the amber marker to the blue disc** and moved it
+  to the capsule top with its top flush, which MEASURED A CONFLICT: at that height the capsule occludes
+  most of it from the default behind-and-above camera. The user reviewed that trade-off and chose to
+  **LEAVE IT EXACTLY AS IT IS**, so the flush amber disc is the intended final state, not a defect.
+  (8O.14 CORRECTS the stronger "INVISIBLE" wording recorded here: from the same camera an amber sliver IS
+  visible at the silhouette edge.) **8O.14 added the user-approved SWING FEEDBACK**: one NEW read-only
+  script, `scripts/diagnostics/facing_marker_feedback_debug.gd`, tints the amber marker by attack phase -
+  amber IDLE, pale-yellow STARTUP, red ACTIVE, blue-grey RECOVERY - so a committed swing is finally
+  visible on the capsule. It READS `PlayerCombat.state` and writes only a material colour; it starts,
+  cancels, delays and redirects nothing, and NO gameplay file was changed. What remains OPEN is the human
+  read of BOTH the yaw-following and the colour transitions, neither of which a still frame can settle.
+- **Current active task: NONE.** Milestone 10 is complete and measured. Milestone 11 is implemented -
+  including the user-approved attack-phase COLOUR FEEDBACK (8O.14) - and is awaiting the user's playtest
+  read of the facing marker and of the swing colours in motion. The 8F authority pass is implemented and
   measured. No further work is authorised; the next milestone must be named and approved before anything
   begins.
 
@@ -5533,4 +5560,105 @@ not started in this pass:
 
 - The yaw-following read during movement, turning, dodge and backstep. Still a human playtest, unchanged
   from 8O.11 and 8O.12.
+
+#### CORRECTION to 8O.13 (recorded in 8O.14)
+
+The claim above that the amber disc is hidden "COMPLETELY" was TOO STRONG. A later frame from the same
+default camera shows an amber sliver clearly visible at the left silhouette edge of the capsule. The disc
+is substantially occluded but NOT invisible. See 8O.14.
+
+---
+
+### 8O.14 Swing feedback implemented, and the amber-marker question resolved (2026-09-13)
+
+Two user decisions were taken before any further code, and this section records both.
+
+#### Decision 1 - the amber marker stays exactly as 8O.13 left it
+
+Asked how to resolve the flush-vs-visible conflict, the user chose **"Leave it exactly as it is now"**.
+The amber disc therefore remains a flat disc (top/bottom radius `0.22`, height `0.08`) at local
+`(0, 1.78, -0.40)` on **-Z**, its top flush at the capsule top. No change was made to it. This was the
+user's call with the occlusion trade-off stated plainly, so it is not a defect to re-litigate.
+
+#### Decision 2 - swing feedback is a MARKER COLOUR CHANGE
+
+Asked what should visually change on an attack, the user chose **"Marker changes colour"** (not a scale
+pulse, not a capsule tint). That is what was built.
+
+#### What was added - ONE new script
+
+`scripts/diagnostics/facing_marker_feedback_debug.gd` (`FacingMarkerFeedbackDebug`), assigned to the
+existing `Player/FacingMarker` node. It reads `PlayerCombat.state` and tints the amber marker:
+
+| Attack phase | Marker colour |
+| ------------ | ------------- |
+| IDLE | amber `(1, 0.62, 0.12)` - the authored colour |
+| STARTUP | hot pale yellow `(1, 0.95, 0.45)` - commitment visible BEFORE the hit lands |
+| ACTIVE | red `(0.95, 0.16, 0.12)` - the damage window |
+| RECOVERY | cool blue-grey `(0.34, 0.46, 0.62)` - spent, unmistakably not ready |
+
+Design constraints, deliberate and recorded:
+
+- **STRICTLY READ-ONLY on gameplay.** It reads the phase and writes exactly one thing: a material's
+  `albedo_color`. It never starts, cancels, delays, extends or redirects an attack, imposes no timing of
+  its own, and owns no gameplay state. The colour FOLLOWS the phase; the phase never follows the colour.
+  This is the same relationship a real animation clip will have in Milestone 15.
+- It reads the phase CONTINUOUSLY rather than connecting to `attack_started` / `attack_finished`, so a
+  missed signal or a mid-swing scene load cannot leave the marker stuck on the wrong colour.
+- It runs on `_process` (visual frame), not `_physics_process`, so it cannot compete with `PlayerCombat`
+  for physics ordering or affect combat timing.
+- It **duplicates the material** on first use, so it can never mutate a resource another node draws with.
+- It writes the material only when the phase CHANGES, not every frame.
+- A missing marker or missing `PlayerCombat` disables it with a visible `push_warning` rather than
+  failing silently. An actor without combat simply keeps the marker neutral.
+- The four colours are **exported**, so a re-tune needs no code change.
+
+#### The ONE rule this deliberately does not break
+
+`gameplay is authoritative; presentation adapts`. The script is a consumer of combat state, never a
+participant. `PlayerCombat`, `PlayerController`, the dodge component, the camera, input, stamina and
+save/load were **not modified**. No gameplay file changed hands in this pass.
+
+#### Verification
+
+- The new script's per-file `state:script-errors` query returns **0**.
+- `test_environment.tscn` re-read from disk: `FacingMarker` carries the new script via
+  `ExtResource("13_0hxc1")`, `Nose` is still the flat `CylinderMesh` disc on **-Z** at `(0, 1.78, -0.40)`,
+  `Tail` still the blue disc on **+Z**, and there is still **NO `CollisionShape3D`** anywhere beneath
+  `FacingMarker` (searched the saved scene text).
+- `main.tscn` launched from a STOPPED state: **0 debugger errors**, no parse or load failures, and no
+  `[FACING] feedback disabled` warning - which is the positive signal that BOTH the marker and `Combat`
+  resolved, since a failure there would print.
+- One rendered frame from the default camera after the script took over the material: the arena renders,
+  the capsule is intact and pale, the BLUE disc is plainly visible on the camera-facing side, and the
+  amber marker is visible as a sliver at the left silhouette edge. The marker is **amber, not white or
+  black**, which is the specific check that the material duplication did not break the authored look.
+  The combat overlay read `phase=IDLE`, consistent with the amber idle colour.
+
+#### Newly confirmed
+
+- The amber marker is NOT fully hidden at the flush position - a sliver remains visible at the silhouette
+  edge (correcting the stronger 8O.13 wording).
+- Attaching a script to `FacingMarker` did not disturb the markers, the capsule, the camera or the arena.
+- The idle colour the adapter paints is identical to the authored amber, so the marker is unchanged when
+  no attack is running.
+
+#### Still UNVERIFIED - and this one needs your hands, not a screenshot
+
+- **A still frame cannot show a colour CHANGE.** Every frame captured here is IDLE, so nothing in this
+  pass proves the marker actually turns yellow, then red, then blue-grey during a real swing. The mappings
+  are readable in the script and the phase machine is the existing measured one, but the transition
+  itself is UNPROVEN until someone attacks and watches.
+- The yaw-following read during movement, turning, dodge and backstep remains an open human playtest,
+  unchanged from 8O.11 / 8O.12 / 8O.13.
+- No gameplay value changed, so the 8N evasion measurements stand unaltered and were deliberately NOT
+  re-run. No probe was written for this pass: a probe cannot grade visual readability, and the colour
+  transition is a visual read.
+
+#### Files changed by this pass
+
+- `scripts/diagnostics/facing_marker_feedback_debug.gd` - NEW (recorded in the deletion manifest).
+- `scenes/test_environment.tscn` - the script assigned to `FacingMarker`.
+- `CASCADIA_DELETION_MANIFEST.md` - the new file recorded as a cleanup candidate.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this section, the header and section 0.
 
