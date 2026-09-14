@@ -302,7 +302,12 @@ func try_start(direction: Vector3, kind: int = Kind.DIRECTIONAL,
 
 	_direction = flat
 	_kind = kind
-	_facing = facing
+	# A backstep is BACKWARD by definition, so the kind decides the facing rather
+	# than trusting a caller to pass both consistently. A caller that names only
+	# the kind (a future enemy AI, an animation adapter, a diagnostic) would
+	# otherwise store a BACKSTEP that reports FORWARD, and that contradiction is
+	# what an animation adapter reads to choose a clip.
+	_facing = Facing.BACKWARD if kind == Kind.BACKSTEP else facing
 	_speed = backstep_speed if kind == Kind.BACKSTEP else dodge_speed
 	_duration = backstep_duration if kind == Kind.BACKSTEP else dodge_duration
 	_elapsed = 0.0

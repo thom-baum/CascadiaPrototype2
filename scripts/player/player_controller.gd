@@ -11,9 +11,12 @@ extends CharacterBody3D
 ## What this owns:
 ##   - camera-relative directional input
 ##   - acceleration and deceleration, at different rates on purpose
-##   - facing: the body turns toward its movement direction
+##   - facing: the body turns toward its movement direction, EXCEPT while a
+##     committed evasion owns the body, when it holds the locked gameplay facing
+##     instead of re-deriving yaw from the evasion's own velocity
 ##   - gravity and floor settling
-##   - slopes (up to floor_max_angle) and low steps (max_step_height)
+##   - slopes (up to floor_max_angle) and low steps (max_step_height), outside a
+##     committed evasion, which owns its own displacement
 ##   - a fall-recovery floor so a bad fall can never soft-lock the session
 ##
 ## What this does NOT own (it reads their state, it does not implement them):
@@ -95,6 +98,15 @@ extends CharacterBody3D
 var _input: CascadiaInput
 var _wish_direction := Vector3.ZERO
 var _wish_magnitude := 0.0
+## The body yaw this controller last authored while no evasion owned the body, and
+## whether an evasion was already active on the previous frame. Together they are
+## the yardstick a committed evasion holds its facing against, so the locked
+## gameplay facing survives the evasion instead of being re-derived from the
+## evasion's own velocity. See _apply_facing() and _sync_evasion_authority().
+var _locked_yaw := 0.0
+## True while an evasion was already owning the body on the previous frame, so the
+## frame where it ENDS can be recognised and the handoff handled exactly once.
+var _was_dodging := false
 var _spawn_position := Vector3.ZERO
 var _spawn_yaw := 0.0
 var _combat: PlayerCombat
@@ -107,11 +119,20 @@ var _death: DeathComponent
 func _ready() -> void:
 	_spawn_position = global_position
 	_spawn_yaw = rotation.y
+	# The authored yaw is the first yardstick, so a body that has not moved yet
+	# still has a facing an evasion can hold.
+	_locked_yaw = _spawn_yaw
 	if not GameActions.all_actions().is_empty():
 		pass
 
 
 func _physics_process(delta: float) -> void:
+	# Facing arbitration happens at the TOP of the frame, before anything can move
+	# the body. The yardstick an evasion holds must be the facing that was authored
+	# while the actor still owned its own orientation, so it is refreshed here and
+	# never re-derived from the evasion's own velocity further down the frame.
+	_sync_evasion_authority()
+
 	# A dead actor is not asked for input at all. Gating HERE rather than inside each
 	# reader is deliberate: there is then no input path that can be forgotten, so a
 	# death cannot be escaped by a dodge, a parry or a swing. The body stops where it
@@ -356,11 +377,53 @@ func _update_stamina(delta: float) -> void:
 ## the raw wish direction means the body keeps facing its travel direction while
 ## decelerating, instead of snapping around the moment the stick is released.
 func _apply_facing(delta: float) -> void:
+	# A committed evasion owns the body's orientation for its whole duration. The
+	# velocity during an evasion IS the evasion burst, so deriving yaw from it turns
+	# the body around mid-backstep and swings it toward a lateral dodge. The locked
+	# gameplay facing is restored instead, and the facing is NOT re-derived here:
+	# body orientation during a committed evasion belongs to the locked facing.
+	if _is_evading():
+		rotation.y = _locked_yaw
+		return
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z)
 	if horizontal.length_squared() < 0.01:
 		return
 	var target_yaw := atan2(-horizontal.x, -horizontal.z)
 	rotation.y = rotate_toward(rotation.y, target_yaw, deg_to_rad(turn_speed_degrees) * delta)
+
+
+## True while a committed evasion owns the body's movement and orientation.
+## DodgeComponent is the single authority; a scene without one is never evading.
+func _is_evading() -> bool:
+	var dodge := _get_dodge()
+	return dodge != null and dodge.is_dodging()
+
+
+## Keep the committed-evasion contract honest, at the TOP of the physics step before
+## anything else in the frame can move or re-orient the body.
+##
+## Two things happen here, and both are about an evasion owning the body for exactly
+## its own duration and not one frame longer:
+##
+##   1. The facing yardstick. While no evasion owns the body, the lock tracks the yaw
+##      the actor authored for itself; once an evasion IS active the lock is frozen,
+##      so the locked gameplay facing survives the evasion instead of being
+##      re-derived from the evasion's own velocity.
+##   2. The end-of-evasion handoff. The evasion owns its displacement for its whole
+##      duration, so the burst velocity it authored must not outlive it. Left on the
+##      body, that velocity keeps driving BOTH the slide and - because ordinary
+##      facing follows the body's travel direction - the body's orientation. After a
+##      backstep it points the wrong way, so the actor would visibly turn around
+##      after an evasion that is already over and already paid for.
+func _sync_evasion_authority() -> void:
+	if _is_evading():
+		_was_dodging = true
+		return
+	if _was_dodging:
+		_was_dodging = false
+		velocity.x = 0.0
+		velocity.z = 0.0
+	_locked_yaw = rotation.y
 
 
 ## Climb ledges no taller than max_step_height. CharacterBody3D does not climb
@@ -380,6 +443,12 @@ func _apply_facing(delta: float) -> void:
 ## probe, so it read as an obstacle - which teleported the body 0.48 m forward per
 ## frame and launched the player up the ramp.
 func _resolve_step_up(before: Vector3, intended: Vector3) -> void:
+	# A committed evasion owns its own displacement, and a step-up correction is
+	# sized by the probe reach rather than by the evasion's authored travel. Running
+	# it during an evasion would add displacement the evasion never asked for, so the
+	# correction stands down and the evasion keeps exactly the travel it authored.
+	if _is_evading():
+		return
 	if not is_on_floor():
 		return
 
@@ -452,6 +521,9 @@ func _check_fall_recovery() -> void:
 		return
 	global_position = _spawn_position
 	rotation.y = _spawn_yaw
+	# The respawn authors a new facing, so the yardstick moves with it. Without this
+	# the next evasion would hold the pre-fall yaw instead of the spawn yaw.
+	_locked_yaw = _spawn_yaw
 	velocity = Vector3.ZERO
 
 

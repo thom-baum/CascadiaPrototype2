@@ -6,7 +6,24 @@ acceptance criteria, known defects, deferred systems and the next approved task.
 A fresh session must be able to read THIS FILE plus `CASCADIA_DELETION_MANIFEST.md`
 and know exactly where the project stands without chat history.
 
-Last updated: 2026-09-13 (M10.10 - RECOVERY CHAINS MEASURED END TO END, AND THE "SECOND TRANSITION"
+Last updated: 2026-09-13 (8F IMPLEMENTED - DODGE MOVEMENT AUTHORITY. The recorded future pass in section
+8F was the sensible next task: it was the last open gameplay defect a HUMAN had actually confirmed in
+play (the backstep turning the body around), and it was written up and scoped long before this session,
+so it is roadmap work rather than an invented milestone. IMPLEMENTED: during a COMMITTED evasion the
+evasion now owns the body's ORIENTATION and its DISPLACEMENT, and on the frame control returns the
+evasion's residual burst velocity is cleared so ordinary locomotion cannot be dragged backwards by it.
+Measured: `dodge_authority_probe_debug` - ALL CHECKS PASSED, 80-line transcript at
+`res://_dodge_authority_report.txt`, 0 debugger errors. The body holds the locked facing to within
+0.00 deg across a neutral backstep AND across a directional dodge that was pinned 180 deg away from its
+own travel direction; travel equals speed x duration on clear ground (1.6875 m directional / 1.2800 m
+backstep) with no single frame above 0.0625 m; a dodge driven into the 42 cm step gained NO unauthored
+displacement and stayed at ground level (final y 0.000). Preserved unchanged and re-measured: the
+attack/dodge mutex, exactly one 22-stamina charge, the i-frame window, and ordinary locomotion
+resuming at 4.20 m/s with the facing following movement again. `step_probe_debug` re-run: all six
+traversal stations still clean, no launch. `main.tscn` boots with 0 runtime errors and the arena
+renders. STILL OPEN and deliberately untouched: the capsule has NO front-facing marker, so the
+correction cannot yet be judged BY EYE - that is a presentation item, not a gameplay one.
+Previous: 2026-09-13 (M10.10 - RECOVERY CHAINS MEASURED END TO END, AND THE "SECOND TRANSITION"
 IS NOT THE GAME. The reported problem is a CHAIN, not a state: Escape releases the cursor, the click
 back sometimes does not re-hook, and a LATER transition (another Escape, another Alt-Tab, another click)
 makes it work. Every individual state had already been measured, so this pass built a chain-level probe
@@ -164,7 +181,7 @@ plus the deletion manifest.
 | 7 | Parry | IMPLEMENTED, MEASURED, AND HUMAN-PLAYED (window readability still open) | parry_probe_debug: timeline 0.600s authored, STARTUP->WINDOW->RECOVERY in order, stationary (travel 0.000m with move_right held), one stamina cost charged, unaffordable/duplicate/still-attacking/still-dodging refusals all counted per cause, damage refused in-window and applied in startup+recovery, physical parry key produced exactly one parry, RESULT: ALL CHECKS PASSED; all five regression probes re-run and passed |
 | 8 | Single attacking test enemy | IMPLEMENTED, MEASURED, AND HUMAN-PLAYED (readability/cadence still open) | enemy_attack_probe_debug: phase order WINDUP->ACTIVE->RECOVERY once each, measured 0.58/0.13/0.70s vs authored 0.60/0.12/0.70s, telegraph only during WINDUP, undefended player lost exactly 20 once on an ACTIVE frame, parry refused and counted as PARRY (0->1), dodge refused and counted as I-FRAME (0->1), out-of-range refused by cause, auto_attack started on its own, RESULT: ALL CHECKS PASSED; all six regression probes re-run and passed |
 | - | Enemy death and persistence | IMPLEMENTED AND MEASURED (playtest of the presentation still pending) | enemy_death_probe_debug: the defeat processed exactly once, further damage refused, committed attack cancelled with its damage window closed, no attack can start after defeat (refusal counted by cause), a defeated enemy cannot damage the player, and the player's death + automatic reset do NOT resurrect it (health 0.0, is_dead, is_defeated, IDLE, defeats=1), RESULT: ALL CHECKS PASSED; all seven required regression probes re-run and passed. See section 8I |
-| - | Sprint / Dodge / Backstep input pass | IMPLEMENTED, MEASURED, AND HUMAN-PLAYED (backstep orientation DEFECT human-confirmed) | dodge_input_probe_debug: shared input tap->dodge / hold->sprint, release-after-sprint does NOT dodge, forward/right/backward resolve camera-relative (dot 1.00), a neutral tap produces a BACKSTEP travelling backwards along facing (dot 1.00), directional travel 1.688 m vs 3.375 m before, backstep 1.280 m, i-frames intact, exactly one 22-stamina charge and an unaffordable refusal counted by cause, RESULT: ALL CHECKS PASSED; all eight probes re-run and passed |
+| - | Sprint / Dodge / Backstep input pass | IMPLEMENTED, MEASURED, AND HUMAN-PLAYED; backstep orientation DEFECT FIXED 2026-09-13 by the 8F authority pass (the facing INDICATOR half is still open) | dodge_input_probe_debug: shared input tap->dodge / hold->sprint, release-after-sprint does NOT dodge, forward/right/backward resolve camera-relative (dot 1.00), a neutral tap produces a BACKSTEP travelling backwards along facing (dot 1.00), directional travel 1.688 m vs 3.375 m before, backstep 1.280 m, i-frames intact, exactly one 22-stamina charge and an unaffordable refusal counted by cause, RESULT: ALL CHECKS PASSED; all eight probes re-run and passed |
 | - | Reusable actor death capability | ACCEPTED 2026-09-12 (measured AND human-verified) | Roadmap section 8J written BEFORE implementation, per the user's instruction. Audit read from the live scenes: the reusable defeat path existed (`EnemyDeathComponent`) but only `TestAttacker` carried it, so the capability was NOT actually shared; `DummyActor` and `Targets/TargetA..C` had health and a hurtbox and no defeat path at all. `DummyActor` now carries the same component and is measured defeated exactly once; the immortal and non-damageable axes are measured as genuinely distinct; the player's reset did NOT revive it. `actor_death_probe_debug`: RESULT: ALL CHECKS PASSED, 0 runtime errors; all nine other probes re-run and passed. ACCEPTED after the user's manual playtest: the dummy takes damage, reaches 0/100, enters the dead state, tips and darkens, shows DEFEATED, and does not disturb the other actors. See 8J.10 and 8J.12 |
 | 9 | Soulslike credit economy and meaningful progression foundation | IMPLEMENTED AND MEASURED (CARRIED Credits only; banking/spending/persistence NOT built; feel not yet played) | MILESTONE 9, selected by the user and written into section 8L BEFORE implementation. `credit_economy_probe_debug` ENUMERATES the authoritative enemy population and kills each eligible enemy through the real `receive_hit -> apply_damage` chain: every one awards Credits exactly once, the reward equals the documented provisional amount, the carried balance equals the sum of eligible rewards, and the non-mortal and player archetypes are excluded by explicit rule. Duplicate, freed-actor and not-actually-defeated cases award nothing. STILL NOT BUILT: banking, spending, stats/items/gear progression, death-loss retrieval and save/load. See 8L |
 | 10 | Game-state saving and loading foundation | IMPLEMENTED AND MEASURED (probe-verified; NOT yet human-played; persists the carried balance ONLY). The reported physical-F9 failure was a HOST KEY COLLISION, NOT a save/load defect - see 8M.20. The load key is now F7 (F11 alternate); F9 and F8 are owned by the embedding host and cannot be used | MILESTONE 10, selected by the user and written into section 8M BEFORE implementation. `GameStateSave` writes a REAL save at `user://cascadia_save.json` carrying `schema_version`, `carried_credits` and `saved_at_unix`, reading the balance from `CreditLedger` and restoring it through the ledger's own controlled path (which is NOT `award_credits`, so a load can never be mistaken for a defeat). `game_state_save_load_probe_debug`: RESULT: ALL CHECKS PASSED, 0 debugger errors. Measured round trip: one real kill earned 100, a 250 top-up set the saved value to 350, the live balance was then changed, and the load restored 350 EXACTLY; a further post-load kill took it to 450. Every malformed case (missing, empty, not-an-object, unsupported version, missing field, text value, negative value) failed with its OWN result and left the balance untouched. `main.tscn` boots with 0 runtime errors and the F5/F9/F10 prototype panel plus the balance render in-game. STILL NOT BUILT: banking, spending, stats, items, gear, inventory, checkpoints, world-state persistence, defeated-enemy persistence, death currency loss, multiple slots, cloud saves. See 8M |
@@ -265,8 +282,19 @@ plus the deletion manifest.
 - **This is PROBE-MEASURED, not yet human-played.** The prototype F5 / F9 / F10 controls are built,
   bound and VISIBLE in the running game (confirmed in a rendered frame), but a human has not yet
   exercised the save -> change -> load loop by hand. Treat that as the one open item.
-- **Current active task: NONE.** Milestone 10 is complete and measured; no further work is authorised.
-  Milestone 11 is NOT selected and must be named and approved before anything begins.
+- **SECTION 8F IS NOW IMPLEMENTED (2026-09-13).** The recorded future pass - dodge movement authority
+  over orientation and displacement - was completed as a bounded pass, because it was the last open
+  gameplay defect a HUMAN had confirmed in play. `_apply_facing()` no longer re-derives body yaw from
+  velocity during an evasion (the locked facing drives it), `_resolve_step_up()` stands down while an
+  evasion owns the body, and the evasion's residual burst velocity is cleared on the handoff frame so
+  ordinary facing cannot be dragged backwards by it. MEASURED: `dodge_authority_probe_debug` ALL CHECKS
+  PASSED, 80-line transcript on disk, 0 debugger errors; `step_probe_debug` re-run clean.
+  **This closes the GAMEPLAY half of the 8G.2 backstep defect. The OTHER half - the capsule having no
+  front-facing marker, so the fix cannot be judged by eye - is a PRESENTATION item and is STILL OPEN.**
+  See section 8N.
+- **Current active task: NONE.** Milestone 10 is complete and measured, and the 8F authority pass is
+  now implemented and measured. No further work is authorised; Milestone 11 is NOT selected and must be
+  named and approved before anything begins.
 
 ### Evidence vocabulary used in this file
 
@@ -4958,3 +4986,134 @@ borderless, resolution and display-change behaviour, focus and mouse-capture beh
 mode, whether a return should recapture automatically or require a click, and player-facing feedback when
 capture is lost or restored. The current behaviour is accepted as a development test bed: playable,
 recoverable in normal testing, with the state transitions understood - not final shipping behaviour.
+
+---
+
+## 8N. DODGE MOVEMENT AUTHORITY - THE RECORDED 8F PASS, IMPLEMENTED AND MEASURED (2026-09-13)
+
+This pass closes the bounded future pass that section 8F recorded on 2026-09-12 and that section 8G.2
+then CONFIRMED BY HAND (the user reported that the backstep "seems to lose or alter the intended facing
+orientation"). It was chosen as the next sensible task because it is an explicitly active, recorded,
+roadmap-aligned gameplay item - NOT a new milestone, and NOT a reason to reopen the mouse/focus work,
+which stays accepted as a development test bed (8M.24).
+
+### 8N.1 What was changed
+
+**Orientation arbitration (`scripts/player/player_controller.gd`).** `_apply_facing()` had no evasion
+guard, so it re-derived body yaw from the CURRENT horizontal velocity every frame - and during an
+evasion that velocity IS the evasion burst. A backstep therefore drove yaw to the reverse of the
+actor's facing, and the body turned around mid-evasion. The controller now holds the LOCKED gameplay
+facing for the whole of a committed evasion and does not re-derive orientation from velocity while the
+evasion owns the body. The facing yardstick is refreshed at the TOP of the physics frame
+(`_sync_evasion_authority()`) while no evasion owns the body, and frozen once one does, so the value the
+evasion holds is the last orientation the actor genuinely chose for itself.
+
+**The end-of-evasion handoff.** The evasion owns its displacement for exactly its own duration. The
+burst velocity it authored is now cleared at the handoff instead of being left on the body, because a
+residual burst keeps driving BOTH the slide and - since ordinary facing follows travel - the
+orientation, which would visibly turn the actor around AFTER an evasion it had already paid for.
+
+**Position arbitration (`_resolve_step_up()`).** This had no evasion guard either, and is SIZED BY THE
+PROBE REACH rather than by the evasion's authored travel. It now stands down entirely while an evasion
+is active, so it cannot add displacement the evasion never asked for.
+
+**A latent contradiction in `DodgeComponent.try_start()`.** `facing` defaulted to FORWARD, so a caller
+asking for a BACKSTEP without also naming a facing stored `kind=BACKSTEP` with `facing=FORWARD` -
+which contradicts the component's own documented rule that a backstep is ALWAYS backward. Production
+always passed BACKWARD, so no gameplay path hit it, but the captured state a future animation adapter
+reads could be self-contradictory. The kind now decides the facing, so the two cannot disagree.
+
+### 8N.2 What was deliberately NOT changed
+
+- `_apply_horizontal()`'s dodge branch was already CORRECT (8F.2) and was not touched.
+- i-frames, the 22-stamina cost, dodge timing, commitment and the attack/parry mutexes: unchanged.
+- No lock-on was assumed or added. The dodge direction stays camera-relative.
+- No animation, rig or clip work - there is no animation system yet (8G.2 item 3 stands).
+- No mouse, focus, capture or camera code was touched.
+
+### 8N.3 The probe
+
+`scripts/diagnostics/dodge_authority_probe_debug.gd` (scene
+`scenes/diagnostics/dodge_authority_probe_debug.tscn`, transcript
+`res://_dodge_authority_report.txt`) runs nine checks in one session:
+
+    AC1 backstep facing   neutral backstep driven through REAL input retreats while still facing the
+                          way the player faced; body yaw does not turn around on any evasion frame.
+    AC2 dodge facing      DIRECTIONAL dodge driven through REAL input keeps the SAME locked facing even
+                          when that facing is pinned 180 deg away from the dodge direction.
+    AC3 dodge travel      on clear ground, travel = speed x duration, and no single frame exceeds the
+                          speed the evasion authored.
+    AC4 backstep travel   the same for the neutral backstep, which is slower.
+    AC5 dodge into step   an evasion driven into the 42 cm step gains NO displacement beyond its own
+                          authored travel and does NOT climb onto the step.
+    AC6 commitment        an attack still refuses a dodge (mutex unchanged).
+    AC7 stamina           exactly one 22-point cost per evasion.
+    AC8 i-frames          damage is still refused inside the window.
+    AC9 handoff           ordinary locomotion takes the body back at walking speed, facing follows
+                          movement again - authority is RETURNED, not lost.
+
+### 8N.4 Measured results - `RESULT: ALL CHECKS PASSED`, 80 transcript lines, 0 debugger errors
+
+- AC1 backstep: `travel=1.2800 m over 0.4000 s`, authored 1.280 m; from (0.00, 12.05) to
+  (0.00, 13.33); max body yaw deviation `0.00 deg` over the whole evasion.
+- AC2 dodge: `travel=1.6875 m over 0.4500 s`, authored 1.6875 m; body pinned 180 deg AWAY from the dodge
+  direction and still `max body deviation 0.00 deg` - the adversarial pin held.
+- AC3 dodge travel: measured 1.6250 m vs 1.6875 m authored, max single frame `0.0625 m` (limit 0.20).
+- AC4 backstep travel: measured 1.2267 m vs 1.2800 m authored; still reports BACKWARD.
+- AC5 dodge into the 42 cm step: travel 0.5371 m, final y `0.000` (did not climb the 0.42 m step), max
+  frame 0.0625 m - no step correction leaked into the evasion.
+- AC6/AC7/AC8/AC9: attack mutex refusal counted by cause; exactly one 22-point charge (100 -> 78);
+  damage refused in-window and applied normally outside it; walking resumed at 4.20 m/s for 2.1700 m
+  with facing deviation `0.0 deg`.
+
+Regression controls re-run in the same pass:
+
+- `step_probe_debug` - all six traversal phases clean. A/B/C (14/28/42 cm) each show exactly ONE
+  step-up frame; D (1 m ledge) and E/F (ramp) show ZERO, i.e. smooth. No launch anywhere. Confirms the
+  new evasion guard in `_resolve_step_up()` did not disturb ordinary traversal.
+- Shipped game (`res://main.tscn`) - boots with 0 debugger errors; the rendered frame shows the lit
+  arena, both red target pillars with their world labels, the player capsule and both debug overlays.
+
+### 8N.5 Newly confirmed
+
+- Orientation during a committed evasion belongs to the locked gameplay facing, not to current
+  velocity - measured with the body pinned 180 deg away from the dodge direction.
+- Displacement during an evasion is authored ONLY by the evasion: on clear ground, into a 42 cm step,
+  and at the handoff, with no unauthored frame.
+- Authority is RETURNED at the end of an evasion: ordinary locomotion and facing resume at authored
+  speed.
+- A backstep can no longer store a self-contradictory `kind=BACKSTEP / facing=FORWARD` pair.
+
+### 8N.6 Newly unverified / still open
+
+- The facing INDICATOR the user asked for is NOT built. The correction is therefore still judged by
+  numbers and by the camera, not by an eye-readable marker on the capsule - the parameterisation gap
+  8G.2 item 2 named is only half closed.
+- The corrected backstep has NOT been re-played by hand. Probes confirm the numbers; only the user can
+  confirm how it now reads in motion.
+- Physical Alt-Tab / OS pointer-lock behaviour remains unproven in this host, unchanged from 8M.24.
+- Not re-measured this pass: the save/load probes, the other debug panels, and the combat probes. No
+  change was made to any of them.
+
+### 8N.7 Files changed by this pass
+
+- `scripts/player/player_controller.gd` - facing lock + evasion authority sync + handoff velocity clear
+  + evasion guard in `_resolve_step_up()`.
+- `scripts/player/dodge_component.gd` - kind decides facing, so the pair cannot contradict.
+- `scripts/diagnostics/dodge_authority_probe_debug.gd` - NEW probe (recorded in the deletion manifest).
+- `scenes/diagnostics/dodge_authority_probe_debug.tscn` - its entry scene (same).
+- `res://_dodge_authority_report.txt` - the durable transcript (evidence, NOT a deletion candidate).
+- `CASCADIA_DELETION_MANIFEST.md`, `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - this pass.
+
+### 8N.8 Two PROBE defects found and fixed (NOT production defects)
+
+Recorded because each would mislead a future session:
+
+1. **A probe placed the body inside the enemy.** AC2 originally spawned the player at (0, 0.3, 6) and
+   dodged along camera-forward (-Z), straight into `TestAttacker` at (0, 0, 5) one metre away. The
+   evasion was physically blocked and measured 0.12 m against an authored 1.69 m - which looked exactly
+   like a broken dodge. The phase now runs on clear ground at z=16.
+2. **Travel was measured from the wrong anchor.** The real-input phases hold a movement key BEFORE the
+   tap, so the body is already walking when the evasion starts; counting that approach reported
+   1.9150 m against an authored 1.6875 m. The measurement is now anchored to the evasion's OWN first
+   frame, which is why AC2 reads 1.6875 m exactly.

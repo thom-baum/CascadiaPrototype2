@@ -1,0 +1,79 @@
+[AUTHORITY]   PASS  player found and is a PlayerController
+[AUTHORITY]   PASS  player Dodge is a DodgeComponent
+[AUTHORITY]   PASS  player Stamina found
+[AUTHORITY]   PASS  player Health found
+[AUTHORITY]   PASS  player Hurtbox is a HurtboxComponent
+[AUTHORITY]   PASS  player Combat is a PlayerCombat
+[AUTHORITY] --- wiring audit (measured) ---
+[AUTHORITY] directional: speed=3.75 m/s duration=0.45 s -> travel=1.688 m
+[AUTHORITY] backstep:    speed=3.20 m/s duration=0.40 s -> travel=1.280 m
+[AUTHORITY] i-frames 0.05-0.30 s inside a 0.45 s dodge, stamina cost 22
+[AUTHORITY] locomotion: walk=4.20 m/s sprint=6.80 m/s turn=720 deg/s
+[AUTHORITY] step contract: max_step_height=0.50 m, probe reach=1.20 x radius
+[AUTHORITY] --- AC1 neutral backstep keeps the locked facing ---
+[AUTHORITY] start yaw=0.00 deg, locked=0.00 deg
+[AUTHORITY] AC1 evasion=BACKSTEP facing=BACKWARD travel=1.2800 m over 0.4000 s
+[AUTHORITY] AC1 from=(0.00, 12.05) to=(0.00, 13.33) (flat 1.280 m)
+[AUTHORITY]   PASS  AC1 an evasion actually started (a refusal reads as defaults)
+[AUTHORITY]   PASS  AC1 an evasion was counted as started
+[AUTHORITY]   PASS  AC1 a neutral tap produced a BACKSTEP (got BACKSTEP)
+[AUTHORITY]   PASS  AC1 the body kept the locked facing for the whole evasion (max deviation 0.00 deg, limit 2.0)
+[AUTHORITY] AC1 locked facing 0.0 deg, max body deviation 0.00 deg over the evasion
+[AUTHORITY] --- AC2 directional dodge keeps the locked facing ---
+[AUTHORITY] dodge direction=(0.0, 0.0, -1.0), body pinned to face AWAY from it
+[AUTHORITY]   pinned body yaw=-180.0 deg, direction yaw=0.0 deg
+[AUTHORITY] AC2 evasion=DIRECTIONAL facing=FORWARD travel=1.6875 m over 0.4500 s
+[AUTHORITY] AC2 from=(0.00, 15.71) to=(0.00, 14.01) (flat 1.694 m)
+[AUTHORITY]   PASS  AC2 an evasion actually started (a refusal reads as defaults)
+[AUTHORITY]   PASS  AC2 an evasion was counted as started
+[AUTHORITY]   PASS  AC2 a directional dodge resolved as DIRECTIONAL (got DIRECTIONAL)
+[AUTHORITY]   PASS  AC2 the body kept the locked facing for the whole evasion (max deviation 0.00 deg, limit 2.0)
+[AUTHORITY] AC2 locked facing -180.0 deg, max body deviation 0.00 deg over the evasion
+[AUTHORITY] --- AC3 directional dodge travel on clear ground ---
+[AUTHORITY] measured travel=1.6250 m over 0.4500 s (authored 1.688 m in 0.45 s)
+[AUTHORITY]   PASS  AC3 the directional dodge actually started
+[AUTHORITY] AC3 measured=1.6250 m, speed x elapsed=1.6875 m, authored total=1.6875 m
+[AUTHORITY]   PASS  AC3 travel matches the evasion's own speed over the evasion's own duration (1.6250 vs 1.6875)
+[AUTHORITY]   PASS  AC3 travel matches the authored total (1.6250 vs 1.6875)
+[AUTHORITY]   PASS  AC3 no single frame carried unauthored displacement (max frame 0.0625 m, limit 0.20)
+[AUTHORITY] --- AC4 neutral backstep travel ---
+[AUTHORITY] measured backstep travel=1.2267 m over 0.4000 s (authored 1.280 m)
+[AUTHORITY]   PASS  AC4 the backstep actually started
+[AUTHORITY] AC4 measured=1.2267 m, speed x elapsed=1.2800 m, authored total=1.2800 m
+[AUTHORITY]   PASS  AC4 travel matches the evasion's own speed over the evasion's own duration (1.2267 vs 1.2800)
+[AUTHORITY]   PASS  AC4 travel matches the authored total (1.2267 vs 1.2800)
+[AUTHORITY]   PASS  AC4 the backstep still reports BACKWARD (got BACKWARD)
+[AUTHORITY] --- AC5 dodge driven into the 42 cm step ---
+[AUTHORITY] travel=0.5371 m over 0.4500 s (authored for that time 1.6875 m), final y=0.000
+[AUTHORITY]   PASS  AC5 the dodge into the step actually started
+[AUTHORITY]   PASS  AC5 the obstruction added NO displacement the evasion did not author (0.5371 m vs 1.6875 m)
+[AUTHORITY]   PASS  AC5 no single frame carried a step correction (max frame 0.0625 m, limit 0.20)
+[AUTHORITY]   PASS  AC5 the evasion did not climb onto the step it ran into (final y 0.000, step top 0.42)
+[AUTHORITY] --- AC6 an attack still refuses a dodge ---
+[AUTHORITY]   PASS  the light attack definition exists
+[AUTHORITY]   PASS  a light attack started
+[AUTHORITY]   PASS  the attack commits the body
+[AUTHORITY]   PASS  a dodge during an attack is refused
+[AUTHORITY]   PASS  the refusal was counted as an attack-mutex refusal (0 -> 1)
+[AUTHORITY]   PASS  the refused dodge was not counted as started
+[AUTHORITY]   PASS  the refused dodge left the actor idle
+[AUTHORITY]   PASS  no dodge leaked out of the attack it was refused during
+[AUTHORITY] --- AC7 exactly one stamina cost per evasion ---
+[AUTHORITY]   PASS  an affordable dodge started
+[AUTHORITY]   PASS  the accepted dodge was counted once (5 -> 6)
+[AUTHORITY] stamina 100.0 -> 78.0 (cost 22)
+[AUTHORITY]   PASS  exactly one stamina cost was charged (100.0 -> 78.0, expected -22)
+[AUTHORITY]   PASS  the cost was charged once, not once per frame (78.0)
+[AUTHORITY] --- AC8 the i-frame window still refuses damage ---
+[AUTHORITY]   PASS  damage outside any window applies normally (100.0 -> 93.0)
+[AUTHORITY]   PASS  damage inside the i-frame window was refused
+[AUTHORITY]   PASS  the refusal was counted as an i-frame refusal (0 -> 1)
+[AUTHORITY] --- AC9 ordinary locomotion takes the body back ---
+[AUTHORITY] walked 2.1700 m in 0.517 s at 4.20 m/s (expected 2.1700 m)
+[AUTHORITY]   PASS  AC9 the body reached walking speed again after the evasion
+[AUTHORITY]   PASS  AC9 travel matches walking speed (2.1700 m vs 2.1700 m)
+[AUTHORITY] facing=0.0 deg, movement direction=0.0 deg, deviation=0.0 deg
+[AUTHORITY]   PASS  AC9 the facing follows movement again after the evasion (deviation 0.0 deg)
+[AUTHORITY] --- summary ---
+[AUTHORITY] evasion authority: facing locked during the evasion, displacement authored only by the evasion, ordinary locomotion restored afterwards
+[AUTHORITY] RESULT: ALL CHECKS PASSED
