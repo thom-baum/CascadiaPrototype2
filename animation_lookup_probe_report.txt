@@ -17,7 +17,7 @@ slot vocabulary: ["idle", "locomotion", "sprint", "dodge", "parry", "hurt", "sta
 adapters found (by group): 4
 PASS  at least FOUR actors are driven by one adapter (4)
 PASS  Player: a wired adapter resolves a non-empty SLOT ('idle')
-PASS  Player: reports one of the five documented resolution outcomes ('none')
+PASS  Player: reports one of the five documented resolution outcomes ('exact')
 PASS  TestAttacker: a wired adapter resolves a non-empty SLOT ('locomotion')
 PASS  TestAttacker: reports one of the five documented resolution outcomes ('none')
 PASS  PassiveNpc: a wired adapter resolves a non-empty SLOT ('idle')

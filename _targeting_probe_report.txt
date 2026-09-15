@@ -31,55 +31,55 @@
 [s84] [TARGETING]   PASS  a released lock holds no target
 [s84] [TARGETING]   PASS  releasing the lock withdraws the look intent
 [s84] [TARGETING] --- PHASE 4: the declared look intent and the camera ---
-[s97] [TARGETING]   PASS  the lock is held again for the camera phase
-[s97] [TARGETING]   PASS  a held lock DECLARES the look-yaw intent to the input layer
-[s100] [TARGETING]   PASS  no lock is held, so only ONE yaw authority is active
-[s100] [TARGETING]   PASS  the rig confirms it is NOT framing during the stick measurements
-[s105] [TARGETING]   PASS  unlocked: the right stick's horizontal component REACHES the camera (5.839 deg)
-[s111] [TARGETING]   PASS  locked: the SAME axis does NOT turn the camera (0.0000 deg) - one axis, one consumer
-[s116] [TARGETING]   PASS  the lock is re-acquired for the mouse and framing checks
-[s116] [TARGETING]   PASS  and the look intent is declared again
-[s119] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (50.124 deg)
-[s119] [TARGETING]   PASS  a target is locked for the framing checks
-[s164] [TARGETING]   PASS  the camera's own forward points at the locked target (0.00 deg off centre)
-[s164] [TARGETING]   PASS  PITCH is unchanged by lock-on (-12.000 -> -12.000)
-[s164] [TARGETING]   PASS  ROLL stays zero (camera right vector has no vertical part: 0.000000)
-[s164] [TARGETING]   PASS  the rig hierarchy is intact and unrenamed: ["Camera3D", "SpringArm3D", "CameraPitch", "CameraYaw", "CameraRig"]
-[s164] [TARGETING]   PASS  the camera READ the lock and changed nothing about it
-[s209] [TARGETING]   PASS  the camera FOLLOWS when the target moves (0.01 deg off centre)
-[s257] [TARGETING]   PASS  the lock is released before the release paths are tested
-[s257] [TARGETING] --- PHASE 5: the four auto-release paths, each by its own cause ---
-[s257] [TARGETING]   PASS  a temporary target was created for the defeat path
-[s264] [TARGETING]   PASS  the lock is taken on the temporary target
-[s264] [TARGETING]   PASS  the temporary target carries a defeat authority
-[s264] [TARGETING]   PASS  the temporary target is in its authoritative DEFEATED state
-[s267] [TARGETING]   PASS  a DEFEATED target releases the lock
-[s267] [TARGETING]   PASS  the release is recorded as DEFEATED (1)
-[s267] [TARGETING]   PASS  and it is NOT filed as a generic invalid release - the causes stay apart
-[s274] [TARGETING]   PASS  the lock is taken on a second temporary target
-[s277] [TARGETING]   PASS  a FREED target releases the lock
-[s277] [TARGETING]   PASS  the release is recorded as invalid (1)
-[s284] [TARGETING]   PASS  the lock is taken on a third temporary target
-[s284] [TARGETING]   PASS  the temporary target carries a CombatParticipant
-[s287] [TARGETING]   PASS  the target became UNUSABLE through the project's own validity authority
-[s287] [TARGETING]   PASS  a target refused as a target releases the lock
-[s287] [TARGETING]   PASS  that release is also recorded as invalid
-[s294] [TARGETING]   PASS  the lock is taken on a fourth temporary target
-[s297] [TARGETING]   PASS  a target beyond acquire_range but inside release_range KEEPS the lock (20 m)
-[s300] [TARGETING]   PASS  a target beyond release_range releases the lock
-[s300] [TARGETING]   PASS  the release is recorded as out-of-range (1)
-[s307] [TARGETING]   PASS  the lock is taken on a fifth temporary target
-[s310] [TARGETING]   PASS  PLAYER DEATH releases the lock
-[s310] [TARGETING]   PASS  the release is recorded as player-dead (1)
-[s310] [TARGETING]   PASS  a dead player cannot take a new lock
-[s310] [TARGETING]   PASS  no look intent survives the player's death
-[s313] [TARGETING]   PASS  the player was restored by its own death circuit
-[s313] [TARGETING]   PASS  and can lock again afterwards
-[s313] [TARGETING] --- PHASE 6: the scene is left as it was found ---
-[s316] [TARGETING]   PASS  no lock is left held
-[s316] [TARGETING]   PASS  no look intent is left declared
-[s322] [TARGETING]   PASS  no ARENA actor was damaged or defeated by this probe ([])
-[s322] [TARGETING]   PASS  the carried balance is unchanged at 0 - no Credits were minted by the probe
-[s322] [TARGETING]   PASS  the economy granted no awards during the probe (0)
-[s322] [TARGETING]   PASS  the arena's own targets are still usable
-[s322] [TARGETING] RESULT: ALL CHECKS PASSED (78)
+[s89] [TARGETING]   PASS  the lock is held again for the camera phase
+[s89] [TARGETING]   PASS  a held lock DECLARES the look-yaw intent to the input layer
+[s92] [TARGETING]   PASS  no lock is held, so only ONE yaw authority is active
+[s92] [TARGETING]   PASS  the rig confirms it is NOT framing during the stick measurements
+[s97] [TARGETING]   PASS  unlocked: the right stick's horizontal component REACHES the camera (6.160 deg)
+[s103] [TARGETING]   PASS  locked: the SAME axis does NOT turn the camera (0.0000 deg) - one axis, one consumer
+[s108] [TARGETING]   PASS  the lock is re-acquired for the mouse and framing checks
+[s108] [TARGETING]   PASS  and the look intent is declared again
+[s111] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (28.549 deg)
+[s111] [TARGETING]   PASS  a target is locked for the framing checks
+[s156] [TARGETING]   PASS  the camera's own forward points at the locked target (0.00 deg off centre)
+[s156] [TARGETING]   PASS  PITCH is unchanged by lock-on (-12.000 -> -12.000)
+[s156] [TARGETING]   PASS  ROLL stays zero (camera right vector has no vertical part: 0.000000)
+[s156] [TARGETING]   PASS  the rig hierarchy is intact and unrenamed: ["Camera3D", "SpringArm3D", "CameraPitch", "CameraYaw", "CameraRig"]
+[s156] [TARGETING]   PASS  the camera READ the lock and changed nothing about it
+[s201] [TARGETING]   PASS  the camera FOLLOWS when the target moves (0.01 deg off centre)
+[s249] [TARGETING]   PASS  the lock is released before the release paths are tested
+[s249] [TARGETING] --- PHASE 5: the four auto-release paths, each by its own cause ---
+[s249] [TARGETING]   PASS  a temporary target was created for the defeat path
+[s256] [TARGETING]   PASS  the lock is taken on the temporary target
+[s256] [TARGETING]   PASS  the temporary target carries a defeat authority
+[s256] [TARGETING]   PASS  the temporary target is in its authoritative DEFEATED state
+[s259] [TARGETING]   PASS  a DEFEATED target releases the lock
+[s259] [TARGETING]   PASS  the release is recorded as DEFEATED (1)
+[s259] [TARGETING]   PASS  and it is NOT filed as a generic invalid release - the causes stay apart
+[s266] [TARGETING]   PASS  the lock is taken on a second temporary target
+[s269] [TARGETING]   PASS  a FREED target releases the lock
+[s269] [TARGETING]   PASS  the release is recorded as invalid (1)
+[s276] [TARGETING]   PASS  the lock is taken on a third temporary target
+[s276] [TARGETING]   PASS  the temporary target carries a CombatParticipant
+[s279] [TARGETING]   PASS  the target became UNUSABLE through the project's own validity authority
+[s279] [TARGETING]   PASS  a target refused as a target releases the lock
+[s279] [TARGETING]   PASS  that release is also recorded as invalid
+[s286] [TARGETING]   PASS  the lock is taken on a fourth temporary target
+[s289] [TARGETING]   PASS  a target beyond acquire_range but inside release_range KEEPS the lock (20 m)
+[s292] [TARGETING]   PASS  a target beyond release_range releases the lock
+[s292] [TARGETING]   PASS  the release is recorded as out-of-range (1)
+[s299] [TARGETING]   PASS  the lock is taken on a fifth temporary target
+[s302] [TARGETING]   PASS  PLAYER DEATH releases the lock
+[s302] [TARGETING]   PASS  the release is recorded as player-dead (1)
+[s302] [TARGETING]   PASS  a dead player cannot take a new lock
+[s302] [TARGETING]   PASS  no look intent survives the player's death
+[s305] [TARGETING]   PASS  the player was restored by its own death circuit
+[s305] [TARGETING]   PASS  and can lock again afterwards
+[s305] [TARGETING] --- PHASE 6: the scene is left as it was found ---
+[s308] [TARGETING]   PASS  no lock is left held
+[s308] [TARGETING]   PASS  no look intent is left declared
+[s314] [TARGETING]   PASS  no ARENA actor was damaged or defeated by this probe ([])
+[s314] [TARGETING]   PASS  the carried balance is unchanged at 0 - no Credits were minted by the probe
+[s314] [TARGETING]   PASS  the economy granted no awards during the probe (0)
+[s314] [TARGETING]   PASS  the arena's own targets are still usable
+[s314] [TARGETING] RESULT: ALL CHECKS PASSED (78)

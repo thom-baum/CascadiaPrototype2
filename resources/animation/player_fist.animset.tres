@@ -1,0 +1,21 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/animation/animation_set.gd" id="1_set"]
+
+[resource]
+script = ExtResource("1_set")
+display_name = "Player Fist"
+neutral_slot = "idle"
+slots = {
+"idle": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_idle_01.fbx"),
+"locomotion": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_walk_F_01.fbx"),
+"sprint": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_sprint_F_01.fbx"),
+"dodge": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_roll_to_idle_F_01.fbx"),
+"backstep": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_back_step_medium_01.fbx"),
+"hurt": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_hit_reaction_medium_f_01.fbx"),
+"stagger": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_stance_broken_f_01.fbx"),
+"dead": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_death_01.fbx"),
+"attack:light": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Dual Wield/unarmed_dw_light_attack_01.fbx"),
+"attack:heavy": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Dual Wield/unarmed_dw_charged_attack_01_release_full.fbx")
+}
+fallbacks = {}

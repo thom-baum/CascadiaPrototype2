@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/characters/Nephilite Studios/Fist Animation Set/Models/Md_Char_Low_Poly_Man.fbx" id="1_model"]
+[ext_resource type="PackedScene" path="res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_idle_01.fbx" id="2_idle"]
+
+[node name="ModelRecon" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_model")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="IdleClip" parent="." instance=ExtResource("2_idle")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)

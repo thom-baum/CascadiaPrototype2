@@ -139,6 +139,20 @@ const HISTORY_LIMIT := 32
 ## rather than silently presented as the wrong motion.
 @export var report_missing_slots := true
 
+@export_group("Visual driver")
+## The REAL animation driver this adapter hands its resolved clip to (Milestone 21 - Slice B), or
+## EMPTY for an actor that wears no visual.
+##
+## This adapter still decides NOTHING about gameplay. It resolves a slot and reports it; the visual
+## is what turns that into a playing clip. Keeping the two apart is what lets the driver be replaced
+## without the adapter changing, and what keeps the placeholder label working as the read for an
+## actor that has no content.
+@export var visual_path: NodePath
+
+## The resolved visual driver, cached after the first lookup. A lookup RESULT rather than a
+## configuration, which is why it is not exported.
+var _visual: Node = null
+
 @export_group("Placeholder driver")
 ## Whether to build the placeholder intent label. A real animation driver replaces
 ## `_apply_intent()` and this label with authored clips.
@@ -464,13 +478,53 @@ func _apply_intent(previous: String, previous_slot: String) -> void:
 	if _label != null:
 		_label.text = _slot.to_upper()
 		if not _resolved_clip.is_empty():
-			_label.text += "\n" + _resolved_clip
+			# THE FILE NAME ONLY. A resolved clip is a full `res://` path, and printing that on a
+			# billboarded label at font size 40 paints a hundred characters across the screen - which
+			# is noise, not information. The identity a reader needs is WHICH CLIP, not where it
+			# lives on disk. The full path is still what the visual is handed and what the probe
+			# reads; only the on-screen rendering is shortened.
+			_label.text += "\n" + String(_resolved_clip).get_file().get_basename()
 		_label.modulate = _color_for(_intent)
 	_log("intent %s -> %s | slot %s -> %s | clip '%s' (%s)" % [
 		"(unread)" if previous.is_empty() else previous, _intent,
 		"(unread)" if previous_slot.is_empty() else previous_slot, _slot,
 		_resolved_clip, _resolved_status,
 	])
+	# THE HANDOFF. Everything above has already decided WHAT should play; the visual is what plays
+	# it. An EMPTY clip is deliberately not pushed through, so an actor with no content keeps the
+	# pose it already had rather than being reset to something arbitrary. No decision here consults
+	# or writes gameplay: a visual that failed to load changes nothing about how an actor behaves.
+	if _resolved_clip.is_empty():
+		return
+	var visual := _resolve_visual()
+	if visual == null:
+		return
+	# Looping is PRESENTATION policy, decided here because this is the layer that knows what an
+	# intent MEANS - a locomotion cycle repeats, a committed action does not.
+	var loops: bool = _intent == INTENT_IDLE or _intent == INTENT_LOCOMOTION or _intent == INTENT_SPRINT
+	visual.call("play_clip", _resolved_clip, loops)
+
+
+## The visual driver for this actor: by authored path when there is one, otherwise by the shared
+## `visual_driver` group so a scene does not have to hand-wire the pair. The group name is a LITERAL
+## rather than a reference to the visual class, for the registration reason documented at the top of
+## this file - a parse failure here would take the whole presentation layer down with it.
+func _resolve_visual() -> Node:
+	if _visual != null and is_instance_valid(_visual):
+		return _visual
+	if not String(visual_path).is_empty():
+		_visual = get_node_or_null(visual_path)
+	if _visual != null:
+		return _visual
+	var actor := _resolve_actor()
+	if actor == null:
+		return null
+	for child in actor.get_children():
+		var node := child as Node
+		if node != null and node.is_in_group(&"visual_driver"):
+			_visual = node
+			break
+	return _visual
 
 
 ## One distinct colour per intent, so a glance distinguishes a windup from an active window.

@@ -1,0 +1,90 @@
+PASS  the player actor is discoverable by group
+player: Player (CharacterBody3D)
+PASS  the player is still a CharacterBody3D
+PASS  the player body still carries its controller script
+PASS  the player still carries its authored 'Collision' node
+PASS  the player still carries its authored 'Hurtbox' node
+PASS  the player still carries its authored 'AttackHitbox' node
+PASS  the player still carries its authored 'Combat' node
+PASS  the player still carries its authored 'Stamina' node
+PASS  the player still carries its authored 'Dodge' node
+PASS  the player still carries its authored 'Parry' node
+PASS  the player still carries its authored 'Death' node
+PASS  the player still carries its authored 'ActorState' node
+PASS  the player still carries its authored 'Animation' node
+PASS  the player carries an imported VISUAL child
+visual: Visual (Node3D)
+PASS  the visual resolved its imported model
+PASS  the imported model carries a Skeleton3D (it is a rigged character)
+PASS  the imported model carries a skinned MeshInstance3D
+PASS  the primitive placeholder capsule is hidden now that a real model is worn
+PASS  the visual subtree owns NO CollisionObject3D / CollisionShape3D (found 0)
+PASS  the player hurtbox is still on the player body
+PASS  the player hitbox is still on the player body
+PASS  the visual is a child of the player BODY, not of a collider
+PASS  the visual declares NO positional offset of its own (origin=(0.0, 0.0, 0.0))
+PASS  the visual joined no gameplay group beyond its own (found [])
+PASS  the player's AnimationAdapter is present
+PASS  the adapter is wired to the player's ActorState
+PASS  the adapter has an AnimationSet assigned
+set: Player Fist
+clips registered on the visual: 10
+PASS  the visual registered at least one real clip from the set
+PASS  slot 'idle' resolves EXACT to real content (got 'exact')
+PASS  slot 'idle' resolves to a clip the visual actually registered
+  idle           -> core_main_idle_01
+PASS  slot 'locomotion' resolves EXACT to real content (got 'exact')
+PASS  slot 'locomotion' resolves to a clip the visual actually registered
+  locomotion     -> core_main_walk_F_01
+PASS  slot 'sprint' resolves EXACT to real content (got 'exact')
+PASS  slot 'sprint' resolves to a clip the visual actually registered
+  sprint         -> core_main_sprint_F_01
+PASS  slot 'dodge' resolves EXACT to real content (got 'exact')
+PASS  slot 'dodge' resolves to a clip the visual actually registered
+  dodge          -> core_main_roll_to_idle_F_01
+PASS  slot 'hurt' resolves EXACT to real content (got 'exact')
+PASS  slot 'hurt' resolves to a clip the visual actually registered
+  hurt           -> core_main_hit_reaction_medium_f_01
+PASS  slot 'stagger' resolves EXACT to real content (got 'exact')
+PASS  slot 'stagger' resolves to a clip the visual actually registered
+  stagger        -> core_main_stance_broken_f_01
+PASS  slot 'dead' resolves EXACT to real content (got 'exact')
+PASS  slot 'dead' resolves to a clip the visual actually registered
+  dead           -> core_main_death_01
+PASS  slot 'attack:light' resolves EXACT to real content (got 'exact')
+PASS  slot 'attack:light' resolves to a clip the visual actually registered
+  attack:light   -> unarmed_dw_light_attack_01
+PASS  slot 'attack:heavy' resolves EXACT to real content (got 'exact')
+PASS  slot 'attack:heavy' resolves to a clip the visual actually registered
+  attack:heavy   -> unarmed_dw_charged_attack_01_release_full
+PASS  declared slot 'backstep' names real content
+NOTE: 'backstep' is declared with real content but is NOT reachable from gameplay - AnimationIntent maps every evasion to 'dodge'. Recorded, not built.
+PASS  the adapter is asking for a slot at rest ('idle')
+PASS  the set resolved that slot to a clip through the REAL lookup ('core_main_idle_01.fbx')
+PASS  the visual owns an AnimationPlayer
+PASS  the resolved clip is registered ON the AnimationPlayer
+PASS  the AnimationPlayer is actually PLAYING (current='core_main_idle_01')
+PASS  the clip playing is the one the lookup resolved (playing='core_main_idle_01.fbx')
+PASS  a MISSING slot ('parry') is not reported as exact content
+PASS  missing parry falls to the declared NEUTRAL stand-in (got 'neutral')
+PASS  the fallback note NAMES the missing slot ('no content for 'parry'; neutral slot 'idle' stands in')
+MISSING CONTENT: slot 'parry' -> neutral (no content for 'parry'; neutral slot 'idle' stands in)
+PASS  a real light attack was accepted while the animation layer was live
+PASS  the attack still ran STARTUP -> ACTIVE -> RECOVERY with animation playing (["STARTUP", "ACTIVE", "RECOVERY"])
+PASS  the damage window never opened outside ACTIVE (0 frames)
+PASS  the damage window was open on every ACTIVE frame (0 closed)
+PASS  the authored light-attack stamina cost was charged (spent 18.0, authored 18.0)
+PASS  the attack did not translate the body by an animation (0.000 m)
+PASS  the player's collision shape was not replaced while animation played
+PASS  the existing death reset still restores the player (100.0 -> 100.0)
+PASS  the visual survives the death reset and is still in the tree
+PASS  the driver is still playing after attack + death reset (current='core_main_idle_01')
+PASS  the driver still resolves a clip through the lookup after the reset (slot='idle')
+post-reset: slot=idle clip=core_main_idle_01 playing=core_main_idle_01
+PASS  the model's skeleton carries real bones (59)
+PASS  BONES ACTUALLY MOVED while a clip played, so the clips bound to THIS skeleton (59 bones)
+bone signature: early=456.530 late=443.332 moved=true
+PASS  with the driver STOPPED the skeleton holds still, so THIS driver is what poses it (59 bones)
+stopped control: a=443.192 b=443.192 held=true
+
+RESULT: ALL CHECKS PASSED (70)

@@ -21,6 +21,8 @@
 [ext_resource type="PackedScene" uid="uid://baljideejeglf" path="res://scenes/actors/passive_npc.tscn" id="17_ju4s4"]
 [ext_resource type="PackedScene" uid="uid://djocmtsr1c1uq" path="res://scenes/actors/heavy_brute.tscn" id="19_hb1a6"]
 [ext_resource type="PackedScene" path="res://scenes/props/credit_stake.tscn" id="21_mtjhi"]
+[ext_resource type="PackedScene" path="res://scenes/actors/player_visual.tscn" id="22_pvisual"]
+[ext_resource type="Resource" path="res://resources/animation/player_fist.animset.tres" id="23_pset"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.32, 0.42, 0.58, 1)
@@ -515,6 +517,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape_player")
 
 [node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1456733949]
+visible = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 material_override = SubResource("Mat_player")
 mesh = SubResource("CapsuleMesh_player")
@@ -574,6 +577,9 @@ script = ExtResource("14_wwk3j")
 
 [node name="Animation" type="Node3D" parent="Player" unique_id=1333495852]
 script = ExtResource("15_2ugr5")
+animation_set = ExtResource("23_pset")
+
+[node name="Visual" parent="Player" instance=ExtResource("22_pvisual")]
 
 [node name="CameraRig" type="Node3D" parent="." unique_id=1012415909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)

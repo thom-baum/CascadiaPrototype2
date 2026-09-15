@@ -66,11 +66,26 @@ sections; this block is the entry point, not a replacement for them.
   reports `RESULT: ALL CHECKS PASSED (30)`, including the central claim measured directly: one attack held
   ONE slot (`attack:light`) for 33 committed frames while the coarse intent moved through all three phases,
   and light vs heavy resolve to DIFFERENT slots. Regressions green: adapter probe 54/54, actor contract
-  82/82, live combat credit 54/54; `main.tscn` 0 errors. **SLICE B - the content pipeline - is NOT started**:
-  the Nephilite pack is NOT IMPORTED (no `*.fbx.import` exists; it still ships Unity `.meta` sidecars), NO
-  `AnimationPlayer`/`AnimationTree`/`Skeleton3D` exists anywhere in the project, and the pack contains NO
-  PARRY CLIP. The user has decided the pack's low poly man becomes the PLAYER's visual child when Slice B
-  lands. Full record: section 8X.
+  82/82, live combat credit 54/54; `main.tscn` 0 errors.
+- **Milestone 21 - ANIMATION CONTENT PIPELINE (SLICE B) - APPLIED + PROBE-MEASURED, NOT accepted and NOT
+  human-playtested.** The Nephilite pack's low poly man is now the PLAYER'S VISUAL CHILD, wearing real
+  imported clips, with every gameplay element untouched. `animation_content_probe_debug` reports
+  **`RESULT: ALL CHECKS PASSED (70)`** - including the two checks that separate "a clip is playing" from
+  "the character is animating": the model's **59-bone skeleton ACTUALLY MOVES** while a clip plays
+  (signature 456.530 -> 443.332), and the STOPPED control proves THIS driver is what poses it
+  (443.192 -> 443.192 held). Ten clips are registered, every gameplay-reachable slot resolves EXACT to a
+  real imported clip, and **parry - which the pack genuinely does not contain - is correctly reported as
+  MISSING content falling to the NEUTRAL stand-in, not faked.**
+  **CORRECTION OF AN EARLIER RECORD:** Slice A's note claimed the pack was "NOT IMPORTED". **That was
+  FALSE.** The pack's `*.fbx.import` sidecars DO exist and always did; the listing tools used to reach
+  that conclusion HIDE `.import` files, and a direct path read showed it immediately. The retracted claim
+  stood in this file and in the manifest until this pass. The Unity `.meta` sidecars are separate files
+  and are NOT evidence either way.
+  Regressions re-run fresh this pass, all green: lookup 30/30, adapter 54/54, actor contract 82/82,
+  targeting 78/78, new-run reset 32/32, player-death reset 38/38, live combat credit 54/54, combat
+  feedback ALL PASSED, enemy engagement ALL PASSED, focus/input routing ALL PASSED (run 2).
+  `attack_probe_debug` remains RED on its ACTIVE-duration check - a PROBE measurement artifact caused by
+  hitstop that PREDATES this work (12.5), not a regression. Full record: section 8Y.
 - **Milestone 14 - ENEMY HEALTH BARS - IMPLEMENTED + MEASURED, still not human-read.** Requested by the user 2026-09-14 as the
   remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
   implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
@@ -7849,16 +7864,22 @@ THE RIG DECISION IS MADE: on the user's instruction, the pack's own low poly man
 (`Models/Md_Char_Low_Poly_Man.fbx`) becomes the PLAYER's visual child, while the collision shape,
 hurtbox and hitbox stay exactly as authored on the existing body.
 
-THREE MEASURED BLOCKERS STAND IN FRONT OF IT:
+THE BLOCKERS AS THEY WERE BELIEVED AT THE TIME - **TWO OF THE THREE WERE WRONG, AND THE CORRECTION IS
+RECORDED HERE RATHER THAN QUIETLY DELETED** (Slice B, 2026-09-15):
 
-1. **THE PACK IS NOT IMPORTED.** A search for `*.fbx.import` across the whole Nephilite folder returns
-   ZERO files, and the pack ships UNITY `.meta` sidecars (172-byte folder metas, ~27 KB model metas).
-   Godot writes an `.import` sidecar for every asset it imports, so all 112 animations and the model are
-   currently inert raw files sitting beside the scene tree. Nothing can reach the screen until this is
-   solved, and it is a TOOLING problem that can fail independently of the design.
-2. **NO SKELETON NODE EXISTS ANYWHERE**, so there is no path by which a clip could be applied even if
-   one imported.
-3. **THE PACK HAS NO PARRY CLIP.** A search for `*arry*` across the entire pack returns ZERO results;
+1. **RETRACTED - "THE PACK IS NOT IMPORTED" WAS FALSE.** The claim rested on a search for
+   `*.fbx.import` across the Nephilite folder returning ZERO files. That search was worthless: **the
+   project's listing tools do not return `.import` files at all**, so the zero meant "not listed", not
+   "not imported". A DIRECT PATH READ showed the truth immediately - `Md_Char_Low_Poly_Man.fbx.import`
+   exists, is 1262 bytes, declares `importer="scene"`, `type="PackedScene"`, `animation/import=true` and
+   a real uid. The pack WAS imported. **Lesson: absence of evidence from a LISTING is not absence of the
+   file - read the exact path before declaring something missing.** The Unity `.meta` sidecars are
+   separate files and were never evidence either way.
+2. **RETRACTED - "NO SKELETON NODE EXISTS ANYWHERE" WAS ALSO FALSE.** It was true of the SCENE FILES
+   (no `.tscn` referenced a `Skeleton3D`), and false of the PROJECT: the imported model scene carries a
+   `Skeleton3D` with a skinned `MeshInstance3D`, and every clip FBX carries its own `Skeleton3D` and
+   `AnimationPlayer`. The count that mattered was over the imported RESOURCES, not over the scenes.
+3. **THE PACK HAS NO PARRY CLIP - CONFIRMED, and it is the one blocker that held.** A search for `*arry*` across the entire pack returns ZERO results;
    the README's own action list is light, charged, running, rolling, backstepping and jumping
    light/heavy. Parry is an implemented, measured, HUMAN-PLAYED, ACCEPTED gameplay system, so on day one
    of the fist set an accepted action has no content. **The fallback policy is therefore LOAD-BEARING,
@@ -7881,4 +7902,162 @@ reports each unsatisfied slot ONCE via `push_warning` (`report_missing_slots`, O
 set assigned, every adapter honestly reports the slot it WOULD ask for and resolves NONE - which is why
 the whole lookup is readable today, before a single clip exists. **No real `.tres` set has been authored
 yet**, so the policy is proven against a synthetic set and NOT against the fist pack's real contents.
+
+---
+
+## Milestone 21 - Animation content pipeline, SLICE B (section 8Y, recorded 2026-09-15)
+
+STATUS: **APPLIED, statically clean, PROBE-MEASURED at 70 checks including two falsification
+controls.** `main.tscn` boots at 0 errors / 0 debugger errors / 20 warnings. **NOT human-playtested,
+so NOT accepted.** No animation FEEL, readability, clip quality, facing or scale claim is made anywhere
+in this record - those are the user's judgement and nothing below substitutes for it.
+
+### 8Y.1 WHAT WAS BUILT
+
+    gameplay owners -> ActorState -> AnimationAdapter -> AnimationSet (slot) -> PlayerVisual -> AnimationPlayer -> skeleton
+    (own the attack)  (report it)    (read the slot)   (map to a clip)      (play it)        (pose bones)
+
+- **`scenes/actors/player_visual.tscn`** (NEW) - the visual child. THREE nodes: the wrapper, the
+  imported model INSTANCE, and an `AnimationPlayer`. It carries no `CollisionObject3D` and no
+  `CollisionShape3D` at any depth, which the probe asserts.
+- **`scripts/animation/player_visual.gd`** (NEW) - the driver. It owns the `AnimationPlayer`, the
+  extracted `Animation` resources and which clip is playing. It WRITES no gameplay state, starts and
+  cancels nothing, holds no timing, and never touches collision.
+- **`resources/animation/player_fist.animset.tres`** (NEW) - the first REAL `AnimationSet`: ten slots
+  mapped to ten imported clips. A machete set is a second `.tres` and one assignment.
+- **`scripts/animation/animation_adapter.gd`** (EDITED) - gained a `visual_path` export, a `_visual`
+  reference, and a handoff in `_apply_intent()`. The adapter still resolves the SLOT and the CLIP; it
+  simply hands both to a driver now instead of only drawing them. The placeholder label remains, and
+  its second line holds the BARE clip name - printing the full `res://` path at font size 40 painted
+  text across the whole viewport, which was a real defect seen in a frame and fixed.
+- **`scenes/test_environment.tscn`** (EDITED) - two `ext_resource`s, the `Animation` node's
+  `animation_set` assignment, the `Visual` instance under `Player`, and `visible = false` on the
+  primitive `Mesh`. The capsule NODE is retained so the shape stays available for comparison; the
+  `CollisionShape3D` is untouched.
+
+### 8Y.2 THE ASSET FINDINGS (read from the imported resources, not assumed)
+
+- **Model:** `res://assets/characters/Nephilite Studios/Fist Animation Set/Models/Md_Char_Low_Poly_Man.fbx`,
+  imported as a `PackedScene` (uid `ek1xvu3wx88f`), containing `Skeleton3D` (59 bones) plus a skinned
+  `MeshInstance3D` - and NO `AnimationPlayer` of its own.
+- **Clips:** 131 `*.fbx`. Every clip FBX carries its OWN `Skeleton3D` and `AnimationPlayer`, so the clip
+  is extracted from a scene that is instantiated, mined and freed.
+- **Mapped:** idle `core_main_idle_01`; locomotion `core_main_walk_F_01`; sprint `core_main_sprint_F_01`;
+  dodge `core_main_roll_to_idle_F_01`; backstep `core_main_back_step_medium_01`; hurt
+  `core_main_hit_reaction_medium_f_01`; stagger `core_main_stance_broken_f_01`; dead
+  `core_main_death_01`; attack:light `unarmed_dw_light_attack_01`; attack:heavy
+  `unarmed_dw_charged_attack_01_release_full`.
+- **UNAVAILABLE, and reported rather than faked: PARRY.** The pack ships no parry and no guard. Measured
+  outcome: `slot 'parry' -> neutral`, with the note `no content for 'parry'; neutral slot 'idle' stands
+  in`. That is the fallback policy doing its job on real content, and it is the FIRST time the policy
+  has been exercised against the pack rather than a synthetic set.
+- **Ten of the pack's eleven action families are UNMAPPED ON PURPOSE.** `jump_light`, `jump_heavy`,
+  `run_attack` and `roll_attack` exist on disk but NO gameplay path can request them: jumping is
+  forbidden by a standing rule, and a committed attack owns the body so it cannot be performed while
+  moving. The key space stays open; nothing speculative was wired.
+
+### 8Y.3 THE THREE MECHANISMS THAT MAKE A FOREIGN CLIP DRIVE THIS SKELETON
+
+1. **TRACK-PATH REBINDING, which is the whole trick.** A clip's track paths are authored against ITS
+   OWN scene root, where the skeleton is a direct child called `Skeleton3D`. The player's skeleton lives
+   at `Visual/Model/Skeleton3D`, so the same paths would resolve nowhere. The player's
+   `AnimationPlayer.root_node` is therefore set to the MODEL, which makes `Skeleton3D:...` resolve here.
+2. **NODE TRACKS ARE STRIPPED; BONE TRACKS ARE KEPT.** A bone track carries the bone name as a SUBNAME;
+   a track animating a node's own transform has none. Those node tracks are the only ones that can move
+   the model inside the body that owns it - and gameplay owns every metre an actor moves - so they are
+   dropped (count exposed as `stripped_tracks`).
+3. **NO ROOT MOTION.** `root_motion_track` stays empty and BOTH mechanisms above are enforced in
+   `_extract()`/`_ready()` rather than relied on. Measured: the body translated 0.000 m during an attack.
+
+### 8Y.4 THE DEATH-POSE OWNERSHIP RULE (decided, smallest option)
+
+**The visual owns the POSE; nothing else does.** `EnemyDeathPresentationDebug` is left COMPLETELY
+untouched - it keeps owning enemy defeat presentation. The player's visual is a child of the player body
+and the adapter still writes no mesh transforms and no materials, so the only thing posing the player is
+the death clip. There is no second owner and no conflict, because the player and the enemies do not
+share a presentation path. When enemy death clips arrive, THAT is the pass that must settle the transform
+-vs-clip question; it is recorded, not pre-solved.
+
+### 8Y.5 EVIDENCE - ONE PROBE, 70 CHECKS, AND TWO OF THEM ARE FALSIFICATION CONTROLS
+
+`animation_content_probe_debug` (NEW) writes `res://animation_content_probe_report.txt` and reports
+**`RESULT: ALL CHECKS PASSED (70)`**. The two that matter most exist because "a clip is playing" and
+"the character is animating" are DIFFERENT claims:
+
+- `PASS the model's skeleton carries real bones (59)`
+- `PASS BONES ACTUALLY MOVED while a clip played, so the clips bound to THIS skeleton (59 bones)`
+  - `bone signature: early=456.530 late=443.332 moved=true`
+- `PASS with the driver STOPPED the skeleton holds still, so THIS driver is what poses it (59 bones)`
+  - `stopped control: a=443.192 b=443.192 held=true`
+
+**WHY THOSE WERE ADDED, and it is the most useful thing this pass produced.** `is_playing()` and
+`has_animation()` are BOTH satisfied by a player whose tracks resolve to nothing: the clock ticks, every
+frame advances, and no bone moves - a silently animated EMPTY space that every other assertion in the
+file would have reported as success. The probe was extended because the author could not prove the
+binding worked, and a control that STOPS the driver was added so a skeleton moving for some OTHER reason
+could not pass as this driver's work. The risk was real and untested; it is now measured either way.
+
+Also measured: the primitive capsule is hidden; the visual subtree owns ZERO collision nodes; every
+authored gameplay node survives; 10 clips registered; all 9 reachable slots resolve EXACT (not fallback,
+not neutral); the attack still ran STARTUP -> ACTIVE -> RECOVERY with animation live; the damage window
+never opened outside ACTIVE; the authored 18.0 stamina cost was charged; the body moved 0.000 m from
+animation; and the death reset still restores the player.
+
+### 8Y.6 A DECLARED BUT UNREACHABLE SLOT, recorded rather than implied
+
+`backstep` is mapped to real content, and **NO gameplay path can request it today**: `AnimationIntent`
+maps every evasion to the single `dodge` slot, because the contract does not yet expose whether an
+evasion was a roll or a backstep. The probe asserts it as a DECLARED slot and says so in its own report.
+The clip and the slot are ready; the contract field is the missing piece, and it was NOT added here.
+
+### 8Y.7 REGRESSIONS - all re-run fresh, exact counts
+
+| Probe | Fresh result |
+| ----- | ------------ |
+| `animation_content_probe_debug` (NEW) | `ALL CHECKS PASSED (70)` |
+| `animation_lookup_probe_debug` | `ALL CHECKS PASSED (30)` |
+| `animation_adapter_probe_debug` | `ALL CHECKS PASSED (54)` |
+| `actor_contract_probe_debug` | `ALL CHECKS PASSED (82)` |
+| `targeting_probe_debug` | `ALL CHECKS PASSED (78)` |
+| `new_run_reset_probe_debug` | `ALL CHECKS PASSED (32)` |
+| `player_death_reset_probe_debug` | `ALL CHECKS PASSED (38)` |
+| `live_combat_credit_probe_debug` | `ALL CHECKS PASSED (54)` |
+| `combat_feedback_probe_debug` | `RESULT: ALL CHECKS PASSED` |
+| `enemy_engagement_probe_debug` | `RESULT: ALL CHECKS PASSED` |
+| `focus_input_routing_probe_debug` | `ALL CHECKS PASSED` on the second run - see below |
+| `main.tscn` | 0 errors, 0 debugger errors, 20 warnings |
+
+**ONE INTERMITTENT FAILURE, MEASURED RATHER THAN ASSERTED.** `focus_input_routing_probe_debug` failed
+ONE check on its first run - `REFOCUSED: mouse look works again` (yaw changed 0.0000 deg) - while
+PASSING the adjacent `ESCAPE-RETURN: mouse look works again after the player clicks back in` at
+48.8952 deg IN THE SAME RUN. A second run returned `ALL CHECKS PASSED` with that same yaw value
+IDENTICAL (48.8952 deg), so the failure is NOT a deterministic regression from this pass: nothing in
+Slice B touches focus, capture, input routing or the camera. It is recorded as an intermittent
+timing-sensitive check in a probe that injects synthetic mouse motion, and it is NOT fixed here. The
+honest statement is: 1 of 2 runs red on one look assertion, cause unidentified.
+
+### 8Y.8 DEFECTS FOUND AND FIXED DURING THIS PASS
+
+1. **THE FALSE "NOT IMPORTED" CLAIM in the Slice A record**, corrected above. It came from trusting a
+   ZERO-FILE glob for `*.fbx.import`; the project's listing tools simply do not return `.import` files.
+   A direct path read settled it in one call. This is the same class of error as the earlier "section 0
+   is authoritative" claim: a CONVENIENT tool result treated as a measurement.
+2. **A duplicate `AnimationPlayer` node** in `player_visual.tscn` - declared without a `type`, so it
+   parsed as a plain `Node` and the driver found nothing. Caught by reading the instanced tree.
+3. **`NodePath.get_subnames()` does not exist** - the correct call is `get_subname_count()`. A parse
+   error, caught by diagnostics.
+4. **`_player.get_animation_library(&"")` on a player with no library RAISES in Godot** rather than
+   returning null, which surfaced as a runtime error from `AnimationMixer`. Fixed to test
+   `has_animation_library` first.
+5. **A `Dictionary` slot value must be written as `PackedStringArray("...")`** in a `.tres`, not as a
+   bare array literal - the latter fails to parse with `Expected string`.
+6. **PROBE defects, all three mine:** two calls passing the wrong arguments to `apply_damage` (it takes
+   ONE `DamageEvent`, not a float); a group assertion that excluded `animation_adapter` while the
+   visual's own group is `visual_driver`; and a 30-frame wait for a reset that fires after
+   `death_delay = 1.5 s` - about 90 frames - which reported a WORKING death reset as broken. After the
+   fix the same check reads `(100.0 -> 100.0)`.
+7. **THE EDITOR HELD A STALE INSTANCE EXPANSION** of `player_visual.tscn` for several reloads and
+   reported `Node './AnimationPlayer' was modified from inside an instance, but it has vanished`. The
+   files on disk were correct throughout. Resolved by opening the sub-scene itself and then re-opening
+   the environment. Recorded because it LOOKED like a broken scene and was not one.
 

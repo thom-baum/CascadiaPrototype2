@@ -4130,6 +4130,73 @@ which forbade enemy-position save/load.
 
 ---
 
+## MILESTONE 21 SLICE B - ANIMATION CONTENT PIPELINE - NEW FILES AND RECORDED CHANGES (2026-09-15)
+
+Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion
+stays manual.
+
+### New gameplay/presentation files (NOT deletion candidates)
+
+- `scenes/actors/player_visual.tscn` (`PlayerVisual`) - the player's VISUAL child. Three nodes: the
+  wrapper, the imported Nephilite model instance, and an `AnimationPlayer`. Carries no collision node
+  at any depth. Instanced under `Player` in `scenes/test_environment.tscn`; the primitive `Mesh` is
+  hidden but its NODE and the authored `CollisionShape3D` are retained.
+- `scripts/animation/player_visual.gd` (`PlayerVisual`) - the driver behind `AnimationAdapter`'s
+  `_apply_intent()` seam. Owns the `AnimationPlayer`, the extracted `Animation` resources and which
+  clip is playing. Writes no gameplay state; holds no timing; poses bones only.
+- `resources/animation/player_fist.animset.tres` (`AnimationSet`) - the FIRST real animation set: ten
+  slots mapped to ten imported Nephilite clips. `parry` is deliberately ABSENT (the pack ships no
+  parry clip) and is reported through the fallback policy as `neutral`. A machete set will be a second
+  `.tres` and one assignment.
+
+### New diagnostic files (cleanup candidates, delete with their scenes)
+
+- `scripts/diagnostics/animation_content_probe_debug.gd` - deterministic content-pipeline probe, 70
+  checks. It DRIVES real gameplay (a committed attack, a lethal blow, a reset) and reads the skeleton,
+  and it carries two FALSIFICATION CONTROLS: the bone-pose check proves the clips bound to the real
+  skeleton, and a stopped-driver control proves THIS driver is what poses it.
+- `scenes/diagnostics/animation_content_probe_debug.tscn` - the probe's standalone entry scene.
+- `scenes/diagnostics/model_recon_debug.tscn` - a THREE-NODE recon scene built to inspect what an
+  imported FBX actually contains without opening the package's own scenes. Temporary; it exists so the
+  recon was a measurement rather than an assumption. Safe To Delete: Yes, once `player_visual.tscn`
+  itself carries the same information.
+- `res://animation_content_probe_report.txt` - the durable probe transcript, same convention as the
+  other `*_report.txt` evidence files.
+
+### Recorded changes to existing files
+
+- `scripts/animation/animation_adapter.gd`: added a `visual_path` export, a `_visual` reference, a
+  `_resolve_visual()` and a handoff inside `_apply_intent()`. The adapter still resolves the SLOT and
+  the CLIP; it now hands both to a real driver. The placeholder label's second line was changed from
+  the full `res://` clip PATH to the bare clip NAME - the path at font size 40 painted text across the
+  whole viewport, which was a real defect observed in a captured frame and fixed.
+- `scenes/test_environment.tscn`: two `ext_resource` lines (`player_visual.tscn`, `player_fist.animset.tres`),
+  `animation_set` on `Player/Animation`, the `Visual` instance under `Player`, and `visible = false`
+  on `Player/Mesh`.
+
+### Recurring tooling problem, recorded (FOURTH occurrence of a class already in this file)
+
+**A ZERO-FILE glob result for `*.import` / `*.fbx.import` IS NOT EVIDENCE THAT NOTHING IS IMPORTED.**
+The project's listing tools (`glob`, `listTree`) do NOT return `.import` files at all: a glob for
+`**/*.import` over the whole project returns ZERO while the console simultaneously reports warnings
+from `.png.import` FILES THAT PLAINLY EXIST. A direct `readFile` of the exact path reads them fine.
+This produced a FALSE claim in the roadmap's Slice A record - "THE PACK IS NOT IMPORTED ... all 112
+animations and the model are currently inert raw files" - which was WRONG: every FBX already carried a
+valid `[remap] importer="scene"` sidecar. The lesson is the project's own oldest one: a convenient tool
+result is not a measurement. When an asset's import state matters, read the `.import` file by path or
+call `OpenScene`, and never conclude from an empty listing.
+
+### Rendered-evidence limitation, recorded honestly
+
+`gameSnapshot` on the shipped scene returned a frame that was captured successfully but that the
+visual observer could NOT analyze (`observer_analysis_failed`), so the one frame taken is INCONCLUSIVE
+rather than evidence of success or failure. What the frame DID show to a direct read: the humanoid
+model standing where the capsule was, at roughly player scale, with the capsule hidden - and the
+oversized clip-path label defect described above, which is why that label was fixed. Model facing,
+scale, and pose quality are NOT measured and are the user's judgement.
+
+---
+
 ## MILESTONE 21 - ANIMATION LOOKUP ARCHITECTURE, SLICE A (2026-09-15)
 
 Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion
