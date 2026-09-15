@@ -24,6 +24,16 @@ extends CanvasLayer
 ## It deliberately does NOT create an animation, a ragdoll, a ragdoll-shaped
 ## effect, a death camera or a transition. It is a readable state change.
 ##
+## PLACEMENT IS NOT DECIDED HERE. The message joins the RESERVED SCREEN REGION
+## `ScreenRegions.Region.DEATH_MESSAGE` - the centre band, above the reserved health/stamina strip -
+## and that region's container centres it. This file used to place the panel with a hardcoded
+## `position = Vector2((viewport.x - content.x) * 0.5, viewport.y * 0.30)` recomputed every frame, and
+## `y = 0.30 * viewport.y` is the part that collides: it is a screen-fraction guess with no knowledge
+## of what any other panel is doing, and it moves relative to NOTHING when a panel's height changes.
+## The region is the answer: the strip between the left debug column and the right debug column, and
+## between the top band and the reserved vitals strip, so the death message is centred in a band no
+## other panel can occupy.
+##
 ## Development presentation; recorded in CASCADIA_DELETION_MANIFEST.md.
 
 ## Degrees the death pose tips the actor's mesh forward.
@@ -38,8 +48,6 @@ const TEXT_DEAD := Color(0.95, 0.28, 0.24, 1.0)
 const TEXT_HINT := Color(0.80, 0.82, 0.86, 1.0)
 const FONT_SIZE_TITLE := 34
 const FONT_SIZE_HINT := 15
-## Margin kept between the panel and the viewport edge.
-const EDGE_MARGIN := 16
 
 ## Every presentation joins this group, so tooling can find it without a
 ## hard-coded scene path - the same convention as stamina, dodge, parry and the
@@ -59,10 +67,13 @@ var _connected := false
 
 
 func _ready() -> void:
+	# Above the other debug diagnostics, below the shipped HUD and well below the pause overlay. The
+	# literal value on the DeathPresentation node in main.tscn reads from this same constant.
+	layer = ScreenRegions.LAYER_DEATH_PRESENTATION
 	add_to_group(GROUP_DEATH_PRESENTATION)
 	_build_ui()
-	get_viewport().size_changed.connect(_reclamp)
-	_reclamp()
+	# NO `size_changed` HANDLER AND NO PER-FRAME RE-PLACEMENT. The message is anchored into its reserved
+	# region and centres itself, so a resized or docked viewport needs no work here at all.
 
 
 func _process(_delta: float) -> void:
@@ -74,7 +85,6 @@ func _process(_delta: float) -> void:
 		else:
 			_restore_living_pose()
 	_apply_message(dead)
-	_reclamp()
 
 
 ## Listen to the death itself rather than waiting for the next frame to notice it.
@@ -93,7 +103,6 @@ func _ensure_connected() -> void:
 func _on_death_started() -> void:
 	_apply_death_pose()
 	_apply_message(true)
-	_reclamp()
 
 
 # --- Queries ----------------------------------------------------------------
@@ -142,7 +151,14 @@ func _build_ui() -> void:
 	style.content_margin_bottom = 14.0
 	_panel.add_theme_stylebox_override("panel", style)
 	_panel.visible = false
-	add_child(_panel)
+	# JOIN THE REGION. This used to be `add_child(_panel)` on the CanvasLayer, which parented the panel
+	# to the LAYER rather than to the region's stack - so it fell to the layer's origin, top-left, and
+	# "YOU DIED" appeared in the corner instead of centred. The region now owns the placement, so the
+	# message is centred at any window size without a resize handler.
+	var host := ScreenRegions.join(self, ScreenRegions.Region.DEATH_MESSAGE)
+	_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_panel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	host.add_child(_panel)
 
 	var column := VBoxContainer.new()
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -165,21 +181,6 @@ func _make_label(text: String, size: int, color: Color) -> Label:
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_font_size_override("font_size", size)
 	return label
-
-
-## Keeps the message centred horizontally and inside the viewport, recomputed
-## every frame: the panel's size depends on its text, and a docked viewport can be
-## resized at any moment.
-func _reclamp() -> void:
-	if _panel == null or not is_instance_valid(_panel):
-		return
-	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	var viewport := _panel.get_viewport_rect().size
-	var content := _panel.get_combined_minimum_size()
-	_panel.size = content
-	_panel.position = Vector2(
-		maxf(EDGE_MARGIN, (viewport.x - content.x) * 0.5),
-		viewport.y * 0.30)
 
 
 func _apply_message(dead: bool) -> void:

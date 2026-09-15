@@ -228,6 +228,9 @@ func reset_playable_state(by_input: bool = false) -> void:
 
 	_restore_position()
 	_reset_attackers()
+	# Dying resets the ENCOUNTER, not just the player: every other combat actor comes back alive at
+	# full health. See _restore_arena_actors() for why this is the spawn path only.
+	_restore_arena_actors()
 
 	resets += 1
 	if by_input:
@@ -305,20 +308,91 @@ func _place(position: Vector3, yaw: float) -> void:
 		(_actor as CharacterBody3D).velocity = Vector3.ZERO
 
 
-## Put the arena's test attacker back into its initial usable state: no attack in
+## Put EVERY attacker in the arena back into its initial usable state: no attack in
 ## progress, no cooldown left, an idle telegraph and its hitbox shut.
+##
+## EVERY attacker, not the first one, and that is a defect fix rather than a tidy-up. This used to
+## resolve a SINGLE attacker, falling back to `get_first_node_in_group()` when no path was authored
+## - so with two enemy variants in the arena only ONE of them was reset, and WHICH one depended on
+## an unspecified group order that could differ between runs. Enumerating the group makes the result
+## deterministic and covers a newly added variant the moment it exists.
+##
+## ACTION state only. Health and the defeated state are NOT touched here, because this same method
+## runs on a LOAD (`restore_snapshot`), where the world's recorded values must survive untouched.
+## The enemy health/defeat reset a death needs lives in `_restore_arena_actors()`, which only the
+## spawn-reset path calls.
 func _reset_attackers() -> void:
 	# An actor configured NOT to restore the arena (resets_actors = false) must not
 	# reach into the scene and reset somebody else's attacker either. The guard is
 	# here rather than at the call site so there is exactly one place that decides.
 	if not resets_actors:
 		return
-	var attacker := _resolve_attacker()
-	if attacker == null:
+	# An AUTHORED path means "reset exactly this one", which is what a scene naming its own
+	# attacker is asking for.
+	var named := _resolve_attacker_by_path()
+	if named != null:
+		if named.has_method("reset"):
+			named.call("reset")
+			_log("attacker %s reset (authored path)" % named.name)
 		return
-	if attacker.has_method("reset"):
-		attacker.call("reset")
-		_log("attacker %s reset" % attacker.name)
+	var count := 0
+	for node in get_tree().get_nodes_in_group(GROUP_ATTACKER):
+		if node == null or not is_instance_valid(node):
+			continue
+		if not node.has_method("reset"):
+			continue
+		node.call("reset")
+		count += 1
+	if count > 0:
+		_log("%d attacker(s) reset" % count)
+
+
+## Put EVERY OTHER COMBAT ACTOR in the arena back to alive and at full health, and clear its defeat.
+##
+## SOULSLIKE DEATH LOGIC, and a DELIBERATE CHANGE TO AN EARLIER DECISION. This circuit used to reset
+## only the attackers' ACTION state and left enemy health and enemy defeat exactly as the fight left
+## them - `EnemyDeathComponent` was specifically authored NOT to be cleared from here, so a defeated
+## enemy stayed down when the player died. That is no longer the intent: dying resets the encounter,
+## and every enemy comes back alive at full health, which is what a Soulslike does.
+##
+## Enumerated from the damageable group, so a newly added enemy is covered the moment it exists, and
+## every value goes back through its OWN owner - `HealthComponent.reset()` and the defeat component's
+## `restore_defeated(false)` - so this is never a second authority over either one. The restore
+## deliberately does NOT emit `defeated`, which is exactly why reviving an enemy here cannot pay a
+## Credit reward for it.
+##
+## THIS ACTOR is skipped: its own health, stamina, position and actions were already restored by the
+## caller, and repeating that here would misstate who owns them.
+##
+## Only the SPAWN-RESET path calls this. A load must NOT: it restores a recorded world, and refilling
+## every enemy would overwrite exactly the state the snapshot exists to put back.
+func _restore_arena_actors() -> void:
+	if not resets_actors:
+		return
+	var self_actor := _resolve_actor()
+	var restored := 0
+	for node in get_tree().get_nodes_in_group(HealthComponent.GROUP_DAMAGEABLE):
+		var actor := node.get_parent() as Node3D
+		if actor == null or actor == self_actor:
+			continue
+		var other_health := actor.get_node_or_null("Health") as HealthComponent
+		if other_health != null:
+			other_health.reset()
+		var other_death := actor.get_node_or_null("Death")
+		if other_death != null and other_death.has_method("restore_defeated"):
+			other_death.call("restore_defeated", false)
+		# POSITION TOO, and only through the mover's OWN API. Once an enemy can walk, a fight
+		# rearranges the arena: without this a player who died would come back to enemies standing
+		# wherever the fight left them. `reset_to_mark()` restores the transform the SCENE authored
+		# and stops the body; it deliberately touches neither health nor defeat, because those have
+		# their own owners just above. Duck-typed like every other cross-component call here, so an
+		# enemy that cannot move simply has nothing to reset.
+		var other_locomotion := actor.get_node_or_null("Locomotion")
+		if other_locomotion != null and other_locomotion.has_method("reset_to_mark"):
+			other_locomotion.call("reset_to_mark")
+		restored += 1
+	if restored > 0:
+		_log("%d arena actor(s) restored to alive at full health" % restored)
 
 
 # --- Input ------------------------------------------------------------------
@@ -341,10 +415,15 @@ func _resolve_actor() -> Node3D:
 	return get_parent() as Node3D
 
 
-func _resolve_attacker() -> Node:
-	if not String(attacker_path).is_empty():
-		return get_node_or_null(attacker_path)
-	return get_tree().get_first_node_in_group(GROUP_ATTACKER)
+## The attacker an AUTHORED path names, or null when this component does not name one.
+##
+## Deliberately NO group fallback. That fallback is what this pass removed: with two enemy variants
+## in the arena it returned ONE of them in an unspecified order, so the reset restored a single,
+## non-deterministic attacker and silently ignored the other.
+func _resolve_attacker_by_path() -> Node:
+	if String(attacker_path).is_empty():
+		return null
+	return get_node_or_null(attacker_path)
 
 
 func _get_health() -> HealthComponent:

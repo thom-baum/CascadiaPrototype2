@@ -3782,9 +3782,348 @@ debug panel toggle. Milestone 13 is CLOSED and must not be reopened without a ge
 
 ### Verification
 
+### Milestone 15 - shared combatant foundation (2026-09-14)
+
+New artifacts this pass (all recorded as RETAIN unless noted):
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/actors/actor_state.gd` | RETAIN | The shared actor contract. Owns no state; reads every answer from its owner. |
+| `scripts/actors/actor_profile.gd` | RETAIN | Archetype IDENTITY data: health, mortality, targetability, reaction. |
+| `scripts/combat/enemy_attack_profile.gd` | RETAIN | Archetype ATTACK data: timing, damage, range, cadence. |
+| `scripts/combat/health_reaction_component.gd` | RETAIN | Shared hit-reaction state (flinch / stagger). Inert by default (threshold 0.0). |
+| `scripts/npc/passive_npc.gd` + `scenes/actors/passive_npc.tscn` | RETAIN | First NPC archetype. |
+| `resources/actors/civilian_npc.tres` | RETAIN | Civilian archetype data. NOW ASSIGNED and measured live (see defect 6). |
+| `resources/enemies/test_attacker_attack.tres` | RETAIN | Arena attacker archetype. Assigned and verified. |
+| `resources/enemies/heavy_brute_attack.tres` | RETAIN | Second variant archetype. NOW ASSIGNED to `HeavyBrute` and measured live. |
+| `scenes/actors/heavy_brute.tscn` | RETAIN | Second enemy variant. The SAME `scripts/combat/enemy_attacker.gd` script as `TestAttacker`; differs only by its assigned archetype resource. |
+| `scripts/diagnostics/actor_contract_probe_debug.gd` + its .tscn | CANDIDATE FOR DELETION | Temporary diagnostic. Writes `res://actor_contract_probe_report.txt`. Delete together. |
+| `res://actor_contract_probe_report.txt` | CANDIDATE FOR DELETION | Probe output, regenerated each run. |
+
+Defects found and fixed THIS pass, recorded because each was a real boot or truth failure:
+
+1. **`scenes/actors/test_attacker.tscn` was corrupted by incremental `strReplace`** - six duplicate
+   `Reaction`/`ActorState` node blocks and duplicated `ext_resource` ids. The scene failed to parse,
+   and the editor then REFUSED to reload it from disk (error 43), keeping the broken in-memory copy.
+   Repaired with a single whole-file write. LESSON: build a scene with one whole-file write, never
+   node-by-node into an existing file.
+2. **`ActorState` called a nonexistent method** (`_get_actor()`; the method is `_resolve_actor()`),
+   which failed the whole script to parse.
+3. **THE BOOT FAILURE (the reported defect).** `scenes/actors/passive_npc.tscn` put an
+   `extends CharacterBody3D` script on a plain `Node` named `Npc`, and the actual `CharacterBody3D`
+   root carried NO script. Godot cannot apply a body script to a Node, so the NPC scene failed to
+   instantiate, which failed `test_environment.tscn`, which failed `main.tscn`. This is what "the
+   game does not boot" was. Fixed by moving the script to the root body.
+4. **`passive_npc.gd` referenced the brand-new `ActorProfile` type** while the editor had not yet
+   registered it, so that script failed to parse DURING AUTHORING. That was a registration-timing
+   symptom of writing these files inside one pass, NOT the cause of the boot failure - and the
+   `preload` workaround adopted for it introduced a worse, silent defect. See defect 6.
+5. **`ActorState` had no `can_act()`**, so the contract could not answer the question the probe (and
+   Phase 3 of the brief) requires. Added, DELEGATING to `CombatParticipant.can_act()` so there is
+   still exactly one authority.
+6. **THE SILENT ONE - found by the probe, not by inspection.** Once defect 3 was fixed and the game
+   booted, the NPC still ran with **no archetype at all**. `profile` was declared as
+   `@export var profile: <preload() const type>`, and an exported property typed by a `preload()` CONST
+   does NOT register as a bindable property - so the scene's `profile = ExtResource(...)` line was
+   DROPPED at load with no error anywhere. The source scene's inspector showed the resource bound while
+   the arena's instance showed `null`. Declaring the property with the global `class_name`
+   (`@export var profile: ActorProfile`) fixed it - the SAME mechanism `EnemyAttacker` already uses for
+   `EnemyAttackProfile`. LESSON: a `preload`-const export type can silently fail to bind, and only a
+   BEHAVIOURAL check caught it; the class-registration workaround that caused it is not needed.
+
+Also recorded: the editor console in this build does NOT reliably surface a running game's `print()`
+output. Nine `_*_report.txt` files already exist at the project root for that reason. Do not diagnose
+a probe by its console output alone - read its report file.
+
 `ui_hud_probe_debug` **RESULT: ALL CHECKS PASSED (165)** - up from 142, the 23 new checks covering:
 the player is NOT tracked, no bar at rest, damage reveals, the fill width equals the owner's real
 health fraction (47.00 px measured against 47.00 px expected), the lock holds a bar past the damage
 window, releasing the lock lets it hide, hiding is counted exactly once, and a freed enemy's bar is
 dropped with it. The shipped `main.tscn` boots at 0 runtime and 0 debugger errors. NOT human-read:
 bar size, position, colour and whether the 4 s hold feels right are the user's call.
+
+---
+
+## 2026-09-14 - Milestone 15 (shared combatant foundation): artifacts recorded
+
+### A. New cleanup candidates - development diagnostics
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/actor_contract_probe_debug.gd` + `scenes/diagnostics/actor_contract_probe_debug.tscn` | CANDIDATE FOR DELETION (new this pass; the contract probe. Delete the pair together with its report file) |
+| `actor_contract_probe_report.txt` (project root) | CANDIDATE FOR DELETION (probe output; same family as the existing `_*_report.txt` scratch files) |
+| `scripts/diagnostics/new_run_reset_probe_debug.gd` + its `.tscn` + `new_run_reset_probe_report.txt` | CANDIDATE FOR DELETION (new this pass; proves New Run restores every actor. Delete the trio together) |
+| `scripts/diagnostics/player_death_reset_probe_debug.gd` + its `.tscn` + `player_death_reset_probe_report.txt` | CANDIDATE FOR DELETION (new this pass; proves the player-death encounter reset. Delete the trio together) |
+
+### C. 2026-09-14 - New Run / player-death reset regression pass
+
+Two behaviour FIXES, both in existing production files, both measured:
+
+1. **`DeathComponent._reset_attackers()` reset only ONE attacker** - it fell back to
+   `get_first_node_in_group(GROUP_ATTACKER)`, so with two enemy variants only one was reset and which
+   one depended on unspecified group order. Now enumerates the group; an authored `attacker_path`
+   still means "reset exactly this one". ACTION state only, because the same method runs on a load.
+2. **Dying now resets the ENCOUNTER** - new `DeathComponent._restore_arena_actors()` returns every
+   other combat actor to alive at full health. This deliberately REVERSES the earlier recorded
+   decision that `EnemyDeathComponent` must not be cleared from the player-death circuit. It goes
+   through each owner's own API and does not emit `defeated`, so it cannot pay a Credit reward.
+3. **`PassiveNpc` cancels a pending respawn** when the actor is already alive again, so the arena
+   reset or a load cannot be followed by its own timer firing a second restoration.
+
+NPC health bars were NOT touched: no change to `enemy_health_bars.gd`, no `can_be_targeted` gate added.
+A damaged NPC still reveals a bar, as intended.
+
+The probe follows the existing `*_debug_*` naming and lives under `scripts/diagnostics/`, so it obeys
+the diagnostic-material rule in `.summerrules`.
+
+### B. New PRODUCTION files (NOT cleanup candidates - recorded for completeness)
+
+Added this pass, all retained:
+
+- `scripts/actors/actor_profile.gd` (`ActorProfile`) - identity/lifecycle archetype data
+- `scripts/actors/actor_state.gd` (`ActorState`) - the shared animation-facing contract
+- `scripts/combat/enemy_attack_profile.gd` (`EnemyAttackProfile`) - attack archetype data
+- `scripts/combat/health_reaction_component.gd` (`HealthReactionComponent`) - hit reaction
+- `scripts/npc/passive_npc.gd` (`PassiveNpc`) + `scenes/actors/passive_npc.tscn` - first NPC archetype
+- `resources/actors/civilian_npc.tres`, `resources/enemies/test_attacker_attack.tres`
+
+### C. Recurring process/editor problems - NEW ENTRIES
+
+**C1. Repeated `strReplace` on a `.tscn` corrupted `test_attacker.tscn` (RESOLVED).**
+Nine successive `strReplace` calls writing new nodes into `scenes/actors/test_attacker.tscn` produced
+a file with SIX duplicate `Reaction`/`ActorState` node blocks and duplicated `ext_resource` ids
+(`8_reaction`, `9_actorstate` repeated six times). Godot refused to load it:
+
+    Parse Error: Parse error. [Resource file res://scenes/actors/test_attacker.tscn:92]
+
+and the editor then refused to reload it from disk at all, keeping the broken in-memory scene and
+blocking the save. Repair: ONE complete `writeFile` of the whole scene. Lesson, recorded so it is not
+rediscovered: **add several nodes to a scene with a single whole-file write, not with one
+`strReplace` per node.**
+Related, and separately useful: `InstantiateScene`/`SetProp` batches against a scene the editor is
+not currently editing fail with `scene_target_inactive`; OpenScene the target first (the destination
+is still declared by the top-level `scenePath`).
+
+**C2. The game halts at a debugger breakpoint and cannot execute (OPEN, environment).**
+Every launch this pass reported `is_breaked: true` with `session_active: true`. Consequence, measured
+three times with a probe that writes an EARLY MARKER from `_ready()`: the marker file was never
+created, no GDScript `print()` from any script reached the Output panel (not even the `[DAMAGE]`
+lines `HealthComponent` emits with `debug_logging = true`), and `gameSnapshot` returned a blurred
+magenta placeholder image rather than a viewport frame. Engine-level lines ("Welcome to Summer
+Engine", the D3D12 device line) DID appear, so stdout capture works - it is script execution that is
+suspended. **No runtime claim from this pass is verified.** Clearing the breakpoint is a UI action
+outside this project's tooling.
+
+### D. Stale-analysis noise reconfirmed (do not chase)
+
+`state:diagnostics` reported three `open_script_buffers` entries that are NOT real defects, each
+contradicted by a direct read: `GameActions.TARGET_CYCLE_LEFT` / `TARGET_CYCLE_RIGHT` ARE declared
+(`game_actions.gd:60-61`), and `ActorProfile` IS a valid global class
+(`scripts/actors/actor_profile.gd:1`). Per-file `state:script-errors` returned **0** for every file
+this pass touched. Consistent with the existing `open_script_buffers` entry at the top of this file.
+
+---
+
+## 2026-09-14 - Milestone 16 (animation adapter): artifacts recorded
+
+### A. New cleanup candidates - development diagnostics
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/animation_adapter_probe_debug.gd` + `scenes/diagnostics/animation_adapter_probe_debug.tscn` | CANDIDATE FOR DELETION (new this pass; the animation-adapter contract probe. Delete the pair together with its report file) |
+| `animation_adapter_probe_report.txt` (project root) | CANDIDATE FOR DELETION (probe output; same family as the existing `_*_report.txt` scratch files) |
+
+### B. New PRODUCTION files (NOT cleanup candidates - recorded for completeness)
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/animation/animation_adapter.gd` | RETAIN | MILESTONE 16's deliverable. The FIRST consumer of `ActorState`. Reads the contract, owns no gameplay state, writes no mesh transform or material. Its placeholder driver is the single seam a real animation system replaces. |
+| `Animation` node inside `scenes/test_environment.tscn` (`Player`), `scenes/actors/test_attacker.tscn`, `scenes/actors/heavy_brute.tscn`, `scenes/actors/passive_npc.tscn` | RETAIN | One adapter per actor, all running the SAME script. Enemy variants differ by PROFILE, not by animation code. |
+
+### C. Defect found and fixed THIS pass
+
+`animation_adapter_probe_debug` asserted the adapter covered **FOUR different actor KINDS**. Cascadia
+has exactly THREE actor kinds (player / enemy / npc) while the arena has FOUR actors, because two of
+them are enemy ARCHETYPES - so the check could only ever have failed, and did (`1 CHECK(S) FAILED
+(52 passed)`). It now asserts that every KIND is covered AND that BOTH enemy archetypes are driven by
+the one shared adapter. Re-run: `RESULT: ALL CHECKS PASSED (54)`.
+
+### D. Scene-editing hazard reconfirmed (do not repeat)
+
+`AddNode` collided with a STALE in-memory node from an earlier failed batch and created
+`Animation_1` beside an existing `Animation` in `scenes/actors/test_attacker.tscn` and
+`scenes/actors/heavy_brute.tscn`. Both stray nodes were removed with `RemoveNode` and the scenes
+re-read from disk to confirm exactly one adapter node each. LESSON, and it is the SAME lesson as the
+Milestone 15 `test_attacker.tscn` corruption: after any batch that PARTIALLY fails, re-read the scene
+from disk before issuing the next mutation, and prefer `OpenScene` first so the editor's in-memory
+copy matches what is on disk.
+
+---
+
+## 2026-09-14 - Milestone 18 (combat feedback, interruption, death credits): artifacts recorded
+
+### A. New cleanup candidates - development diagnostics
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/combat_feedback_probe_debug.gd` + `scenes/diagnostics/combat_feedback_probe_debug.tscn` | CANDIDATE FOR DELETION (new this pass; the probe that MEASURES hitstop, attack interruption and the death credit reset at runtime. Delete the pair together. It writes NO report file - its output is console only, so there is no `_report.txt` to pair with it) |
+| `scripts/diagnostics/live_combat_credit_probe_debug.gd` + `scenes/diagnostics/live_combat_credit_probe_debug.tscn` | CANDIDATE FOR DELETION (Milestone 18 follow-up, PREVIOUSLY UNRECORDED - recorded now. The probe that measures the same three behaviours through the REAL player attack path with nothing stood down, which `combat_feedback_probe_debug` could not, because that one stands every enemy down and opens the hitbox by hand. Delete the pair together. Console only, no `_report.txt`.) |
+| `scripts/diagnostics/player_attack_reach_probe_debug.gd` + `scenes/diagnostics/player_attack_reach_probe_debug.tscn` | CANDIDATE FOR DELETION (new this pass, section 8U.6; the probe that measures the player's REAL attack at each archetype's OWN `Locomotion.stopping_distance()` rather than a hard-coded 1.8 m. Delete the pair together. Console only, no `_report.txt`.) |
+
+## 2026-09-14 - UI cleanup and layout unification pass (section 8W): artifacts recorded
+
+### A. New production file
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/ui/screen_regions.gd` (`class_name ScreenRegions`) | RETAIN | THE ONE LAYOUT AUTHORITY for every persistent panel. Owns the reserved screen regions as anchor fractions, the CanvasLayer z-order constants, and the host-VBoxContainer-per-region model. Also owns `adaptive_columns()` / `bound_to_region()` (the shared reflow and no-clip helpers) and `region_pixel_size()`. This SUPERSEDES the ad-hoc placement that used to live in each panel script. |
+| `scenes/test_environment.tscn` - `Markers/*` Label3D `outline_size = 6` | RETAIN | World-space debug labels given an outline so they stay legible against the arena. Light touch only: no label was moved, renamed or removed. |
+
+### B. Refactored in place (NOT new files - the existing panels, re-pointed at the shared regions)
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/ui/game_hud.gd` | RETAIN | Credits and vitals now join reserved regions instead of hand-set anchors and offsets. |
+| `scripts/diagnostics/save_load_debug_controls.gd` | RETAIN | The hand-tuned `offset_top = 62` dodge is GONE; the panel is the second child of the shared top-right stack. |
+| `scripts/diagnostics/combat_debug_overlay.gd` | RETAIN | Its per-frame viewport maths and `_reclamp` were removed; the region places it. |
+| `scripts/diagnostics/death_presentation_debug.gd` | RETAIN | Centred by its region; no self-positioning. |
+| `scripts/diagnostics/input_debug_overlay.gd` | RETAIN | Split into two reflowing columns inside a region bound (8W.5). |
+| `scripts/ui/enemy_health_bars.gd` | RETAIN | Layer now read from `ScreenRegions.LAYER_ENEMY_HEALTH_BARS` instead of a hardcoded 2. |
+
+### C. New cleanup candidates - development diagnostics
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/input_panel_layout_probe_debug.gd` + `scenes/diagnostics/input_panel_layout_probe_debug.tscn` + `input_panel_layout_probe_report.txt` | CANDIDATE FOR DELETION (new this pass; the probe that MEASURES the INPUT FOUNDATION panel's geometry, reflow decision and row count at runtime. Delete all three together.) |
+
+---
+
+## 2026-09-14 - Milestone 19 (death-drop loop): artifacts recorded
+
+### A. New cleanup candidates - development diagnostics
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/death_drop_credit_probe_debug.gd` + `scenes/diagnostics/death_drop_credit_probe_debug.tscn` | CANDIDATE FOR DELETION (new this pass, section 8V; the probe that MEASURES the death-drop loop end to end - drop, revive, claim, one-stake rule, empty-pocket death, new run, load. Pair it with the report file below and delete all three together.) |
+| `res://death_drop_credit_probe_report.txt` | CANDIDATE FOR DELETION (new this pass; the report written by the probe above. It is written because the console TAIL IS TRUNCATED - a measurement printed only mid-run can be missing from the transcript, so the probe routes its results to a file as well.) |
+
+### B. New PRODUCTION files (NOT cleanup candidates - recorded for completeness)
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/economy/credit_stake.gd` | RETAIN | MILESTONE 19's deliverable node (`class_name CreditStake`, group `credit_stake`). A world MARKER that displays a dropped stake and offers the claim. It owns no balance and never pays out: `CreditLedger.reclaim_stake()` is the only thing that moves Credits. Claims by DISTANCE only and never by `get_overlapping_bodies()` - see 8V for the measured reason. |
+| `scenes/props/credit_stake.tscn` | RETAIN | The stake marker scene: an `Area3D` on layer 0 (detection only, it collides with nothing and nothing collides with it) with a `MeshInstance3D` readout and a `CollisionShape3D` sphere sized from `pickup_radius`. Placed ONCE in `scenes/test_environment.tscn` as `CreditStake`. |
+| `CreditLedger` stake API in `scripts/economy/credit_ledger.gd` | RETAIN | The death-drop contract: `drop_on_death` (exported, default true), `has_stake()` / `stake_amount()` / `stake_position()`, `place_stake()` / `reclaim_stake()` / `clear_stake()`, the `stake_placed` / `stake_reclaimed` / `stake_lost` signals, and the `stakes_placed` / `stakes_reclaimed` / `stakes_lost` per-run counters. |
+
+### B. New PRODUCTION files (NOT cleanup candidates - recorded for completeness)
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/combat/hit_stop.gd` | RETAIN | MILESTONE 18's deliverable. Freezes the two PARTICIPANTS of a confirmed hit with `propagate_call` over `set_process` / `set_physics_process`. Never touches `process_mode`, `Engine.time_scale` or `get_tree().paused`. Owns no gameplay truth, no damage and no attack state. |
+| `HitStop` node in `main.tscn` | RETAIN | ONE service, a DIRECT child of the game root and a sibling of `TestEnvironment`, so a participant's own freeze can never disable the clock that releases it. |
+| `HitboxComponent.GROUP_HITBOX` in `scripts/combat/hitbox_component.gd` | RETAIN | New group constant, added so a confirmed-hit consumer enumerates hitboxes without a hard-coded scene path - the same resolution pattern the attacker, locomotion and health modules use. |
+
+### C. Modified PRODUCTION files (recorded for completeness)
+
+| Artifact | Change |
+| -------- | ------ |
+| `scripts/combat/enemy_attacker.gd` | Subscribes to its sibling `Reaction`'s `staggered` signal and cancels its OWN attack (`_connect_reaction` / `on_hit_received` / `interrupt_attack`). Also DEFERS uncommitted facing to a `Locomotion` sibling when one is present. |
+| `scripts/economy/credit_ledger.gd` | Subscribes to the PLAYER's own `DeathComponent.GROUP_DEATH` circuit and resets the carried balance, `credits_earned` and the per-run reward history on death. Lifetime counters and live signal connections are deliberately left alone. |
+| `scenes/actors/test_attacker.tscn` | `Reaction.stagger_threshold = 12.0` |
+| `scenes/actors/heavy_brute.tscn` | `Reaction.stagger_threshold = 20.0` |
+| `scripts/diagnostics/game_state_death_loop_probe_debug.gd` | Header and step-10 note updated: roadmap 8L.7's "carried Credits SURVIVE death" contract is SUPERSEDED by the user's decision. |
+
+### D. Contract change recorded
+
+Roadmap section 8L.7 explicitly recorded the OPPOSITE decision - that carried Credits SURVIVE the
+player's death and reset - and `game_state_death_loop_probe_debug` pinned it in its header. The user
+overruled it during this playtest: dying costs the run its carried Credits. `CreditLedger.on_player_death()`
+now performs that reset, and the death-loop probe was updated to assert the new rule rather than left
+pinning the old one. The full Soulslike drop-and-retrieve loop (a corpse to return to) is still NOT
+implemented and remains deferred.
+
+### E. Reported defect that was NOT a defect
+
+The playtest report "hitstop does not work" was accurate in the most literal sense. A project-wide
+search for `hitstop` / `hit_stop` / `hitStop` returned ZERO matches in any `.gd` or `.tscn`: there was
+no hitstop, broken or otherwise. The only hit feedback in the project was a tweened damage number and a
+`material_overlay` flash, neither of which has any time component. Recorded here so a later session does
+not go hunting for a broken implementation that was never written.
+
+### F. Benign tooling noise confirmed this pass (do not chase)
+
+`state:diagnostics` reports three console errors that are ALL stale `open_script_buffers` analysis of
+editor tabs. Each was re-checked OUTSIDE that scope, as the project rule requires:
+`cascadia_input.gd:396` / `:400` (`TARGET_CYCLE_LEFT` / `TARGET_CYCLE_RIGHT`) - both constants exist at
+`game_actions.gd:60-61`; and `hit_stop.gd:264` (`HitboxComponent.GROUP_HITBOX`) - the constant exists at
+`hitbox_component.gd:24` AND the runtime proves it resolves, because hitstop demonstrably froze and
+released during the probe. `state:script-errors` returns ZERO errors for every file this milestone touched.
+
+---
+
+## 2026-09-14 - Milestone 17 (minimal enemy engagement): artifacts recorded
+
+STATUS: ACCEPTED BY THE USER 2026-09-14 after HUMAN PLAYTESTING. The user reported that human
+testing shows the enemy engagement concept is implemented correctly, which satisfies this
+milestone's manual-play criterion. That is the user's own first-hand result and it is the only
+evidence in this project for how the behaviour READS in motion; everything else below is artifact
+accounting and probe output from the pass that produced it, and neither kind substitutes for the
+other.
+
+### A. New cleanup candidates - development diagnostics
+
+| Artifact | Status as recorded |
+| -------- | ------------------ |
+| `scripts/diagnostics/enemy_engagement_probe_debug.gd` + `scenes/diagnostics/enemy_engagement_probe_debug.tscn` | CANDIDATE FOR DELETION (new this pass; the enemy-engagement probe. Delete the pair together. It writes NO report file - its output is console only, so there is no `_report.txt` to pair with it) |
+
+### B. New PRODUCTION files (NOT cleanup candidates - recorded for completeness)
+
+| Artifact | Status | Note |
+| -------- | ------ | ---- |
+| `scripts/combat/enemy_locomotion.gd` | RETAIN | MILESTONE 17's deliverable. Owns ONLY an enemy body's horizontal velocity, its yaw while no attack is committed, and one engagement state (`IDLE` / `APPROACH` / `RETURNING`). Owns no combat truth, no attack phases, no damage and no defeat. |
+| `resources/enemies/test_attacker_actor.tres`, `resources/enemies/heavy_brute_actor.tres` | RETAIN | The two archetypes' MOVEMENT records on the existing `ActorProfile` resource. Archetype difference stays DATA, so no per-archetype movement script exists. |
+| `Locomotion` node inside `scenes/actors/test_attacker.tscn` and `scenes/actors/heavy_brute.tscn` | RETAIN | One `EnemyLocomotion` per enemy body, both running the SAME script, each seeded from its own `.tres`. |
+| `detection_radius` on `resources/enemies/test_attacker_attack.tres` and `heavy_brute_attack.tres` | RETAIN | The one field `EnemyAttackProfile`'s own header had always earmarked for detection. 12.0 m for the arena attacker, 9.0 m for the brute. |
+
+### C. Defects found and fixed THIS pass
+
+1. **DUPLICATE `@export var locomotion_path` in `scripts/combat/enemy_attacker.gd`.** Two identical
+   declarations landed, which is a GDScript PARSE ERROR - `Parse Error: Variable "locomotion_path"
+   has the same name as a previously declared variable` - and it made the script fail to load
+   entirely (`Failed to load script ... with error "Parse error"`), taking the whole attacker with
+   it. Found by reading the file back and by the parse error in `state:diagnostics`; fixed by
+   removing the duplicate declaration and its duplicated comment block.
+
+2. **Three parse defects in the new probe**, all found by running it rather than by reading it:
+   `_commit_max_speed` used but never declared; `Step.ARENA_RESET_CONFIRM` referenced before it was
+   added to the `enum`; and `_attacker_health.is_dead()` called as a METHOD when `is_dead` is a
+   `HealthComponent` PROPERTY. All three fixed; the probe then parsed clean and ran to completion.
+
+3. **A measurement artifact in the probe's own AC10**, not a product defect. After the arena reset
+   the attacker was reported 0.864 m off its mark. Cause: `TestAttacker` spawns 7 m from the player
+   spawn, INSIDE its own 12 m detection radius, so on the frame after the reset it correctly
+   RE-ENGAGES and walks off the mark. 2.6 m/s with acceleration over 25 physics frames is about
+   0.86 m, which matches the measurement exactly. Fixed by measuring the restoration on the frame it
+   happens and asserting re-engagement separately as the correct consequence. The brute stays on its
+   mark in the same window because its spawn is outside its 9 m radius. Re-run: `ALL CHECKS PASSED`.
+
+### D. Regression results recorded THIS pass (all re-run fresh, not carried over)
+
+| Probe | Fresh result |
+| ----- | ------------ |
+| `enemy_engagement_probe_debug` (new) | `RESULT: ALL CHECKS PASSED` - run twice, identical |
+| `actor_contract_probe_debug` | `ALL CHECKS PASSED (82)` |
+| `new_run_reset_probe_debug` | `ALL CHECKS PASSED (32)` |
+| `player_death_reset_probe_debug` | `ALL CHECKS PASSED (38)` |
+| `grounding_probe_debug` | **CHANGED - see the roadmap's known-defects entry.** `TestAttacker` now PASSES at -0.001 (gravity from the new body physics settled it); `PassiveNpc` now FAILS at -0.139, reproduced identically on two consecutive runs. The NPC is authored at `X = -4, Z = 6` and `BoxShape_step14` is `Vector3(6, 0.14, 6)` centred at `X = -7`, so the step's east face is at exactly `X = -4` and the NPC stands on that EDGE - its collider bottom rests 0.139 m up while the probe's downward ray down its centre hits the open floor. The failing ACTOR therefore changed. MEASURED: Milestone 17 touched neither `passive_npc.gd`, `passive_npc.tscn` nor any step geometry, and both readings are negative, so this is not the same check failing on the same actor. NOT ESTABLISHED: whether the NPC also floated before this pass. The roadmap recorded only ONE failure (TestAttacker), but that note may have been a partial record rather than a complete one, and no earlier full grounding transcript has been found, so it is NOT claimed either way here. Left UNFIXED and recorded, per the project's rule against solving geometry problems during an unrelated pass. |
+| `animation_adapter_probe_debug` | `ALL CHECKS PASSED (54)` - re-run fresh, matches its historical count |
+| `targeting_probe_debug` | `ALL CHECKS PASSED (78)` - re-run fresh, matches its historical count. All six regression probes in the brief were therefore re-run, not carried over. |
+
+### E. Persistence gap EXPOSED (not introduced) by this milestone
+
+Enemy POSITION is not restored by a LOAD. `GameStateSave._capture_world()` records health, defeated
+and paid, and no transform, so loading a game leaves enemies wherever the fight left them rather
+than on their spawn marks. NEW RUN is unaffected (`_spawn_transforms`) and the player-death
+encounter reset is unaffected (the locomotion component's own recorded mark). Recorded because
+movement makes the gap observable for the first time; deliberately NOT addressed in this milestone,
+which forbade enemy-position save/load.

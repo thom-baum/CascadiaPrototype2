@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://cqyrax1qbgrxo" path="res://scripts/combat/enemy_death_component.gd" id="3_death"]
 [ext_resource type="Script" uid="uid://cl7c6683fslkq" path="res://scripts/diagnostics/enemy_death_presentation_debug.gd" id="4_deathpres"]
 [ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="5_hypij"]
+[ext_resource type="Script" path="res://scripts/actors/actor_state.gd" id="6_state"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_body"]
 radius = 0.4
@@ -53,3 +54,6 @@ script = ExtResource("4_deathpres")
 
 [node name="Participant" type="Node" parent="." unique_id=2048914968]
 script = ExtResource("5_hypij")
+
+[node name="ActorState" type="Node" parent="."]
+script = ExtResource("6_state")

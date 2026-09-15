@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://bu2kpvqpappb1"]
+
+[ext_resource type="PackedScene" uid="uid://bfbf3uq4w4kmk" path="res://main.tscn" id="1_main"]
+[ext_resource type="Script" uid="uid://rcr8qeh332q7" path="res://scripts/diagnostics/player_death_reset_probe_debug.gd" id="2_probe"]
+
+[node name="PlayerDeathResetProbeRun" type="Node3D" unique_id=463008783]
+
+[node name="Main" parent="." unique_id=260785132 instance=ExtResource("1_main")]
+
+[node name="Probe" type="Node3D" parent="." unique_id=40156056]
+script = ExtResource("2_probe")

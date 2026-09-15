@@ -1,85 +1,85 @@
-[s31] [TARGETING] --- PHASE 1: bindings ---
-[s31] [TARGETING]   PASS  the EXISTING lock_on action is still present and was not rebound (2 event(s))
-[s31] [TARGETING]   PASS  target_cycle_left exists in the InputMap
-[s31] [TARGETING]   PASS  target_cycle_right exists in the InputMap
-[s31] [TARGETING]   PASS  both cycle actions are bound to the controller's axis 2 (2 / 2)
-[s31] [TARGETING]   PASS  axis 2 is negative for LEFT (-1.0) and positive for RIGHT (1.0)
-[s31] [TARGETING]   PASS  the keyboard/mouse equivalent is the wheel (left=5, right=4)
-[s31] [TARGETING]   PASS  neither cycle action carries a key binding, so R and F8/F9 were not touched
-[s31] [TARGETING]   PASS  nothing new is bound to R, F8 or F9
-[s31] [TARGETING]   PASS  camera look left/right remain on the SAME axis 2 - the deliberate sharing this milestone resolves
-[s31] [TARGETING] --- PHASE 2: a lock request with nothing in range ---
-[s34] [TARGETING]   PASS  with nothing in range there are no candidates (0)
-[s34] [TARGETING]   PASS  the lock request REFUSES instead of erroring or locking onto nothing
-[s34] [TARGETING]   PASS  no lock is held after a refusal
-[s34] [TARGETING]   PASS  a refused request leaves no target behind
-[s34] [TARGETING]   PASS  the refusal is counted, so "nothing happened" is measurable (1)
-[s34] [TARGETING]   PASS  a refused request declares no look intent to the input layer
-[s34] [TARGETING]   PASS  cycling with no lock held also refuses
-[s37] [TARGETING]   PASS  the arena is in range again after the restore
-[s37] [TARGETING]   PASS  the locking actor is never a candidate for its own lock
-[s37] [TARGETING] --- PHASE 3: acquire, cycle, wrap (through the REAL bound events) ---
-[s37] [TARGETING]   PASS  the arena offers at least three usable targets to cycle through (5)
-[s42] [TARGETING]   PASS  TAB (the existing lock_on binding) ACQUIRES a lock
-[s42] [TARGETING]   PASS  the acquired target is a live actor (TestAttacker)
-[s42] [TARGETING]   PASS  the acquire is counted (1)
-[s47] [TARGETING]   PASS  wheel UP cycles the lock to another target (DummyActor)
-[s52] [TARGETING]   PASS  wheel DOWN returns to where the player came from (TestAttacker -> DummyActor -> TestAttacker)
-[s77] [TARGETING]   PASS  right cycling visits every valid target exactly once (5 of 5)
-[s77] [TARGETING]   PASS  right cycling 5 times WRAPS back to the first target (TestAttacker)
-[s82] [TARGETING]   PASS  the SAME lock_on binding RELEASES the held lock (toggle)
-[s82] [TARGETING]   PASS  a released lock holds no target
-[s82] [TARGETING]   PASS  releasing the lock withdraws the look intent
-[s82] [TARGETING] --- PHASE 4: the declared look intent and the camera ---
-[s87] [TARGETING]   PASS  the lock is held again for the camera phase
-[s87] [TARGETING]   PASS  a held lock DECLARES the look-yaw intent to the input layer
-[s90] [TARGETING]   PASS  no lock is held, so only ONE yaw authority is active
-[s90] [TARGETING]   PASS  the rig confirms it is NOT framing during the stick measurements
-[s95] [TARGETING]   PASS  unlocked: the right stick's horizontal component REACHES the camera (6.160 deg)
-[s101] [TARGETING]   PASS  locked: the SAME axis does NOT turn the camera (0.0000 deg) - one axis, one consumer
-[s106] [TARGETING]   PASS  the lock is re-acquired for the mouse and framing checks
-[s106] [TARGETING]   PASS  and the look intent is declared again
-[s109] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (86.563 deg)
-[s109] [TARGETING]   PASS  a target is locked for the framing checks
-[s154] [TARGETING]   PASS  the camera's own forward points at the locked target (0.00 deg off centre)
-[s154] [TARGETING]   PASS  PITCH is unchanged by lock-on (-12.000 -> -12.000)
-[s154] [TARGETING]   PASS  ROLL stays zero (camera right vector has no vertical part: 0.000000)
-[s154] [TARGETING]   PASS  the rig hierarchy is intact and unrenamed: ["Camera3D", "SpringArm3D", "CameraPitch", "CameraYaw", "CameraRig"]
-[s154] [TARGETING]   PASS  the camera READ the lock and changed nothing about it
-[s199] [TARGETING]   PASS  the camera FOLLOWS when the target moves (0.01 deg off centre)
-[s247] [TARGETING]   PASS  the lock is released before the release paths are tested
-[s247] [TARGETING] --- PHASE 5: the four auto-release paths, each by its own cause ---
-[s247] [TARGETING]   PASS  a temporary target was created for the defeat path
-[s254] [TARGETING]   PASS  the lock is taken on the temporary target
-[s254] [TARGETING]   PASS  the temporary target carries a defeat authority
-[s254] [TARGETING]   PASS  the temporary target is in its authoritative DEFEATED state
-[s257] [TARGETING]   PASS  a DEFEATED target releases the lock
-[s257] [TARGETING]   PASS  the release is recorded as DEFEATED (1)
-[s257] [TARGETING]   PASS  and it is NOT filed as a generic invalid release - the causes stay apart
-[s264] [TARGETING]   PASS  the lock is taken on a second temporary target
-[s267] [TARGETING]   PASS  a FREED target releases the lock
-[s267] [TARGETING]   PASS  the release is recorded as invalid (1)
-[s274] [TARGETING]   PASS  the lock is taken on a third temporary target
-[s274] [TARGETING]   PASS  the temporary target carries a CombatParticipant
-[s277] [TARGETING]   PASS  the target became UNUSABLE through the project's own validity authority
-[s277] [TARGETING]   PASS  a target refused as a target releases the lock
-[s277] [TARGETING]   PASS  that release is also recorded as invalid
-[s284] [TARGETING]   PASS  the lock is taken on a fourth temporary target
-[s287] [TARGETING]   PASS  a target beyond acquire_range but inside release_range KEEPS the lock (20 m)
-[s290] [TARGETING]   PASS  a target beyond release_range releases the lock
-[s290] [TARGETING]   PASS  the release is recorded as out-of-range (1)
-[s297] [TARGETING]   PASS  the lock is taken on a fifth temporary target
-[s300] [TARGETING]   PASS  PLAYER DEATH releases the lock
-[s300] [TARGETING]   PASS  the release is recorded as player-dead (1)
-[s300] [TARGETING]   PASS  a dead player cannot take a new lock
-[s300] [TARGETING]   PASS  no look intent survives the player's death
-[s303] [TARGETING]   PASS  the player was restored by its own death circuit
-[s303] [TARGETING]   PASS  and can lock again afterwards
-[s303] [TARGETING] --- PHASE 6: the scene is left as it was found ---
-[s306] [TARGETING]   PASS  no lock is left held
-[s306] [TARGETING]   PASS  no look intent is left declared
-[s312] [TARGETING]   PASS  no ARENA actor was damaged or defeated by this probe ([])
-[s312] [TARGETING]   PASS  the carried balance is unchanged at 0 - no Credits were minted by the probe
-[s312] [TARGETING]   PASS  the economy granted no awards during the probe (0)
-[s312] [TARGETING]   PASS  the arena's own targets are still usable
-[s312] [TARGETING] RESULT: ALL CHECKS PASSED (78)
+[s33] [TARGETING] --- PHASE 1: bindings ---
+[s33] [TARGETING]   PASS  the EXISTING lock_on action is still present and was not rebound (2 event(s))
+[s33] [TARGETING]   PASS  target_cycle_left exists in the InputMap
+[s33] [TARGETING]   PASS  target_cycle_right exists in the InputMap
+[s33] [TARGETING]   PASS  both cycle actions are bound to the controller's axis 2 (2 / 2)
+[s33] [TARGETING]   PASS  axis 2 is negative for LEFT (-1.0) and positive for RIGHT (1.0)
+[s33] [TARGETING]   PASS  the keyboard/mouse equivalent is the wheel (left=5, right=4)
+[s33] [TARGETING]   PASS  neither cycle action carries a key binding, so R and F8/F9 were not touched
+[s33] [TARGETING]   PASS  nothing new is bound to R, F8 or F9
+[s33] [TARGETING]   PASS  camera look left/right remain on the SAME axis 2 - the deliberate sharing this milestone resolves
+[s33] [TARGETING] --- PHASE 2: a lock request with nothing in range ---
+[s36] [TARGETING]   PASS  with nothing in range there are no candidates (0)
+[s36] [TARGETING]   PASS  the lock request REFUSES instead of erroring or locking onto nothing
+[s36] [TARGETING]   PASS  no lock is held after a refusal
+[s36] [TARGETING]   PASS  a refused request leaves no target behind
+[s36] [TARGETING]   PASS  the refusal is counted, so "nothing happened" is measurable (1)
+[s36] [TARGETING]   PASS  a refused request declares no look intent to the input layer
+[s36] [TARGETING]   PASS  cycling with no lock held also refuses
+[s39] [TARGETING]   PASS  the arena is in range again after the restore
+[s39] [TARGETING]   PASS  the locking actor is never a candidate for its own lock
+[s39] [TARGETING] --- PHASE 3: acquire, cycle, wrap (through the REAL bound events) ---
+[s39] [TARGETING]   PASS  the arena offers at least three usable targets to cycle through (5)
+[s44] [TARGETING]   PASS  TAB (the existing lock_on binding) ACQUIRES a lock
+[s44] [TARGETING]   PASS  the acquired target is a live actor (TestAttacker)
+[s44] [TARGETING]   PASS  the acquire is counted (1)
+[s49] [TARGETING]   PASS  wheel UP cycles the lock to another target (DummyActor)
+[s54] [TARGETING]   PASS  wheel DOWN returns to where the player came from (TestAttacker -> DummyActor -> TestAttacker)
+[s79] [TARGETING]   PASS  right cycling visits every valid target exactly once (5 of 5)
+[s79] [TARGETING]   PASS  right cycling 5 times WRAPS back to the first target (TestAttacker)
+[s84] [TARGETING]   PASS  the SAME lock_on binding RELEASES the held lock (toggle)
+[s84] [TARGETING]   PASS  a released lock holds no target
+[s84] [TARGETING]   PASS  releasing the lock withdraws the look intent
+[s84] [TARGETING] --- PHASE 4: the declared look intent and the camera ---
+[s97] [TARGETING]   PASS  the lock is held again for the camera phase
+[s97] [TARGETING]   PASS  a held lock DECLARES the look-yaw intent to the input layer
+[s100] [TARGETING]   PASS  no lock is held, so only ONE yaw authority is active
+[s100] [TARGETING]   PASS  the rig confirms it is NOT framing during the stick measurements
+[s105] [TARGETING]   PASS  unlocked: the right stick's horizontal component REACHES the camera (5.839 deg)
+[s111] [TARGETING]   PASS  locked: the SAME axis does NOT turn the camera (0.0000 deg) - one axis, one consumer
+[s116] [TARGETING]   PASS  the lock is re-acquired for the mouse and framing checks
+[s116] [TARGETING]   PASS  and the look intent is declared again
+[s119] [TARGETING]   PASS  locked: MOUSE motion still turns the camera (50.124 deg)
+[s119] [TARGETING]   PASS  a target is locked for the framing checks
+[s164] [TARGETING]   PASS  the camera's own forward points at the locked target (0.00 deg off centre)
+[s164] [TARGETING]   PASS  PITCH is unchanged by lock-on (-12.000 -> -12.000)
+[s164] [TARGETING]   PASS  ROLL stays zero (camera right vector has no vertical part: 0.000000)
+[s164] [TARGETING]   PASS  the rig hierarchy is intact and unrenamed: ["Camera3D", "SpringArm3D", "CameraPitch", "CameraYaw", "CameraRig"]
+[s164] [TARGETING]   PASS  the camera READ the lock and changed nothing about it
+[s209] [TARGETING]   PASS  the camera FOLLOWS when the target moves (0.01 deg off centre)
+[s257] [TARGETING]   PASS  the lock is released before the release paths are tested
+[s257] [TARGETING] --- PHASE 5: the four auto-release paths, each by its own cause ---
+[s257] [TARGETING]   PASS  a temporary target was created for the defeat path
+[s264] [TARGETING]   PASS  the lock is taken on the temporary target
+[s264] [TARGETING]   PASS  the temporary target carries a defeat authority
+[s264] [TARGETING]   PASS  the temporary target is in its authoritative DEFEATED state
+[s267] [TARGETING]   PASS  a DEFEATED target releases the lock
+[s267] [TARGETING]   PASS  the release is recorded as DEFEATED (1)
+[s267] [TARGETING]   PASS  and it is NOT filed as a generic invalid release - the causes stay apart
+[s274] [TARGETING]   PASS  the lock is taken on a second temporary target
+[s277] [TARGETING]   PASS  a FREED target releases the lock
+[s277] [TARGETING]   PASS  the release is recorded as invalid (1)
+[s284] [TARGETING]   PASS  the lock is taken on a third temporary target
+[s284] [TARGETING]   PASS  the temporary target carries a CombatParticipant
+[s287] [TARGETING]   PASS  the target became UNUSABLE through the project's own validity authority
+[s287] [TARGETING]   PASS  a target refused as a target releases the lock
+[s287] [TARGETING]   PASS  that release is also recorded as invalid
+[s294] [TARGETING]   PASS  the lock is taken on a fourth temporary target
+[s297] [TARGETING]   PASS  a target beyond acquire_range but inside release_range KEEPS the lock (20 m)
+[s300] [TARGETING]   PASS  a target beyond release_range releases the lock
+[s300] [TARGETING]   PASS  the release is recorded as out-of-range (1)
+[s307] [TARGETING]   PASS  the lock is taken on a fifth temporary target
+[s310] [TARGETING]   PASS  PLAYER DEATH releases the lock
+[s310] [TARGETING]   PASS  the release is recorded as player-dead (1)
+[s310] [TARGETING]   PASS  a dead player cannot take a new lock
+[s310] [TARGETING]   PASS  no look intent survives the player's death
+[s313] [TARGETING]   PASS  the player was restored by its own death circuit
+[s313] [TARGETING]   PASS  and can lock again afterwards
+[s313] [TARGETING] --- PHASE 6: the scene is left as it was found ---
+[s316] [TARGETING]   PASS  no lock is left held
+[s316] [TARGETING]   PASS  no look intent is left declared
+[s322] [TARGETING]   PASS  no ARENA actor was damaged or defeated by this probe ([])
+[s322] [TARGETING]   PASS  the carried balance is unchanged at 0 - no Credits were minted by the probe
+[s322] [TARGETING]   PASS  the economy granted no awards during the probe (0)
+[s322] [TARGETING]   PASS  the arena's own targets are still usable
+[s322] [TARGETING] RESULT: ALL CHECKS PASSED (78)

@@ -18,6 +18,11 @@ extends Area3D
 ## Emitted once per hurtbox that actually took damage in the current window.
 signal hit_landed(event: DamageEvent)
 
+## Every hitbox joins this group, so a consumer of confirmed hits - the HitStop service -
+## can enumerate them without a hard-coded scene path. The same resolution pattern the
+## attacker, locomotion and health modules already use.
+const GROUP_HITBOX := &"hitbox"
+
 @export var damage := 10.0
 ## The actor that owns this hitbox. Its own hurtboxes are never hit. Leave empty
 ## for a neutral hitbox that may hit anything, which is what the diagnostic uses.
@@ -35,6 +40,8 @@ var _source_actor: Node
 
 
 func _ready() -> void:
+	# The group is how a confirmed-hit consumer enumerates hitboxes without a scene path.
+	add_to_group(GROUP_HITBOX)
 	collision_layer = GameLayers.HITBOX
 	collision_mask = GameLayers.HURTBOX
 	# Monitoring stays ON for the whole lifetime. It is deliberately NOT the

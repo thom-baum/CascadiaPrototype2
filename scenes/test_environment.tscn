@@ -16,6 +16,11 @@
 [ext_resource type="PackedScene" uid="uid://dh4v6csv04oel" path="res://scenes/actors/test_attacker.tscn" id="11_ut5rl"]
 [ext_resource type="Script" uid="uid://cja2f2pcslpdn" path="res://scripts/player/death_component.gd" id="12_death"]
 [ext_resource type="Script" uid="uid://dqwiaem1vs08o" path="res://scripts/diagnostics/facing_marker_feedback_debug.gd" id="13_0hxc1"]
+[ext_resource type="Script" uid="uid://bgu3srwroa2wk" path="res://scripts/actors/actor_state.gd" id="14_wwk3j"]
+[ext_resource type="Script" uid="uid://bmclwgsoxmaef" path="res://scripts/animation/animation_adapter.gd" id="15_2ugr5"]
+[ext_resource type="PackedScene" uid="uid://baljideejeglf" path="res://scenes/actors/passive_npc.tscn" id="17_ju4s4"]
+[ext_resource type="PackedScene" uid="uid://djocmtsr1c1uq" path="res://scenes/actors/heavy_brute.tscn" id="19_hb1a6"]
+[ext_resource type="PackedScene" path="res://scenes/props/credit_stake.tscn" id="21_mtjhi"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
 sky_top_color = Color(0.32, 0.42, 0.58, 1)
@@ -151,7 +156,7 @@ radius = 0.6
 height = 1.8
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_810np"]
-size = Vector3(1.2, 1.4, 1.2)
+size = Vector3(1.2, 1.4, 2.1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_adw7c"]
 albedo_color = Color(1, 0.62, 0.12, 1)
@@ -439,54 +444,63 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.6, 6)
 pixel_size = 0.016
 billboard = 1
 text = "STEP 14 CM"
+outline_size = 6
 
 [node name="LabelStep28" type="Label3D" parent="Markers" unique_id=1214267442]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2.8, -2)
 pixel_size = 0.016
 billboard = 1
 text = "STEP 28 CM"
+outline_size = 6
 
 [node name="LabelStep42" type="Label3D" parent="Markers" unique_id=1049949708]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, -10)
 pixel_size = 0.016
 billboard = 1
 text = "STEP 42 CM"
+outline_size = 6
 
 [node name="LabelRamp" type="Label3D" parent="Markers" unique_id=384786601]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.2, 7.6)
 pixel_size = 0.016
 billboard = 1
 text = "RAMP 20 DEG - WALK UP FROM SOUTH"
+outline_size = 6
 
 [node name="LabelLedge" type="Label3D" parent="Markers" unique_id=489687699]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2.9, -8)
 pixel_size = 0.016
 billboard = 1
 text = "LEDGE 1 M - TOO TALL"
+outline_size = 6
 
 [node name="LabelTargetA" type="Label3D" parent="Markers" unique_id=1374525031]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 2.88, -2)
 pixel_size = 0.009
 billboard = 1
 text = "TARGET A"
+outline_size = 6
 
 [node name="LabelTargetB" type="Label3D" parent="Markers" unique_id=1421522312]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2.6, -2)
 pixel_size = 0.009
 billboard = 1
 text = "TARGET B"
+outline_size = 6
 
 [node name="LabelTargetC" type="Label3D" parent="Markers" unique_id=1860655878]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.6, -2)
 pixel_size = 0.009
 billboard = 1
 text = "TARGET C"
+outline_size = 6
 
 [node name="LabelDummyActor" type="Label3D" parent="Markers" unique_id=686228111]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, -2)
 pixel_size = 0.009
 billboard = 1
 text = "DUMMY ACTOR"
+outline_size = 6
 
 [node name="Player" type="CharacterBody3D" parent="." unique_id=301334283 groups=["player_actor"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 12)
@@ -516,7 +530,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape3D_8ya4j")
 
 [node name="AttackHitbox" type="Area3D" parent="Player" unique_id=551409667]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -1.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -1.55)
 script = ExtResource("4_frvy6")
 source_actor_path = NodePath("..")
 
@@ -555,6 +569,12 @@ transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 1
 material_override = SubResource("StandardMaterial3D_0hxc1")
 mesh = SubResource("CylinderMesh_adw7c")
 
+[node name="ActorState" type="Node" parent="Player" unique_id=1178709989]
+script = ExtResource("14_wwk3j")
+
+[node name="Animation" type="Node3D" parent="Player" unique_id=1333495852]
+script = ExtResource("15_2ugr5")
+
 [node name="CameraRig" type="Node3D" parent="." unique_id=1012415909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
 script = ExtResource("2_camera")
@@ -579,3 +599,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
 
 [node name="TestAttacker" parent="." unique_id=1781428234 instance=ExtResource("11_ut5rl")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+
+[node name="PassiveNpc" parent="." unique_id=211724690 instance=ExtResource("17_ju4s4")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 6)
+
+[node name="HeavyBrute" parent="." unique_id=1503786481 instance=ExtResource("19_hb1a6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -4)
+
+[node name="CreditStake" parent="." unique_id=151796310 instance=ExtResource("21_mtjhi")]

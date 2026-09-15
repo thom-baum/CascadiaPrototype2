@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ActorProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/actor_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+display_name = "Civilian"
+max_health = 60.0
+move_speed = 0.0
+sprint_speed = 0.0
+acceleration = 0.0
+turn_speed_degrees = 220.0
+greet_radius = 6.0
+stagger_threshold = 25.0
+reaction_seconds = 0.35
+stagger_seconds = 0.7
+mortal = true
+can_be_targeted = false
+respawnable = true
+respawn_delay = 6.0

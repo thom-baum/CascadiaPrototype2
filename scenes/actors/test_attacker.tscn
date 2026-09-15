@@ -7,6 +7,12 @@
 [ext_resource type="Script" uid="uid://cqyrax1qbgrxo" path="res://scripts/combat/enemy_death_component.gd" id="5_death"]
 [ext_resource type="Script" uid="uid://cl7c6683fslkq" path="res://scripts/diagnostics/enemy_death_presentation_debug.gd" id="6_deathpres"]
 [ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="7_c3asi"]
+[ext_resource type="Script" uid="uid://dyyvqg1kibed" path="res://scripts/combat/health_reaction_component.gd" id="8_reaction"]
+[ext_resource type="Script" uid="uid://bgu3srwroa2wk" path="res://scripts/actors/actor_state.gd" id="9_actorstate"]
+[ext_resource type="Resource" path="res://resources/enemies/test_attacker_attack.tres" id="10_profile"]
+[ext_resource type="Script" path="res://scripts/animation/animation_adapter.gd" id="11_uke6e"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_locomotion.gd" id="12_locomotion"]
+[ext_resource type="Resource" path="res://resources/enemies/test_attacker_actor.tres" id="13_movement"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -77,6 +83,7 @@ shape = SubResource("BoxShape3D_attack")
 
 [node name="Attacker" type="Node" parent="." unique_id=1544281012]
 script = ExtResource("4_attacker")
+profile = ExtResource("10_profile")
 
 [node name="Death" type="Node" parent="." unique_id=1814504617]
 script = ExtResource("5_death")
@@ -87,3 +94,17 @@ script = ExtResource("6_deathpres")
 [node name="Participant" type="Node" parent="." unique_id=1342801164]
 script = ExtResource("7_c3asi")
 attack_path = NodePath("../Attacker")
+
+[node name="Reaction" type="Node" parent="." unique_id=373493421]
+script = ExtResource("8_reaction")
+stagger_threshold = 12.0
+
+[node name="ActorState" type="Node" parent="." unique_id=1969808791]
+script = ExtResource("9_actorstate")
+
+[node name="Animation" type="Node3D" parent="." unique_id=1632089426]
+script = ExtResource("11_uke6e")
+
+[node name="Locomotion" type="Node" parent="."]
+script = ExtResource("12_locomotion")
+profile = ExtResource("13_movement")

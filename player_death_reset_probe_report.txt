@@ -1,0 +1,44 @@
+Actors examined (7), discovered through project groups:
+  DummyActor     path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/DummyActor
+  HeavyBrute     path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/HeavyBrute
+  PassiveNpc     path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/PassiveNpc
+  TargetA        path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/Targets/TargetA
+  TargetB        path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/Targets/TargetB
+  TargetC        path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/Targets/TargetC
+  TestAttacker   path=/root/PlayerDeathResetProbeRun/Main/TestEnvironment/TestAttacker
+
+applied 30 damage through the hurtbox chain: 7 of 7 subjects changed
+--- after PARTIAL damage (expect hurt but alive) ---
+  DummyActor     health=70.0/100.0 is_dead=false defeated=false
+  HeavyBrute     health=150.0/180.0 is_dead=false defeated=false
+  PassiveNpc     health=30.0/60.0 is_dead=false defeated=false
+  TargetA        health=70.0/100.0 is_dead=false defeated=false
+  TargetB        health=70.0/100.0 is_dead=false defeated=false
+  TargetC        health=70.0/100.0 is_dead=false defeated=false
+  TestAttacker   health=70.0/100.0 is_dead=false defeated=false
+
+killing blow applied to DummyActor
+--- after a LETHAL killing blow (expect dead and defeated) ---
+  DummyActor     health=0.0/100.0 is_dead=true defeated=true
+  HeavyBrute     health=150.0/180.0 is_dead=false defeated=false
+  PassiveNpc     health=30.0/60.0 is_dead=false defeated=false
+  TargetA        health=70.0/100.0 is_dead=false defeated=false
+  TargetB        health=70.0/100.0 is_dead=false defeated=false
+  TargetC        health=70.0/100.0 is_dead=false defeated=false
+  TestAttacker   health=70.0/100.0 is_dead=false defeated=false
+
+lethal damage applied to the PLAYER through its hurtbox
+--- after the player DIED and the death circuit restored the arena ---
+  DummyActor     health=100.0/100.0 is_dead=false defeated=false
+  HeavyBrute     health=180.0/180.0 is_dead=false defeated=false
+  PassiveNpc     health=60.0/60.0 is_dead=false defeated=false
+  TargetA        health=100.0/100.0 is_dead=false defeated=false
+  TargetB        health=100.0/100.0 is_dead=false defeated=false
+  TargetC        health=100.0/100.0 is_dead=false defeated=false
+  TestAttacker   health=100.0/100.0 is_dead=false defeated=false
+
+
+RESULT: ALL CHECKS PASSED (38)
+
+Failures:
+  none

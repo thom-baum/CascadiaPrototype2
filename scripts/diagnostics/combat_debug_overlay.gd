@@ -20,6 +20,16 @@ extends CanvasLayer
 ## Everything is found through groups and relative paths, so this needs no
 ## exported NodePath and survives the scene being reorganised.
 ##
+## PLACEMENT IS NOT DECIDED HERE. The panel joins the RESERVED SCREEN REGION
+## `ScreenRegions.Region.BOTTOM_RIGHT_DIAGNOSTICS` and that region's VBoxContainer places it, packed
+## to the BOTTOM of the region. This file used to re-derive the bottom-right corner itself on every
+## frame from `get_viewport_rect()`, and the comment on that code said why: top-right "collides with
+## the input overlay in the narrow docked viewport". That is the same magic-number dodge as the
+## save/load panel's `offset_top = 62` - a corner picked by eye against one neighbour at one window
+## size. The region replaces it: the combat panel and the input table now occupy different reserved
+## columns, so they cannot collide at ANY viewport size, and the bottom-right corner is the region's
+## bottom edge rather than arithmetic on the panel's own measured size.
+##
 ## Toggled by the same action as the input overlay (F1), so one key clears all
 ## debug UI. Development tooling; listed in CASCADIA_DELETION_MANIFEST.md.
 
@@ -33,8 +43,6 @@ const TEXT_HIT := Color(1.0, 0.55, 0.35, 1.0)
 const WIDTH := 246
 const FONT_SIZE := 11
 const BAR_WIDTH := 16
-## Margin kept between the panel and the viewport edge, on every side.
-const EDGE_MARGIN := 16
 ## How long a landed hit stays lit in the log and on its row.
 const HIT_FLASH_TIME := 1.4
 ## Lines of hit history kept on screen. Deliberately short: the panel has to stay
@@ -62,11 +70,15 @@ var _row_flash: Dictionary = {}
 
 
 func _ready() -> void:
+	# The diagnostics band, shared with the input and save/load overlays: they cannot collide on one
+	# layer because each owns a different RESERVED SCREEN REGION, and none of them is above the pause
+	# overlay. The literal value on the CombatDebugOverlay node in main.tscn reads from this constant.
+	layer = ScreenRegions.LAYER_DEBUG_PANELS
 	_build_ui()
 	_connect_hitbox()
-	# A docked viewport can be resized at any time, so the corner has to be
-	# re-derived rather than assumed.
-	get_viewport().size_changed.connect(_reclamp)
+	# NO `size_changed` HANDLER AND NO PER-FRAME CORNER MATHS. The panel is anchored to its reserved
+	# region, and anchors follow the viewport on their own, so there is nothing left to re-derive when
+	# a docked viewport is resized.
 
 
 func _process(delta: float) -> void:
@@ -82,19 +94,23 @@ func _process(delta: float) -> void:
 	_update_attack()
 	_update_actors()
 	_update_hit_log()
-	# After the rows, never before: the panel's size depends on them, so pinning
-	# it earlier would use a stale size and let the bottom edge escape again.
-	_reclamp()
-	# Re-derived every frame, because the panel's height depends on how many
-	# actors have been discovered and can change at any moment.
-	_reclamp()
+	# Nothing to re-pin afterwards. The panel's height still changes as actor rows are discovered, but
+	# it grows inside its region now: the VBoxContainer packs it against the region's BOTTOM edge, so
+	# added rows extend upward instead of pushing the bottom of the panel off the screen.
 
 
 # --- UI ---------------------------------------------------------------------
 
 func _build_ui() -> void:
+	# The reserved bottom-right diagnostics region owns this panel's geometry.
+	var column_host := ScreenRegions.join(self, ScreenRegions.Region.BOTTOM_RIGHT_DIAGNOSTICS)
+
 	_panel = PanelContainer.new()
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Right-aligned in the region and shrunk to its own text both ways, so the readout keeps its
+	# designed width instead of stretching across the region.
+	_panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	_panel.size_flags_vertical = Control.SIZE_SHRINK_END
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.05, 0.06, 0.78)
 	style.content_margin_left = 12.0
@@ -102,7 +118,8 @@ func _build_ui() -> void:
 	style.content_margin_top = 9.0
 	style.content_margin_bottom = 9.0
 	_panel.add_theme_stylebox_override("panel", style)
-	add_child(_panel)
+	# The region's container places this panel; this file never positions it.
+	column_host.add_child(_panel)
 
 	var column := VBoxContainer.new()
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -129,48 +146,16 @@ func _build_ui() -> void:
 	_hit_log.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(_hit_log)
 
-	# Anchored AFTER the content exists, and to the BOTTOM-right on purpose.
-	# Three measured traps are avoided here:
-	#   1. Applying the preset before the labels exist gives the panel a zero
-	#      width, and later growth pushes it off the RIGHT edge. It was unreadable.
-	#   2. Without an explicit grow direction the panel expands toward the END of
-	#      its axes when rows are added at runtime, pushing its bottom off the
-	#      BOTTOM edge. That was the second clipping report.
+	# NO PRESET AND NO CORNER MATHS AFTER THE CONTENT EXISTS. Three traps used to be measured here:
+	#   1. Presetting before the labels exist gave the panel a zero width and later growth pushed it off
+	#      the RIGHT edge (unreadable).
+	#   2. Without a grow direction the panel expanded toward the END of its axes as rows were added at
+	#      runtime, pushing its bottom off the BOTTOM edge (the second clipping report).
 	#   3. Top-right collides with the input overlay in the narrow docked viewport.
-	_reclamp()
-
-
-## Keeps the panel fully inside the viewport, in the bottom-right corner.
-##
-## Anchors alone could not do this. Measured: when an anchor preset was applied
-## the panel's minimum size was still small, because the damageable-actor rows
-## are created LATER, as actors are discovered. The panel then outgrew the
-## offsets it had been given and its bottom edge ran off screen - that was the
-## clipping report. An anchor preset only describes the size the panel happened
-## to have at that instant.
-##
-## So the panel is anchored top-left, which makes position and size plain pixel
-## values with no corner arithmetic, and the corner is recomputed every frame
-## from the panel's ACTUAL size. That is immune both to content growth and to the
-## docked viewport being resized.
-func _reclamp() -> void:
-	if _panel == null or not is_instance_valid(_panel):
-		return
-	_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
-
-	var viewport := _panel.get_viewport_rect().size
-	var content := _panel.get_combined_minimum_size()
-	# Never larger than the viewport, or the panel would touch both edges at once
-	# and the margin would stop meaning anything.
-	var limit := Vector2(
-		maxf(1.0, viewport.x - 2.0 * EDGE_MARGIN),
-		maxf(1.0, viewport.y - 2.0 * EDGE_MARGIN))
-	_panel.size = Vector2(minf(content.x, limit.x), minf(content.y, limit.y))
-
-	var target := Vector2(
-		viewport.x - _panel.size.x - EDGE_MARGIN,
-		viewport.y - _panel.size.y - EDGE_MARGIN)
-	_panel.position = Vector2(maxf(EDGE_MARGIN, target.x), maxf(EDGE_MARGIN, target.y))
+	# All three are now structural rather than tuned: the panel lives in the reserved bottom-right
+	# region (so it cannot reach the input column), the region's right and bottom edges are anchors (so
+	# growth cannot escape them), and the VBoxContainer packs it against the region's BOTTOM (so added
+	# rows extend upward). Nothing here needs to be recomputed when the content or the window changes.
 
 
 func _make_label(text: String, color: Color) -> Label:
@@ -277,8 +262,8 @@ func _rebuild_rows(entries: Array, ids: Array) -> void:
 		var label := _make_label("", TEXT_DIM)
 		_actor_column.add_child(label)
 		_rows[id] = label
-	# The row count changed, so the panel's size changed: re-pin the corner.
-	_reclamp()
+	# The row count changed, so the panel's size changed - and that is now entirely the region's
+	# business. The panel is packed against the bottom of its band, so a taller list extends upward.
 
 
 func _actor_name(health: HealthComponent) -> String:

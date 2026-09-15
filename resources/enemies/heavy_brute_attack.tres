@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyAttackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/enemy_attack_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+display_name = "Heavy Brute"
+windup = 1.05
+active = 0.16
+recovery = 1.0
+damage = 34.0
+detection_radius = 9.0
+engage_range = 3.4
+attack_cooldown = 2.2
+auto_attack = true
+face_target = true

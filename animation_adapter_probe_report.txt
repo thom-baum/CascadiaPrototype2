@@ -1,0 +1,18 @@
+Animation adapters found (by group): 4
+actor kinds covered: player, enemy, npc
+drove the player's attack: PlayerCombat.try_start -> true
+player intent history: idle, attack_windup, attack_active, attack_recovery
+applied a lethal blow to HeavyBrute through the existing damage chain
+HeavyBrute intent after the killing blow: dead
+NPC intent history: idle
+
+Actors driven by the adapter:
+  - Player        kind=player intent=idle           script=res://scripts/animation/animation_adapter.gd
+  - TestAttacker  kind=enemy  intent=locomotion     script=res://scripts/animation/animation_adapter.gd
+  - PassiveNpc    kind=npc    intent=idle           script=res://scripts/animation/animation_adapter.gd
+  - HeavyBrute    kind=enemy  intent=idle           script=res://scripts/animation/animation_adapter.gd
+
+RESULT: ALL CHECKS PASSED (54)
+
+Failures:
+  none

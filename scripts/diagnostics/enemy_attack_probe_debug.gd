@@ -93,6 +93,17 @@ var _iframe_before := 0
 var _leads := 0
 var _armed := false
 var _auto_frames := 0
+## One compact per-scenario phase breakdown, printed again in the summary. A HITSTOP pauses a
+## participant's per-frame callbacks, so a raw frame count measures the attack's authored timing PLUS
+## whatever freeze landed on it. "How many frames were sampled and how many of them the actor was
+## actually PROCESSING" therefore has to be readable from the transcript, and the console tail is
+## truncated - hence the re-print.
+var _phase_trace: Array[String] = []
+## The freeze service's own state on every frame where it CHANGED, for the first scenario only.
+## A frame count alone cannot distinguish "the freeze was too long" from "the actor was frozen for
+## some other reason", and those are different findings.
+var _trace: Array[String] = []
+var _last_stop_frozen := false
 ## True between moving the player and actually starting the attack, so the attacker
 ## gets FACE_SETTLE_FRAMES IDLE frames to turn toward the new position first.
 var _pending := false
@@ -283,13 +294,54 @@ func _perp_direction() -> Vector3:
 	return Vector3(-to.z, 0.0, to.x).normalized()
 
 
+## Record the freeze service's transitions for the first scenario. Print-again-in-summary, because a
+## reading that only exists mid-run can be truncated out of the transcript.
+func _trace_freeze() -> void:
+	if _step != Step.PLAIN:
+		return
+	var stop := HitStop.find_hit_stop(get_tree())
+	if stop == null:
+		return
+	if stop.is_frozen() == _last_stop_frozen:
+		return
+	_last_stop_frozen = stop.is_frozen()
+	_trace.append("PLAIN frame %d, phase %s: hitstop is_frozen -> %s (n=%d, remaining=%d ms, body_proc=%s)" % [
+		_frame, _attacker.phase_name(), str(_last_stop_frozen), stop.frozen_count(),
+		int(stop.remaining_seconds() * 1000.0), str(_body.is_physics_processing())])
+
+
 func _sample() -> void:
+	_trace_freeze()
 	_records.append({
 		"phase": _attacker.phase_name(),
 		"open": _attacker.hitbox_is_open(),
 		"tell": _telegraph.visible,
 		"health": _player_health.current_health,
+		# Whether the MEASURED enemy was FROZEN on this frame. Milestone 18's hitstop freezes the
+		# two participants of a confirmed hit, and this probe instantiates `main.tscn`, so the
+		# service is live in its tree. On a frame the enemy is frozen its phase does NOT advance,
+		# yet this probe still samples it - so counting those frames as phase duration measures the
+		# hitstop rather than the attack, and MEASURED on the PLAIN scenario (the one where the
+		# enemy's hit actually lands on an undefended player) it inflated ACTIVE past tolerance.
+		# The frames are recorded rather than dropped, so the correction is visible in the report.
+		#
+		# The gate is the SERVICE's own state, NOT `_body.is_physics_processing()`. MEASURED, and
+		# it is why this line reads the way it does: that body reports its physics flag FALSE from
+		# spawn until the FIRST release enables it, so on PLAIN - the only scenario in which a
+		# freeze runs - all 35 windup frames read as "frozen" and the windup measured 0.000 s. The
+		# freeze trace showed the real picture: the single freeze ran from frame 52 to frame 57,
+		# about 75 ms, exactly the authored duration. Both participants are frozen by the service,
+		# and this scenario's freeze includes the measured enemy, so its own state is the correct
+		# question to ask.
+		"frozen": _hitstop_is_frozen(),
 	})
+
+
+## Whether a hitstop is running right now, resolved through the service that owns the fact. By group,
+## so no scene path is hard-coded, and safe in a tree that has no hitstop at all.
+func _hitstop_is_frozen() -> bool:
+	var stop := HitStop.find_hit_stop(get_tree())
+	return stop != null and stop.is_frozen()
 
 
 func _end_recording() -> void:
@@ -334,21 +386,53 @@ func _evaluate() -> void:
 	_expect(seen == ["WINDUP", "ACTIVE", "RECOVERY"],
 		"%s: phases run once each in order (got %s)" % [label, str(seen)])
 
+	# FROZEN FRAMES ARE NOT PHASE DURATION. A frame on which the measured enemy did not process is
+	# not a frame of its attack; counting it measures Milestone 18's hitstop instead. They are
+	# counted separately and PRINTED, so the correction is visible rather than silent.
 	var counts := {"WINDUP": 0, "ACTIVE": 0, "RECOVERY": 0}
+	var frozen_frames := 0
 	for r in _records:
+		if bool(r.get("frozen", false)):
+			frozen_frames += 1
+			continue
 		var p: String = r["phase"]
 		if counts.has(p):
 			counts[p] += 1
+	if frozen_frames > 0:
+		print("[ENEMYPROBE] %s: %d frame(s) excluded - the enemy was frozen by a hitstop, not running its attack"
+			% [label, frozen_frames])
+	# Per-phase totals, INCLUDING how many of those frames the actor was actually processing. A
+	# HITSTOP pauses a participant's per-frame callbacks, so a raw frame count measures the attack's
+	# authored timing PLUS whatever freeze landed on it - and a freeze that covers a whole phase makes
+	# that phase read as 0.00 s.
+	var total := {"WINDUP": 0, "ACTIVE": 0, "RECOVERY": 0}
+	var frozen := {"WINDUP": 0, "ACTIVE": 0, "RECOVERY": 0}
+	for r in _records:
+		var tp: String = r["phase"]
+		if not total.has(tp):
+			continue
+		total[tp] += 1
+		if bool(r.get("frozen", false)):
+			frozen[tp] += 1
+	_phase_trace.append("%s: windup %d/%d frozen, active %d/%d, recovery %d/%d" % [
+		label, frozen["WINDUP"], total["WINDUP"], frozen["ACTIVE"], total["ACTIVE"],
+		frozen["RECOVERY"], total["RECOVERY"]])
 	var fps := float(Engine.physics_ticks_per_second)
 	print("[ENEMYPROBE] %s measured windup=%.2fs active=%.2fs recovery=%.2fs (authored %.2f/%.2f/%.2f)" % [
 		label, counts["WINDUP"] / fps, counts["ACTIVE"] / fps, counts["RECOVERY"] / fps,
 		_attacker.windup, _attacker.active, _attacker.recovery])
+	# THE MEASURED VALUES ARE IN THE LABEL, so a failure reports its own numbers. The console is
+	# truncated, and the mid-run print is early enough to be dropped from the transcript a reader
+	# actually sees - which would leave a failure with no measurement attached to it.
 	_expect(absf(counts["WINDUP"] / fps - _attacker.windup) <= DURATION_TOLERANCE,
-		"%s: measured windup matches authored" % label)
+		"%s: measured windup matches authored (%.3f s over %d frame(s), authored %.2f)"
+		% [label, counts["WINDUP"] / fps, counts["WINDUP"], _attacker.windup])
 	_expect(absf(counts["ACTIVE"] / fps - _attacker.active) <= DURATION_TOLERANCE,
-		"%s: measured ACTIVE matches authored" % label)
+		"%s: measured ACTIVE matches authored (%.3f s over %d frame(s), authored %.2f)"
+		% [label, counts["ACTIVE"] / fps, counts["ACTIVE"], _attacker.active])
 	_expect(absf(counts["RECOVERY"] / fps - _attacker.recovery) <= DURATION_TOLERANCE,
-		"%s: measured recovery matches authored" % label)
+		"%s: measured recovery matches authored (%.3f s over %d frame(s), authored %.2f)"
+		% [label, counts["RECOVERY"] / fps, counts["RECOVERY"], _attacker.recovery])
 
 	# Damage accounting across the whole run.
 	var changes := 0
@@ -455,6 +539,16 @@ func _finish() -> void:
 		_player_health.max_health if _player_health != null else -1.0,
 		_hurtbox.refusals_by_parry if _hurtbox != null else -1,
 		_hurtbox.refusals_by_iframes if _hurtbox != null else -1])
+	# Re-printed here, and for the same reason the failure list is: the console tail is TRUNCATED, so
+	# a reading printed only mid-run can be missing from the transcript a reader actually sees.
+	for line in _phase_trace:
+		print("[ENEMYPROBE] phase frames - %s" % line)
+	for line in _trace:
+		print("[ENEMYPROBE] freeze trace - %s" % line)
+	var stop := HitStop.find_hit_stop(get_tree())
+	if stop != null:
+		print("[ENEMYPROBE] hitstop over the whole run: freezes=%d extensions=%d releases=%d frozen_now=%d"
+			% [stop.freezes, stop.extensions, stop.releases, stop.frozen_count()])
 	if _failures.is_empty():
 		print("[ENEMYPROBE] RESULT: ALL CHECKS PASSED")
 	else:

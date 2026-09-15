@@ -15,9 +15,12 @@ extends Node
 ## AttackDefinition payload rather than the owner.
 ##
 ## This is deliberately NOT enemy AI. There is no navigation, no pathing, no
-## chase, no target selection and no second attack. The enemy stands where it is
-## placed, turns to face its target while idle, and swings on a fixed cadence when
-## the target is inside engage_range. That is the whole behaviour.
+## target selection and no second attack. This component owns exactly one thing: the
+## swing, on a fixed cadence, when the target is inside engage_range. An enemy that
+## also has to WALK to that range is given a separate `EnemyLocomotion` component -
+## moving a body is a different concern from committing an attack, and folding it in
+## here would put a body's physics inside the one component whose whole correctness
+## argument is that it is a phase machine.
 ##
 ## DEFEAT is owned by EnemyDeathComponent, not here. This component only ASKS whether
 ## the enemy is defeated; once it is, the enemy stops acting entirely and refuses
@@ -28,8 +31,33 @@ extends Node
 ## by finishing recovery. The FACING is locked at the moment the attack starts and
 ## is never re-read while it runs, so walking around a windup genuinely works.
 ##
+## THE YAW CONTRACT (Milestone 17). The body's rotation.y has exactly ONE writer at any
+## moment, and which one depends on whether an attack is committed:
+##
+##   no attack committed  ->  `EnemyLocomotion`, turning at its own turn_speed_degrees
+##   attack committed     ->  NEITHER writes; the facing committed at the start is frozen
+##
+## `_face_target()` therefore DEFERS to a Locomotion component when one is present, and this
+## component stops being a yaw writer entirely. With no Locomotion component present it keeps
+## writing yaw exactly as it always has, so every archived scene, probe and recorded result
+## stays valid. Two systems must never write the same property, and this is the single place
+## where that is decided.
+##
 ## Attach one per attacking actor, as a direct child of the body, named
 ## "Attacker", with a sibling "AttackHitbox" on GameLayers.HITBOX.
+##
+## HIT INTERRUPTION (Milestone 18). A committed attack can now be ENDED BY A HIT, and the
+## decision lives HERE - not in the reaction timer - for the reason HealthReactionComponent
+## records: whether a committed attack survives a hit is an interrupt-armor decision that
+## belongs to the actor's own action state machine. This component SUBSCRIBES to its
+## sibling "Reaction" component's `staggered` signal and ends the attack through its own
+## `cancel_attack()`, so the reaction component still cancels nothing and the attack state
+## machine is still the only thing that changes the phase. The threshold is the reaction
+## component's per-archetype `stagger_threshold`, so interruption is DATA, and an enemy
+## whose threshold is left at its inert default keeps its previous behaviour exactly.
+
+## Emitted once when a hit ended a committed attack. `amount` is the damage that did it.
+signal attack_interrupted(amount: float)
 
 ## Emitted once when an attack is actually accepted.
 signal attack_started(definition: AttackDefinition)
@@ -48,6 +76,15 @@ enum Phase { IDLE, WINDUP, ACTIVE, RECOVERY }
 ## fighting the arena at the same time.
 const GROUP_ATTACKER := &"enemy_attacker"
 
+@export_group("Data")
+## The archetype data for this attacker: what this VARIANT is allowed to change.
+##
+## Copied into the exported fields below at _ready(), before the attack definition is built from
+## them, which is what makes a second enemy variant a new .tres instead of a copied scene. Leave it
+## EMPTY and this attacker behaves exactly as its own exported values already say - so wiring a
+## profile can change numbers but can never introduce behaviour that was not already here.
+@export var profile: EnemyAttackProfile
+
 @export_group("Attack")
 ## Seconds of telegraphed commitment before the damage window opens. The
 ## telegraph is visible for exactly this long, and the actor is VULNERABLE.
@@ -62,8 +99,16 @@ const GROUP_ATTACKER := &"enemy_attacker"
 @export var damage := 20.0
 
 @export_group("Engagement")
+## Radius at which this enemy NOTICES its target, seeded one-way and one-time from the archetype
+## profile exactly like every other number here. Read by `EnemyLocomotion`, which asks its sibling
+## attacker for it rather than storing a second copy that could drift out of step.
+##
+## It lives on THIS component because the engagement tuning is one record and this is where the rest
+## of it already is. This component itself never reads it: an attacker that has not been approached
+## does not need to know how it was found.
+@export var detection_radius := 0.0
 ## Flat distance at which the attacker will commit to a swing. Outside this it
-## simply stands and faces its target.
+## simply stands and faces its target - unless an `EnemyLocomotion` component is walking it in.
 @export var engage_range := 2.8
 ## Seconds of IDLE after recovery completes before the next swing may begin.
 @export var attack_cooldown := 1.6
@@ -72,6 +117,17 @@ const GROUP_ATTACKER := &"enemy_attacker"
 @export var auto_attack := true
 ## Turn to face the target while idle. Locked once an attack commits.
 @export var face_target := true
+
+@export_group("Interruption")
+## The hit reaction component whose `staggered` signal ends a committed attack. Defaults to a
+## sibling named "Reaction".
+##
+## Duck-typed and OPTIONAL on purpose, exactly like death_path: an enemy with no reaction
+## component simply never has an attack interrupted, so every scene and every archived result
+## stays valid. The THRESHOLD is not read or duplicated here - it is the reaction component's
+## own per-archetype value, asked through `would_stagger`, so interruption is calibrated in
+## one place and by data.
+@export var reaction_path: NodePath = NodePath("../Reaction")
 
 @export_group("Death")
 ## The enemy's death state, if it has one. Read ONLY to refuse a new attack and to
@@ -87,6 +143,13 @@ const GROUP_ATTACKER := &"enemy_attacker"
 ## The telegraph node shown during WINDUP. Defaults to a sibling named
 ## "Telegraph"; actor without one simply has no visual tell.
 @export var telegraph_path: NodePath = NodePath("../Telegraph")
+## The locomotion component that owns this body's yaw and velocity, if the enemy has one. Defaults
+## to a sibling named "Locomotion".
+##
+## Present: this attacker DEFERS all yaw writing to it and never touches rotation.y. Absent: this
+## attacker writes yaw exactly as it did before that component existed. Duck-typed on `has_method`,
+## so no particular locomotion class is depended on and a scene without one is untouched.
+@export var locomotion_path: NodePath = NodePath("../Locomotion")
 ## Explicit target override. Leave empty and the target is found through
 ## target_group instead.
 @export var target_path: NodePath
@@ -100,6 +163,9 @@ const GROUP_ATTACKER := &"enemy_attacker"
 ## The attack this component performs. Built from the exported values in _ready(),
 ## the same way PlayerCombat builds its own, so the numbers live in one place.
 var attack: AttackDefinition
+## Name carried into the built AttackDefinition. Seeded from the archetype profile when one is
+## assigned, so a diagnostic reports the VARIANT's own name rather than a generic one.
+var _display_name := "Enemy Attack"
 
 var _phase: int = Phase.IDLE
 ## Seconds spent in the current phase.
@@ -115,6 +181,14 @@ var _target: Node3D
 ## ever asks whether the enemy is defeated, so any component that answers
 ## `is_defeated()` works and no particular death class is depended on.
 var _death: Node
+## The locomotion component that owns this body's yaw and velocity, when the enemy has one.
+## Untyped and duck-typed on purpose, exactly like `_death`: this component only needs to ask whether
+## some other component has taken ownership of the facing, so any component answering
+## `owns_uncommitted_facing()` works and no particular locomotion class is depended on.
+var _locomotion: Node
+## The sibling hit reaction. Untyped and duck-typed on purpose: the attacker only asks
+## whether the incoming amount reaches the reaction's authored threshold.
+var _reaction: Node
 
 ## Attacks accepted since load.
 var attacks_started := 0
@@ -140,6 +214,12 @@ var target_refusals_missing := 0
 var target_refusals_non_participant := 0
 var target_refusals_not_targetable := 0
 
+## Committed attacks a HIT ended, and how many interrupt-classified hits arrived while there
+## was nothing committed to end. Counted separately like every other cause in Cascadia, so
+## "it was interrupted" can never be confused with "the hit arrived and nothing happened".
+var attacks_interrupted := 0
+var hits_with_nothing_to_interrupt := 0
+
 ## The refusal reason last recorded by the auto-attack cadence, or -1 for none. A
 ## REASON and not a boolean on purpose: while an enemy stands next to an unusable
 ## target the cause can change (out of range, then dead, then defeated), and a
@@ -156,12 +236,43 @@ func _ready() -> void:
 	# on the frame this attacker opens its damage window the player's defensive
 	# windows have already advanced for that frame. The defences evaluate first;
 	# the attack lands second. That ordering is deliberate, not incidental.
+	_apply_profile()
 	_body = get_parent() as Node3D
-	attack = AttackDefinition.make("Enemy Attack", windup, active, recovery, damage)
+	attack = AttackDefinition.make(_display_name, windup, active, recovery, damage)
 	_hitbox = _resolve_hitbox()
 	_telegraph = _resolve_telegraph()
 	if _telegraph != null:
 		_telegraph.visible = false
+	# The ONLY interrupt-armor wiring. The sibling reaction component CLASSIFIES the hit and
+	# says so; this state machine decides what that costs a committed attack. Neither reaches
+	# into the other's state.
+	_connect_reaction()
+
+
+## Copy the assigned archetype data into this component's OWN exported fields, once, before the
+## attack definition is built from them.
+##
+## ONE-WAY AND ONE-TIME, and both halves of that are load-bearing. One-way, because nothing is ever
+## written back to the profile, so two enemies sharing one archetype cannot corrupt each other's
+## tuning. One-time, because an attack whose numbers could change while it is committed would not
+## be authoritative gameplay timing - and gameplay timing is authoritative in Cascadia.
+##
+## Every field written here already has an exported default on this component, so a profile can
+## only ever SET values this attacker already had. It cannot create behaviour.
+func _apply_profile() -> void:
+	if profile == null:
+		return
+	windup = profile.windup
+	active = profile.active
+	recovery = profile.recovery
+	damage = profile.damage
+	detection_radius = profile.detection_radius
+	engage_range = profile.engage_range
+	attack_cooldown = profile.attack_cooldown
+	auto_attack = profile.auto_attack
+	face_target = profile.face_target
+	if not String(profile.display_name).is_empty():
+		_display_name = profile.display_name
 
 
 func _physics_process(delta: float) -> void:
@@ -357,7 +468,14 @@ func _enter(next: int) -> void:
 ## Turn the body to face the target, yaw only. A body with rotation.y = 0 faces
 ## -Z, so facing a flat direction d is atan2(-d.x, -d.z). Roll and pitch are
 ## never touched - the horizon stays upright, as everywhere else in Cascadia.
+##
+## THE YAW CONTRACT. When the enemy has a locomotion component, that component owns the body's yaw
+## while no attack is committed and this function writes nothing at all. The two never both write:
+## the delegated case turns at a real turn rate, and the committed case is frozen by the phase
+## machine above. With no locomotion component this is the pre-existing instant snap, unchanged.
 func _face_target() -> void:
+	if _gives_facing_to_locomotion():
+		return
 	var target := _get_valid_target()
 	if target == null or _body == null:
 		return
@@ -391,6 +509,76 @@ func cancel_attack() -> void:
 		_hitbox.deactivate()
 	if _telegraph != null:
 		_telegraph.visible = false
+
+
+# --- Hit interruption ---------------------------------------------------------
+
+## End the committed attack because a hit was heavy enough to break it.
+##
+## THE ONLY HIT-DRIVEN CALLER of cancel_attack(), and the mechanics are deliberate:
+##
+##   1. The attack ends through `cancel_attack()`, so the damage window really closes and a
+##      stale swing can no longer land. There is no second path that changes the phase.
+##   2. The actor takes its NORMAL `attack_cooldown`, because without it the enemy is idle
+##      on the very next frame and instantly re-windups - which reads as the interruption
+##      having done nothing at all.
+##   3. It returns whether an attack was actually ended. A hit that arrives while the enemy
+##      is idle counts as having KEPT nothing, so a stale counter can never be read as an
+##      interruption.
+##
+## `amount` is only used for the report; the threshold decision belongs to the reaction
+## component, which is why this is never called for a hit below it.
+func interrupt_attack(amount: float) -> bool:
+	if _phase == Phase.IDLE:
+		return false
+	cancel_attack()
+	_cooldown_left = attack_cooldown
+	attacks_interrupted += 1
+	_log("attack INTERRUPTED by %.1f damage - cooldown %.2f s" % [amount, attack_cooldown])
+	attack_interrupted.emit(amount)
+	return true
+
+
+## A hit landed on this enemy. THE interrupt-armor decision, and it lives in the attack state
+## machine rather than in the reaction timer on purpose.
+##
+## Public so a probe can drive it directly. The production route is the reaction component's
+## `staggered` signal, which is connected to exactly this method.
+##
+## The amount is re-checked against the reaction component's OWN threshold rather than
+## trusted. `staggered` is a signal any node in the tree can be handed to, so this keeps the
+## decision honest even if it is called by hand, and it stops a partially wired reaction
+## component from being able to interrupt. An enemy with no reaction component never has an
+## attack interrupted, which is the pre-existing behaviour exactly.
+func on_hit_received(amount: float) -> bool:
+	var reaction := _get_reaction()
+	if reaction == null:
+		return false
+	if not reaction.has_method(&"would_stagger"):
+		return false
+	if not bool(reaction.call(&"would_stagger", amount)):
+		return false
+	if not interrupt_attack(amount):
+		hits_with_nothing_to_interrupt += 1
+		return false
+	return true
+
+
+## Subscribe to the sibling reaction's stagger classification, once. A missing component, one
+## with no such signal, or one already connected is a plain no-op.
+func _connect_reaction() -> void:
+	var reaction := _get_reaction()
+	if reaction == null:
+		return
+	if not reaction.has_signal(&"staggered"):
+		return
+	var handler := Callable(self, &"_on_reaction_staggered")
+	if not reaction.is_connected(&"staggered", handler):
+		reaction.connect(&"staggered", handler)
+
+
+func _on_reaction_staggered(amount: float) -> void:
+	on_hit_received(amount)
 
 
 ## Stop every attacker in the tree from starting an attack on its own. Returns how
@@ -493,6 +681,31 @@ func _is_defeated() -> bool:
 	return bool(death.call("is_defeated"))
 
 
+## Whether some other component has taken ownership of this body's yaw.
+##
+## Asked as a QUESTION rather than read as a name, so a scene that happens to have an unrelated node
+## called "Locomotion" does not silently stop this attacker from facing. A component that answers
+## `owns_uncommitted_facing()` with true is making a statement about authority, and this is where it
+## is honoured.
+func _gives_facing_to_locomotion() -> bool:
+	var locomotion := _get_locomotion()
+	if locomotion == null:
+		return false
+	if not locomotion.has_method(&"owns_uncommitted_facing"):
+		return false
+	return bool(locomotion.call(&"owns_uncommitted_facing"))
+
+
+## The locomotion component, or null when the enemy has none. Resolved once and re-resolved if it
+## goes away, so a scene that never adds one never pays for the lookup.
+func _get_locomotion() -> Node:
+	if _locomotion == null or not is_instance_valid(_locomotion):
+		_locomotion = null
+		if not String(locomotion_path).is_empty():
+			_locomotion = get_node_or_null(locomotion_path)
+	return _locomotion
+
+
 ## The enemy's death state, or null when there is none. Duck-typed on purpose: any
 ## component answering `is_defeated()` works, so this state machine depends on no
 ## particular enemy-death class.
@@ -502,6 +715,16 @@ func _get_death() -> Node:
 			return null
 		_death = get_node_or_null(death_path)
 	return _death
+
+
+## The sibling hit reaction, or null when the enemy has none. Re-resolved if it goes away, so a
+## scene that never adds one never pays for anything beyond the lookup.
+func _get_reaction() -> Node:
+	if _reaction == null or not is_instance_valid(_reaction):
+		_reaction = null
+		if not String(reaction_path).is_empty():
+			_reaction = get_node_or_null(reaction_path)
+	return _reaction
 
 
 func _log(message: String) -> void:

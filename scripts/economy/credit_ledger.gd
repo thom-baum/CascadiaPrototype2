@@ -39,6 +39,19 @@ signal credits_changed(current: int, delta: int)
 ## Emitted when Credits were actually awarded, so a gain can be shown without comparing balances.
 signal credits_awarded(actor_name: String, amount: int, total: int)
 
+## Emitted when the run's carried balance was DROPPED as a retrievable stake at a world position
+## (Milestone 19). `amount` is what was dropped, which is the balance the death COST - not the
+## balance the run was carrying, when `starting_credits` is above zero.
+signal stake_placed(amount: int, position: Vector3)
+
+## Emitted when the player walked back to a standing stake and took its contents back.
+signal stake_reclaimed(amount: int)
+
+## Emitted when a standing stake was DESTROYED without being claimed - a second death, a new run,
+## or a load. Counted separately from `stake_reclaimed` so "the run got its Credits back" can never
+## be confused with "the run lost them for good".
+signal stake_lost(amount: int)
+
 ## Every ledger joins this group, so presentation and probes can find it without a scene path.
 const GROUP_LEDGER := &"credit_ledger"
 
@@ -55,6 +68,42 @@ const GROUP_PLAYER_ACTOR := &"player_actor"
 ## deliberately explicit and trivial to replace: no currencies, rarity, loot tables, modifiers,
 ## multipliers or balancing exist, and none of them belong in this milestone.
 @export var reward_per_enemy := 100
+
+## Whether the player's DEATH resets the carried balance to `starting_credits` and clears this
+## run's reward history.
+##
+## true  - the rule the project now plays by, and the default. A Soulslike that keeps your
+##         carried Credits through a death has no stake in dying, and the reward history had a
+##         second, independent defect: enemies are REVIVED by the death circuit, so an actor
+##         the run had already been paid for came back alive, killable and targetable while
+##         being permanently worth nothing. Clearing the history is what makes a revived enemy
+##         worth Credits again.
+## false - death leaves the economy exactly as it found it. Kept as a POLICY because the
+##         superseded decision is on record (roadmap 8L.7) and a save/load or a future
+##         difficulty option may legitimately want it back.
+##
+## LIFETIME counters are deliberately NOT reset either way. `awards`, every refusal counter and
+## `loads` describe what this process has SEEN, not what the run is carrying, and clearing them
+## on a death would destroy the diagnostics that make the economy checkable.
+@export var reset_on_death := true
+
+## Whether a death's lost balance is DROPPED as a RETRIEVABLE stake at the death position
+## (Milestone 19 - the Soulslike death-drop loop).
+##
+## true  - the rule the project now plays by, and the default. `reset_on_death` decides that dying
+##         COSTS the run its carried Credits; this decides WHERE THEY GO. Dropping them makes the
+##         cost a setback the player can undo by walking back to where they fell, which is the whole
+##         point of the loop: a death that simply deletes the balance gives the player no reason to
+##         return to the place that killed them.
+##         Exactly ONE stake ever exists. A second death before the first is claimed DESTROYS the
+##         first, so dying twice without recovering is what makes the loss permanent.
+## false - the lost balance is destroyed outright. That is the Milestone 18 behaviour, kept as a
+##         POLICY because it is on record and a difficulty option may legitimately want it back.
+##
+## A stake is RUN-LOCAL and is deliberately NOT saved: a load replaces the run's world state, so a
+## stake created after the save point is destroyed rather than left standing in a world it did not
+## belong to. That is also what stops a load from paying the same stake twice.
+@export var drop_on_death := true
 
 ## Print each award and each refusal. Diagnostic.
 @export var debug_logging := false
@@ -79,11 +128,32 @@ var awards_refused_invalid := 0
 ## `awards` because a load is not a defeat: a restored balance must never inflate the award count.
 var loads := 0
 
+## Changes served by the player's death circuit, counted separately from every other reset so
+## "the balance went back to the starting value because the player DIED" can never be confused
+## with a new run, a load, or an award that merely happened to net out.
+var death_resets := 0
+
+## Stakes dropped, stakes claimed, and stakes destroyed unclaimed. Split three ways for the same
+## reason every other outcome in Cascadia is: "the player got their Credits back" must never be
+## mistakable for "the player lost them".
+var stakes_placed := 0
+var stakes_reclaimed := 0
+var stakes_lost := 0
+
+## Whether a stake is standing right now.
+var _has_stake := false
+## What the standing stake is worth.
+var _stake_amount := 0
+## Where the standing stake lies. Meaningless while `_has_stake` is false.
+var _stake_position := Vector3.ZERO
+
 ## Instance ids of enemies already paid, so ONE enemy can never pay twice - however many times a
 ## signal fires, a frame repeats, or a check is re-run.
 var _rewarded: Dictionary = {}
 ## Instance ids of defeat components already subscribed to, so re-scanning never double-connects.
 var _watched: Dictionary = {}
+## Instance ids of PLAYER death circuits already subscribed to, for the same reason.
+var _watched_deaths: Dictionary = {}
 
 
 func _ready() -> void:
@@ -92,12 +162,15 @@ func _ready() -> void:
 	# rather than being left at whatever the editor last showed.
 	credits = starting_credits
 	_watch_enemies()
+	_watch_death_circuits()
 
 
 func _physics_process(_delta: float) -> void:
 	# Enemies can be added at runtime, so the population is re-scanned. Cheap at this scale, and it
-	# is what makes the reward path enumeration-driven rather than wired to a fixed actor list.
+	# is what makes the reward path enumeration-driven rather than wired to a fixed actor list. The
+	# death circuit is re-scanned the same way, so a player added later is picked up too.
 	_watch_enemies()
+	_watch_death_circuits()
 
 
 # --- Queries -----------------------------------------------------------------
@@ -110,6 +183,23 @@ func get_credits() -> int:
 ## How many distinct enemies have been paid since the last reset.
 func rewarded_count() -> int:
 	return _rewarded.size()
+
+
+## Whether a stake is standing right now - Credits dropped by a death that the player has not yet
+## walked back to claim.
+func has_stake() -> bool:
+	return _has_stake
+
+
+## What the standing stake is worth, or 0 when there is none.
+func stake_amount() -> int:
+	return _stake_amount
+
+
+## Where the standing stake lies, or the origin when there is none. Meaningless while `has_stake()`
+## is false, so a presentation layer must ask that first rather than treating the origin as a place.
+func stake_position() -> Vector3:
+	return _stake_position
 
 
 ## The ledger in this tree, or null when there is none. Lets presentation and probes resolve it
@@ -204,6 +294,11 @@ func restore_carried_credits(amount: int) -> bool:
 	if amount < 0:
 		_log("refused: cannot restore a negative carried balance (%d)" % amount)
 		return false
+	# A LOAD REPLACES THE RUN'S WORLD STATE, and a stake is run-local and is NOT saved. The one
+	# already standing was created at some point the restored world may never have reached, so
+	# leaving it in place would pay the player for a death the loaded world never saw - the
+	# double-dip. Destroyed rather than kept, and reported through `stake_lost`.
+	clear_stake()
 	credits = amount
 	credits_earned = amount
 	loads += 1
@@ -267,12 +362,185 @@ func reset_credits() -> void:
 	awards_refused_player = 0
 	awards_refused_invalid = 0
 	loads = 0
+	death_resets = 0
+	# A NEW RUN has no history at all, so a stake left by the previous run must not survive into it.
+	# Destroyed BEFORE the counters are zeroed, so the destruction is not counted against the fresh
+	# run's own tally.
+	clear_stake()
+	stakes_placed = 0
+	stakes_reclaimed = 0
+	stakes_lost = 0
 	_rewarded.clear()
 	_log("reset to the starting balance %d" % credits)
 	credits_changed.emit(credits, 0)
 
 
+## The carried balance and this run's reward history go back to the start, because the PLAYER DIED
+## (Milestone 18).
+##
+## THE RULE, which SUPERSEDES roadmap section 8L.7. That section recorded the opposite decision -
+## "carried Credits SURVIVE the player's death and reset" - and the user has now overruled it: dying
+## costs the run its carried Credits, as a Soulslike does. The primary defect this closes is that
+## the balance survived a death at all. The SECOND, independent defect is the reward history:
+## `DeathComponent._restore_arena_actors()` brings every enemy back ALIVE at full health, so without
+## this call the arena refills with actors the ledger still remembers paying - killable, targetable
+## and permanently worth ZERO. Clearing `_rewarded` is what makes a revived enemy worth Credits
+## again, and it is the same guard `restore_reward_tracking()` exists for on a load.
+##
+## WHAT IS RESET: the carried balance, `credits_earned`, and the per-run reward history.
+## WHAT IS DELIBERATELY NOT: `awards`, every refusal counter and `loads`. Those are LIFETIME
+## counters describing what this process has observed rather than what the run carries, and clearing
+## them would destroy the diagnostics that make this module checkable. `_watched` is left alone too:
+## those are live signal connections, not history, and clearing them would let `_watch_enemies()`
+## double-connect every defeat authority in the tree.
+##
+## Returns whether anything actually changed, so a caller can report what it did rather than
+## assuming, and is safe to call at any time - including twice for one death.
+func on_player_death() -> bool:
+	if not reset_on_death:
+		_log("refused: death reset is disabled by policy")
+		return false
+	var carried_before := credits
+	var records_before := _rewarded.size()
+	var changed := credits != starting_credits or credits_earned != 0 or records_before > 0
+
+	# THE DEATH SPOT IS READ FIRST, while the player is still lying where it fell. The reset below
+	# restores the body's position, and a position read afterwards would drop the stake wherever the
+	# reset happened to put the player rather than where the run was actually lost.
+	var drop_position := _player_position()
+
+	# THE BALANCE IS SETTLED BEFORE THE DROP, and that order is load-bearing rather than tidy.
+	# Placing a stake EMITS `stake_placed`, so any listener is invited to react while a death is
+	# still half-applied. MEASURED on the first run of this pass: with the drop first, the stake's
+	# own marker claimed it from inside that signal, and this function then OVERWROTE the reclaimed
+	# balance - the Credits were destroyed AND no stake was left standing, which is the worst of both
+	# outcomes and silent. Settling the balance first makes the death atomic from the outside: a
+	# listener can only ever observe a finished death.
+	credits = starting_credits
+	credits_earned = 0
+	_rewarded.clear()
+	death_resets += 1
+
+	# The drop is placed from the balance this death TOOK - captured above, before the reset - which
+	# is what makes the stake worth walking back for.
+	if drop_on_death:
+		var dropped := maxi(0, carried_before - starting_credits)
+		if place_stake(dropped, drop_position):
+			changed = true
+
+	_log("death reset: carried %d -> %d, earned cleared, %d reward record(s) cleared"
+		% [carried_before, credits, records_before])
+	# Reported through the SAME signal every other balance change uses, with the real (negative)
+	# delta, so a display can show the loss without comparing balances. Deliberately NOT
+	# `credits_awarded`: a death earns nothing.
+	credits_changed.emit(credits, credits - carried_before)
+	return changed
+
+
+# --- The death-drop stake (Milestone 19) ---------------------------------------
+
+## Drop `amount` Credits at `position` as a RETRIEVABLE stake, DESTROYING any stake already standing.
+##
+## Public because the death path is not its only conceivable caller - a scripted loss, a boss arena
+## or a test may all legitimately want to drop a stake - and it is the ONE place a stake is created,
+## so "where did this stake come from" has a single answer.
+##
+## THE ONE-STAKE RULE. This always begins by destroying whatever stake was already standing, and
+## reports that through `stake_lost`. A run has exactly ONE stake, which is what makes a SECOND
+## death before the first was claimed cost the first one: the new stake replaces the old, and there
+## is nowhere left for the old Credits to have gone.
+##
+## `amount` of zero or less still DESTROYS the standing stake and creates nothing - dying with an
+## empty pocket is exactly that case, and it must not leave the previous stake alive.
+##
+## Returns whether a new stake was created.
+func place_stake(amount: int, position: Vector3) -> bool:
+	clear_stake()
+	if amount <= 0:
+		_log("no stake placed: this death had nothing to drop")
+		return false
+	_has_stake = true
+	_stake_amount = amount
+	_stake_position = position
+	stakes_placed += 1
+	_log("dropped a stake of %d at %s" % [amount, str(position)])
+	stake_placed.emit(amount, position)
+	return true
+
+
+## Take the standing stake's contents back into the carried balance. This is the ONLY way a stake
+## pays out, and it is a transaction rather than a transfer: the stake is gone afterwards whether or
+## not the balance was empty.
+##
+## It deliberately does NOT count as an award. Nothing was defeated, so `awards` is untouched and
+## `credits_awarded` is not emitted - the same discipline `restore_carried_credits()` follows for a
+## load. `credits_earned` IS restored, because the stake holds Credits this run earned and the death
+## took away, so leaving it at zero would make the run's earned total disagree with its balance.
+##
+## Returns the amount reclaimed, or 0 when there was no stake.
+func reclaim_stake() -> int:
+	if not _has_stake:
+		return 0
+	var amount := _stake_amount
+	_has_stake = false
+	_stake_amount = 0
+	_stake_position = Vector3.ZERO
+	stakes_reclaimed += 1
+	credits += amount
+	credits_earned += amount
+	_log("reclaimed a stake of %d -> carried %d" % [amount, credits])
+	credits_changed.emit(credits, amount)
+	stake_reclaimed.emit(amount)
+	return amount
+
+
+## Destroy the standing stake WITHOUT paying it out, and report what was destroyed. Idempotent and
+## safe to call at any time, including when no stake is standing.
+##
+## Returns the amount destroyed, or 0 when there was nothing to destroy.
+func clear_stake() -> int:
+	if not _has_stake:
+		return 0
+	var amount := _stake_amount
+	_has_stake = false
+	_stake_amount = 0
+	_stake_position = Vector3.ZERO
+	stakes_lost += 1
+	_log("stake of %d destroyed without being claimed" % amount)
+	stake_lost.emit(amount)
+	return amount
+
+
 # --- Wiring -------------------------------------------------------------------
+
+## Subscribe to every PLAYER death circuit in the tree that is not already subscribed.
+##
+## Scoped to the player on purpose. `DeathComponent.GROUP_DEATH` holds the player-controlled actor's
+## own death circuit, while an enemy carries `EnemyDeathComponent` in a deliberately different group
+## - so "an enemy was defeated" and "the player died" can never be wired to the same handler. The
+## group is the enumeration source, so a player added later is picked up without editing this file.
+func _watch_death_circuits() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node in tree.get_nodes_in_group(DeathComponent.GROUP_DEATH):
+		if node == null or not is_instance_valid(node):
+			continue
+		var id := node.get_instance_id()
+		if _watched_deaths.has(id):
+			continue
+		if not node.has_signal("death_started"):
+			continue
+		_watched_deaths[id] = true
+		node.connect("death_started", _on_player_death_started)
+		_log("watching player death circuit %s" % node.name)
+
+
+## The production death handler. It decides nothing - it hands the death to on_player_death() so
+## there is exactly ONE place that decides what a death costs.
+func _on_player_death_started() -> void:
+	on_player_death()
+
 
 ## Subscribe to every defeat authority in the tree that is not already subscribed. The GROUP is the
 ## enumeration source, so an enemy added later is picked up without editing this file.
@@ -317,6 +585,21 @@ func _is_mortal(component: Node) -> bool:
 	if not component.has_method("is_mortal"):
 		return true
 	return bool(component.call("is_mortal"))
+
+
+## The player-controlled actor's world position, or the origin when there is no player.
+##
+## Read at the MOMENT OF A DEATH, while the player is still standing where it fell - the death
+## circuit restores the body's position later in the same death, so a position read afterwards would
+## place the stake wherever the reset happened to put the player rather than where it died.
+func _player_position() -> Vector3:
+	var tree := get_tree()
+	if tree == null:
+		return Vector3.ZERO
+	var actor := tree.get_first_node_in_group(GROUP_PLAYER_ACTOR) as Node3D
+	if actor == null:
+		return Vector3.ZERO
+	return actor.global_position
 
 
 func _log(message: String) -> void:

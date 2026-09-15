@@ -1,0 +1,44 @@
+CASCADIA - NEW RUN WORLD-RESET PROBE (measured, not asserted)
+
+Actors examined (3), discovered through project groups:
+  HeavyBrute     kind=enemy path=/root/NewRunResetProbeRun/Main/TestEnvironment/HeavyBrute
+  TestAttacker   kind=enemy path=/root/NewRunResetProbeRun/Main/TestEnvironment/TestAttacker
+  PassiveNpc     kind=npc   path=/root/NewRunResetProbeRun/Main/TestEnvironment/PassiveNpc
+
+Applied 30 damage through the hurtbox chain: 3 of 3 subjects changed
+
+--- after PARTIAL damage (expect damaged but alive) ---
+  HeavyBrute     health=150.0/180.0 is_dead=false defeated=false
+  TestAttacker   health=70.0/100.0 is_dead=false defeated=false
+  PassiveNpc     health=30.0/60.0 is_dead=false defeated=false
+
+new_run() after partial damage returned code 0
+
+--- NEW RUN after partial damage: verification ---
+  HeavyBrute     health=180.0/180.0 is_dead=false defeated=false archetype=Heavy Brute
+  TestAttacker   health=100.0/100.0 is_dead=false defeated=false archetype=Arena Attacker
+  PassiveNpc     health=60.0/60.0 is_dead=false defeated=false archetype=Civilian
+  HeavyBrute     archetype=Heavy Brute live(windup=1.05 damage=34.0 range=3.40)
+  TestAttacker   archetype=Arena Attacker live(windup=0.60 damage=20.0 range=2.80)
+
+Applied 9999 damage through the hurtbox chain: 3 of 3 subjects changed
+
+--- after LETHAL damage (expect dead / defeated) ---
+  HeavyBrute     health=0.0/180.0 is_dead=true defeated=true
+  TestAttacker   health=0.0/100.0 is_dead=true defeated=true
+  PassiveNpc     health=0.0/60.0 is_dead=true defeated=true
+
+new_run() after a kill returned code 0
+
+--- NEW RUN after a kill: verification ---
+  HeavyBrute     health=180.0/180.0 is_dead=false defeated=false archetype=Heavy Brute
+  TestAttacker   health=100.0/100.0 is_dead=false defeated=false archetype=Arena Attacker
+  PassiveNpc     health=60.0/60.0 is_dead=false defeated=false archetype=Civilian
+  HeavyBrute     archetype=Heavy Brute live(windup=1.05 damage=34.0 range=3.40)
+  TestAttacker   archetype=Arena Attacker live(windup=0.60 damage=20.0 range=2.80)
+
+
+RESULT: ALL CHECKS PASSED (32)
+
+Failures:
+  none

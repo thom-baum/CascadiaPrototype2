@@ -1,0 +1,16 @@
+CASCADIA - SHARED ACTOR CONTRACT + ARCHETYPE PROBE (measured, not asserted)
+
+Actors found (discovered through groups, not a written list):
+  - player=Player alive=true can_act=true
+  - npc=PassiveNpc alive=true can_act=true
+  - enemy:HeavyBrute=HeavyBrute alive=true can_act=true
+  - enemy:TestAttacker=TestAttacker alive=true can_act=true
+
+Enemy variants:
+  - HeavyBrute script=enemy_attacker.gd profile=Heavy Brute live(windup=1.05 damage=34.0 range=3.40 cooldown=2.20 health=180.0)
+  - TestAttacker script=enemy_attacker.gd profile=Arena Attacker live(windup=0.60 damage=20.0 range=2.80 cooldown=1.60 health=100.0)
+
+RESULT: ALL CHECKS PASSED (82)
+
+Failures:
+  none

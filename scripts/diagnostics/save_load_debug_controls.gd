@@ -66,9 +66,9 @@ const TEXT_OK := Color(0.44, 0.85, 0.5, 1)
 const TEXT_BAD := Color(0.9, 0.35, 0.32, 1)
 const TEXT_VALUE := Color(0.95, 0.85, 0.45, 1)
 
-## The panel this prototype draws. Kept as a member so the debug toggle can hide it: it shares the
-## top-right corner with the gameplay HUD's Credits readout and sits on a HIGHER layer, so it is both
-## positioned clear of that readout and switchable off with the same key as the other debug overlays.
+## The panel this prototype draws. Kept as a member so the debug toggle can hide it: it is the SECOND
+## slot of the shared TOP-RIGHT STACK, directly below the gameplay HUD's Credits readout, and it is
+## switchable off with the same key as the other debug overlays.
 var _panel: PanelContainer
 var _label: Label
 var _save: GameStateSave
@@ -78,7 +78,11 @@ var _status := "no save/load action yet"
 
 
 func _ready() -> void:
-	layer = 3
+	# The diagnostics band. It shares that layer with the input and combat overlays, which is safe
+	# because each of them owns a different RESERVED SCREEN REGION - they cannot collide, so one layer
+	# for all three costs nothing. What DOES matter is that this panel is below the pause overlay, and
+	# the literal value on the SaveLoadControls node in main.tscn is read from this same constant.
+	layer = ScreenRegions.LAYER_DEBUG_PANELS
 	_build_ui()
 	_resolve()
 	_refresh()
@@ -175,25 +179,37 @@ func _key_text(action: StringName) -> String:
 
 
 func _build_ui() -> void:
+	# THE MAGIC DODGE IS GONE. This panel used to carry `offset_top = 62.0`, whose comment admitted the
+	# value existed only because at 8 it "covered the credits number completely" - a hand-tuned gap that
+	# was correct at one window size and wrong at every other, because `canvas_items` scaling grows the
+	# panel CONTENT with the theme font while a fixed pixel offset does not.
+	#
+	# It is replaced by the shared region: this panel joins the SAME VBoxContainer the HUD's Credits
+	# readout sits in, as its second child, so the gap between the two numbers is the stack's Container
+	# separation. Neither panel knows the other's height, and no value here needs re-tuning when the
+	# window is resized. `ScreenRegions.join` finds the stack the HUD already built - the HUD is
+	# declared first in main.tscn - and only builds one itself if the HUD is absent.
+	var column := ScreenRegions.join(self, ScreenRegions.Region.TOP_RIGHT_STACK)
+
 	var panel := PanelContainer.new()
 	panel.name = "Panel"
 	_panel = panel
-	panel.anchor_left = 1.0
-	panel.anchor_right = 1.0
-	panel.offset_left = -330.0
-	# BELOW the HUD's Credits readout, NOT on top of it. The HUD's credits panel occupies the top-right
-	# corner from y = 10 down to roughly y = 54 (its label plus margins), and this panel is on a higher
-	# layer, so at the original offset_top of 8 it covered the credits number completely. 62 clears it
-	# on any viewport height, and costs nothing: this is a prototype readout, not placed gameplay UI.
-	panel.offset_top = 62.0
-	panel.offset_right = -8.0
+	# The region owns the width; this panel only states how it shrinks inside the slot. Right-aligned
+	# to the region edge and vertically shrunk to its own text, so the stack can separate it from the
+	# credits panel above by a real gap.
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	# CONTROL, DO NOT CONSUME. A Control defaults to MOUSE_FILTER_STOP, which would swallow every
 	# mouse click landing inside this rectangle - and Cascadia's light and heavy attacks are bound to
 	# MOUSE BUTTONS. A read-only status panel must never be able to eat an attack, so every Control in
 	# this prototype ignores the mouse. Mouse filter is PER CONTROL, not inherited, so all three are
 	# set rather than relying on the parent.
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(panel)
+	# JOIN THE REGION. This used to be `add_child(panel)` on the CanvasLayer, which parented the panel
+	# to the LAYER and not to a Container - so it fell to the layer's origin, top-left, and drew OVER
+	# the input diagnostics instead of sitting under the credits readout. A panel that joins a region
+	# is placed by that region; one that does not is placed by nothing.
+	column.add_child(panel)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 8)

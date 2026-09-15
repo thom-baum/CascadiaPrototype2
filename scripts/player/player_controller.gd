@@ -373,6 +373,20 @@ func _can_sprint() -> bool:
 	return stamina.current_stamina > 0.0
 
 
+## Whether this actor is SPRINTING right now, as gameplay state rather than as a raw input read.
+##
+## A read-only accessor over the exact rule locomotion itself uses, so the shared actor contract
+## (ActorState) can report sprint from its OWNER instead of re-deriving it from speed or reading
+## input behind this controller's back. It owns nothing, decides nothing and changes nothing: the
+## answer is the same one that already decides the body's speed this frame.
+##
+## Deliberately NOT a new authority. Holding sprint while standing still is not sprinting, because
+## this controller only sprints while it has a direction to sprint in - and this reports that same
+## fact rather than a second opinion about it.
+func is_sprinting() -> bool:
+	return _can_sprint()
+
+
 ## Drain while actually sprinting. When the pool empties, _can_sprint() starts
 ## returning false, so the speed falls back to move_speed on its own - there is
 ## no separate "exhausted" state to keep in sync.

@@ -1,0 +1,61 @@
+PASS  AC0 the live game root was instanced
+PASS  AC0 the live test environment resolved
+PASS  AC0 the credit ledger service resolved
+PASS  AC0 the CreditStake node resolved from the live scene
+PASS  AC0 the player, its health, its hurtbox and its death circuit all resolved
+PASS  AC0 the death-drop policy is ON in the live ledger (drop_on_death=true)
+      AC0 ledger: starting=0 reward_per_enemy=100 | stake pickup radius 1.60 m
+      AC0 player death_delay 1.50 s (the revive is the actor's own, never forced by this probe)
+PASS  A the carried balance was 500 before the death (500)
+PASS  A no stake was standing before the death (has_stake=false)
+PASS  A the player really died through the hurtbox chain (is_dead=true)
+PASS  A the DEATH placed exactly one stake (0 -> 1)
+PASS  A a stake is standing after the death
+PASS  A the stake holds the balance the death took (500)
+PASS  A the carried balance was emptied by the death (0)
+PASS  A the stake went down where the player FELL (0.000 m from the death spot)
+PASS  A placing the first stake destroyed nothing (0)
+PASS  A the stake NODE is armed and visible, so the player can see what to go back for
+PASS  A the node displays the amount the death dropped (500)
+PASS  B the actor's OWN auto-reset revived the player
+PASS  B the revive did NOT reset the balance a second time (0)
+PASS  B the revive did NOT place a second stake (1)
+PASS  B the stake is still standing after the revive
+      C standing on the stake: stake at (0.0, 0.0, 0.0), player at (6.0, 0.3, 6.0), distance 0.100 m, armed=false
+PASS  C standing on the stake CLAIMED it (0 -> 1)
+PASS  C the reclaimed stake returned the Credits exactly (500, expected 500)
+PASS  C the stake is gone once claimed
+PASS  C the stake NODE is hidden once claimed
+PASS  C claiming is NOT an award: the lifetime award counter is untouched (1)
+PASS  D a second death dropped its own stake (700)
+PASS  D the player revived again
+PASS  D the second death DESTROYED the unclaimed stake (0 -> 1) - the one-stake rule
+PASS  D the new stake holds only the NEW balance, so nothing was double-dropped (300)
+PASS  D the player revived after the replacement
+      E premise: balance=0 (starting 0), standing=true, reclaimed=1, placed=3, lost=1
+PASS  E premise holds: the balance is at the run's start (0) AND an earlier stake is standing
+PASS  E dying with nothing to drop DESTROYED the standing stake (1 -> 2)
+PASS  E no stake is standing after an empty-pocket death (has_stake=false)
+PASS  E no new stake was created for a death that dropped nothing (3)
+PASS  E the stake NODE is hidden when nothing is standing
+PASS  E the player revived after the empty-pocket death
+PASS  F a stake is standing before the new run
+PASS  F the player revived before the new run
+PASS  F a NEW RUN cleared the standing stake (has_stake=false)
+PASS  F a new run begins at the documented starting balance (0)
+PASS  F a new run begins with no stake history (0 placed, 0 lost)
+PASS  F the stake NODE is hidden after a new run
+PASS  G a stake is standing before the load
+PASS  G the player revived before the load
+PASS  G the load's restore was accepted
+PASS  G the LOAD path ran, not the death path (0 -> 1)
+PASS  G the load did NOT run the death reset (1 death resets, unchanged)
+PASS  G the load cleared the standing stake, so a loaded world cannot pay for a death it never saw
+PASS  G the restored balance is the saved value (999)
+PASS  G the stake NODE is hidden after a load
+      final: balance=999 stake=false placed=1 reclaimed=0 lost=1 death_resets=1 loads=1
+      credits: carried=999 earned=999 placed=1 reclaimed=0 lost=1 death_resets=1 loads=1 awards=1
+      claim gate at the end: { "departed": true, "player_inside": false, "physics_process": true, "distance": 8.48587036132812 }
+      E premise at its death: balance=0 starting=0 standing=true reclaimed=1 placed=3 lost=1
+      C state: has_stake=false armed=false visible=false stake_pos=(0.0, 0.0, 0.0) player_pos=(0.0, 0.1, 12.0) distance=8.486 player_dead=false
+      RESULT: ALL CHECKS PASSED (51)

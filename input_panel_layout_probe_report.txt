@@ -1,0 +1,25 @@
+viewport (logical canvas): 1152 x 889
+ScreenRegions: LEFT_COLUMN_END=0.68  RIGHT_COLUMN_START=0.68  LEFT_COLUMN_SPLIT=0.18  EDGE_MARGIN=12
+INPUT_DIAGNOSTICS bounds [left,top,right,bottom]: [0.0, 0.18, 0.68, 1.0]
+PASS  the InputDebugOverlay resolved in the live tree
+PASS  the INPUT_DIAGNOSTICS region host resolved through its group
+region host: pos 12,172  size 760 x 705
+PASS  the input panel is BOUNDED by a region scroll container
+PASS  the input panel resolved inside its bound
+scroll rect: pos 12,172  size 760 x 704
+panel rect:  pos 12,172  size 760 x 416  min 760 x 416
+PASS  the panel's BOUND is inside the viewport (876 <= 889)
+PASS  the panel does not exceed its bound HORIZONTALLY (760 <= 760)
+PASS  the table either fits its bound or is reachable by scrolling (0 px over)
+PASS  the table's adaptive column container resolved
+PASS  the table is split into exactly TWO blocks (2)
+block positions: (22,244) and (371,244) -> SIDE BY SIDE
+PASS  two columns are shown only because the pair FITS the width they were given (708 <= 740)
+PASS  every input action still has a row (built 31, expected 31)
+rows built: 31 | actions in GameActions.GROUPS: 31
+PASS  a width that fits ONE column makes the table STACK instead of crushing two columns (359 px)
+narrow width 359 -> stacked=true
+PASS  restoring the width brings the two columns back
+restored width 739 -> side by side=true
+
+RESULT: ALL CHECKS PASSED (13 passed, 0 failed)

@@ -77,9 +77,11 @@ var _entries: Dictionary = {}
 
 
 func _ready() -> void:
-	# ABOVE the world, BELOW the debug overlays, so one F1 press still clears the debug layer while
-	# this feedback stays visible in the plain shipped game.
-	layer = 2
+	# ABOVE the world, BELOW every panel. A floating bar is anchored to a world position, so it can
+	# land anywhere on screen - and at the old hardcoded 2 it drew OVER the diagnostics band and the
+	# pause overlay. Read from the shared layout authority rather than a literal here, so this line
+	# and the literal on the node in main.tscn cannot drift apart.
+	layer = ScreenRegions.LAYER_ENEMY_HEALTH_BARS
 	add_to_group(GROUP_ENEMY_HEALTH_BARS)
 	_build_root()
 	_resolve()

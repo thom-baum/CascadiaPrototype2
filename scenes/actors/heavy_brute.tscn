@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://djocmtsr1c1uq"]
+
+[ext_resource type="Script" uid="uid://b4dlgmedc2y8m" path="res://scripts/combat/health_component.gd" id="1_health"]
+[ext_resource type="Script" uid="uid://to6s0nk4vi84" path="res://scripts/combat/hurtbox_component.gd" id="2_hurtbox"]
+[ext_resource type="Script" uid="uid://c5wsf8bxvc8pn" path="res://scripts/combat/hitbox_component.gd" id="3_hitbox"]
+[ext_resource type="Script" uid="uid://dfnghc7ghrwd2" path="res://scripts/combat/enemy_attacker.gd" id="4_attacker"]
+[ext_resource type="Script" uid="uid://cqyrax1qbgrxo" path="res://scripts/combat/enemy_death_component.gd" id="5_death"]
+[ext_resource type="Script" uid="uid://cl7c6683fslkq" path="res://scripts/diagnostics/enemy_death_presentation_debug.gd" id="6_deathpres"]
+[ext_resource type="Script" uid="uid://bo4wxxnv3b64f" path="res://scripts/combat/combat_participant.gd" id="7_participant"]
+[ext_resource type="Script" uid="uid://dyyvqg1kibed" path="res://scripts/combat/health_reaction_component.gd" id="8_reaction"]
+[ext_resource type="Script" uid="uid://bgu3srwroa2wk" path="res://scripts/actors/actor_state.gd" id="9_actorstate"]
+[ext_resource type="Resource" path="res://resources/enemies/heavy_brute_attack.tres" id="10_profile"]
+[ext_resource type="Script" path="res://scripts/animation/animation_adapter.gd" id="11_5lony"]
+[ext_resource type="Script" path="res://scripts/combat/enemy_locomotion.gd" id="12_locomotion"]
+[ext_resource type="Resource" path="res://resources/enemies/heavy_brute_actor.tres" id="13_movement"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+height = 2.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.34, 0.23, 0.19, 1)
+roughness = 0.85
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
+height = 2.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tell"]
+albedo_color = Color(1, 0.35, 0.08, 1)
+roughness = 0.4
+emission_enabled = true
+emission = Color(1, 0.3, 0.05, 1)
+emission_energy_multiplier = 2.4
+
+[sub_resource type="SphereMesh" id="SphereMesh_tell"]
+radius = 0.3
+height = 0.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hurt"]
+radius = 0.55
+height = 2.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_attack"]
+size = Vector3(2.8, 2.2, 3.2)
+
+[node name="HeavyBrute" type="CharacterBody3D" unique_id=31211333]
+collision_layer = 2
+collision_mask = 3
+
+[node name="Collision" type="CollisionShape3D" parent="." unique_id=1943907116]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.12, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1261093554]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.12, 0)
+material_override = SubResource("StandardMaterial3D_body")
+mesh = SubResource("CapsuleMesh_body")
+
+[node name="Telegraph" type="MeshInstance3D" parent="." unique_id=1788559502]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+visible = false
+material_override = SubResource("StandardMaterial3D_tell")
+mesh = SubResource("SphereMesh_tell")
+
+[node name="Health" type="Node" parent="." unique_id=2003645174]
+script = ExtResource("1_health")
+max_health = 180.0
+
+[node name="Hurtbox" type="Area3D" parent="." unique_id=292785796]
+script = ExtResource("2_hurtbox")
+
+[node name="Shape" type="CollisionShape3D" parent="Hurtbox" unique_id=363484424]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.12, 0)
+shape = SubResource("CapsuleShape3D_hurt")
+
+[node name="AttackHitbox" type="Area3D" parent="." unique_id=467117108]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -2.2)
+script = ExtResource("3_hitbox")
+source_actor_path = NodePath("..")
+
+[node name="Shape" type="CollisionShape3D" parent="AttackHitbox" unique_id=207882647]
+shape = SubResource("BoxShape3D_attack")
+
+[node name="Attacker" type="Node" parent="." unique_id=647896543]
+script = ExtResource("4_attacker")
+profile = ExtResource("10_profile")
+
+[node name="Death" type="Node" parent="." unique_id=1679189787]
+script = ExtResource("5_death")
+
+[node name="DeathPresentation" type="Node3D" parent="." unique_id=1907857015]
+script = ExtResource("6_deathpres")
+
+[node name="Participant" type="Node" parent="." unique_id=1024920086]
+script = ExtResource("7_participant")
+attack_path = NodePath("../Attacker")
+
+[node name="Reaction" type="Node" parent="." unique_id=752924517]
+script = ExtResource("8_reaction")
+stagger_threshold = 20.0
+
+[node name="ActorState" type="Node" parent="." unique_id=262735535]
+script = ExtResource("9_actorstate")
+
+[node name="Animation" type="Node3D" parent="." unique_id=801448291]
+script = ExtResource("11_5lony")
+
+[node name="Locomotion" type="Node" parent="."]
+script = ExtResource("12_locomotion")
+profile = ExtResource("13_movement")

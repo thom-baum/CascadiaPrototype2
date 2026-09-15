@@ -28,17 +28,179 @@ sections; this block is the entry point, not a replacement for them.
 
 ## Milestone status
 
-- **Highest accepted milestone: 13 - MINIMAL UI.** ACCEPTED by the user 2026-09-14 after a MANUAL
-  READ of the live game. The user's report: the UI pass "seems to have been implemented correctly",
-  "New Run works correctly", "save seems to be implemented correctly", and "the pause menu and debug
-  menu seem to be working fine". Full record: section 8Q. Milestone 12 (target lock-on) was the
-  previous highest accepted, accepted the same day on its own playtest; its record stands at 8P.
-- **Current active task: MILESTONE 14 - ENEMY HEALTH BARS.** Requested by the user 2026-09-14 as the
+- **THE CURRENT STATUS IS SECTION 8W (see below).** **Milestone 20 - the UI CLEANUP AND LAYOUT
+  UNIFICATION PASS - is ACCEPTED BY THE USER 2026-09-14.** The user handplayed the running game and
+  confirmed it: "Confirm this as accepted." It was applied, statically clean, MEASURED by its own
+  probe and by a regression guard, VISUALLY REVIEWED BY THE USER across frames, and refined once at
+  the user's request (8W.5, the INPUT FOUNDATION two-column reflow). Acceptance record: 8W.8. Read 8W. **Milestone 19 - the Soulslike death-drop loop -
+  is ACCEPTED for the current DEVELOPMENT STATE.** The user handplayed it on 2026-09-14 and confirmed
+  it works: "Current pass has been handplayed and verified ... consider it functionally working at
+  this point." Acceptance record: 8V.7. Its remaining polish - tying the death stake to an on-screen
+  button prompt - is explicitly DEFERRED BY THE USER, not a defect. The highest accepted milestone
+  before this was **18 - COMBAT FEEDBACK AND THE DEATH LOOP** (hitstop, enemy attack interruption,
+  death credit reset), accepted 2026-09-14 after a human playtest that followed the reach change
+  (8U.5; record at 8U.8). Milestone 17 - MINIMAL ENEMY ENGAGEMENT - remains accepted, and its leash,
+  stop-distance and speed behaviour was preserved unchanged through every part of 8U and 8V.
+  **THE UI CLEANUP AND LAYOUT UNIFICATION PASS IS ACCEPTED** - see 8W - accepted by the user
+  2026-09-14 after handplaying the running game and requesting one refinement, which is applied and
+  re-measured (8W.5). The M13 bullet
+  below is superseded as the "highest accepted" claim and is kept only for audit.
+
+- **Highest accepted milestone: 20 - UI CLEANUP AND LAYOUT UNIFICATION** (accepted 2026-09-14 by
+  HANDPLAY; accept record 8W.8). CORRECTED 2026-09-15: this bullet previously declared M13 as the
+  highest accepted milestone and was overtaken by M17, M18, M19 and M20, all of which the user
+  accepted. It is the same defect class as the section-0 staleness recorded below - a status line
+  left standing after the status changed. The chain of acceptance is: M13 (sections 8Q-8R), M17 and
+  M18 (8S-8U), M19 (8V), M20 (8W).
+- **Milestone 13 - MINIMAL UI - ACCEPTED by the user 2026-09-14 after a MANUAL READ of the live
+  game.** The user's report: the UI pass "seems to have been implemented correctly", "New Run works
+  correctly", "save seems to be implemented correctly", and "the pause menu and debug menu seem to be
+  working fine". Full record: section 8Q. This bullet carried the "highest accepted" claim until
+  2026-09-15 and is kept here, demoted rather than deleted, because it is the evidence for M13.
+  Milestone 12 (target lock-on) was the previous highest accepted, accepted the same day on its own
+  playtest; its record stands at 8P.
+- **Milestone 14 - ENEMY HEALTH BARS - IMPLEMENTED + MEASURED, still not human-read.** Requested by the user 2026-09-14 as the
   remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
   implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
   `RESULT: ALL CHECKS PASSED (165)` (up from 142), and the shipped `main.tscn` boots at 0 runtime and
   0 debugger errors. It is **NOT yet human-read**: bar size, position, colour and whether the hold
   feels right are the user's call, and the user has stated this is NOT a permanent HUD decision yet.
+- **Milestone 15 + the SECOND ENEMY VARIANT are IMPLEMENTED AND MEASURED.** The project BOOTS:
+  `main.tscn` runs at **0 debugger errors**, `is_breaked: false`, with every actor's health
+  initialising (`180.0` HeavyBrute, `60.0` NPC, `100.0` the rest).
+- **NEW RUN and PLAYER-DEATH arena reset are now BOTH ALIVE AND MEASURED (2026-09-14, regression
+  pass).** Two probes, both green, both writing readable reports:
+  `new_run_reset_probe_debug` -> `RESULT: ALL CHECKS PASSED (32)` in
+  `res://new_run_reset_probe_report.txt` (HeavyBrute returns to **180/180** after partial damage AND
+  after a killing blow, tuning intact: windup 1.05, damage 34.0, range 3.40);
+  `player_death_reset_probe_debug` -> `RESULT: ALL CHECKS PASSED (38)` in
+  `res://player_death_reset_probe_report.txt` (a killed `DummyActor` comes back **alive at 100/100**,
+  HeavyBrute 150->180, NPC 30->60, TestAttacker 70->100).
+- **DEFECT FOUND AND FIXED THIS PASS - `DeathComponent._reset_attackers()` reset only ONE attacker.**
+  It fell back to `get_first_node_in_group(GROUP_ATTACKER)`, so with two enemy variants only one was
+  reset and WHICH one depended on unspecified group order. It now enumerates the group, and an
+  authored `attacker_path` still means "reset exactly this one". ACTION state only - health and
+  defeat are deliberately NOT touched there, because the same method runs on a LOAD.
+- **SOULSLIKE DEATH SEMANTICS ADDED - a deliberate REVERSAL of the earlier decision.** Dying now
+  resets the ENCOUNTER, not just the player: `DeathComponent._restore_arena_actors()` returns every
+  other combat actor to alive at full health via each owner's own API (`HealthComponent.reset()`,
+  `restore_defeated(false)`). `EnemyDeathComponent` was previously authored specifically NOT to be
+  cleared from the player-death circuit - that is no longer the intent. The restore does NOT emit
+  `defeated`, so reviving an enemy this way cannot pay a Credit reward. A LOAD deliberately does NOT
+  do this: it restores a recorded world instead.
+- **The NPC respawn timer is CANCELLED when something else restored the actor first.** Without that,
+  the player-death arena reset or a load could revive the NPC and its own pending `respawn_delay`
+  timer would still fire afterwards, performing a SECOND restoration and bumping `respawns_made` for
+  a respawn the actor never actually made.
+- **MILESTONE 16 - ANIMATION ADAPTER - ACCEPTED BY THE USER 2026-09-14.** Accepted after a manual read
+  of the running build, in the user's words: "Everything seems to be functioning correctly. Consider
+  this milestone finished for the moment." The first real
+  CONSUMER of `ActorState`, and deliberately a thin one: it answers "given what this actor is
+  ALREADY doing, what should be playing?", never "what is this actor doing?". The pipeline runs one
+  way only - `gameplay owners -> ActorState -> AnimationAdapter -> driver` - and nothing in the
+  adapter writes gameplay state, starts or cancels anything, or owns a phase.
+- **ONE adapter, FOUR actors, THREE kinds, ONE script.** `scripts/animation/animation_adapter.gd` is
+  attached to `Player`, `TestAttacker`, `HeavyBrute` and `PassiveNpc`, and the probe measures
+  **1 distinct script** across all four. Enemy variants are distinguished by PROFILE timing, not by
+  bespoke animation code - so presentation follows the data exactly as gameplay does.
+- **`animation_adapter_probe_debug` -> `RESULT: ALL CHECKS PASSED (54)`** in
+  `res://animation_adapter_probe_report.txt`. It is NOT a screenshot test: it DRIVES real gameplay and
+  requires the adapter to follow. It started the player's attack through `PlayerCombat.try_start` and
+  observed `idle, attack_windup, attack_active, attack_recovery` in the adapter's history; it killed
+  the HeavyBrute through the real hurtbox chain and the adapter reported `dead`; the NPC's history is
+  `idle` ONLY, never a combat intent. It also asserts, per actor, that every value the adapter
+  consumed EQUALS what `ActorState` returns directly - a divergence would mean the layer is guessing
+  instead of reading, which is how a presentation layer becomes a second authority.
+- **THE ADAPTER WRITES NO MESH TRANSFORMS AND NO MATERIALS**, on purpose.
+  `EnemyDeathPresentationDebug` already owns the defeat pose (mesh transform + `material_override`)
+  and `hit_feedback_debug` owns `material_overlay`; writing either would clobber an existing
+  presentation owner mid-effect. A dead actor therefore reports the DEAD intent and lets the existing
+  defeat presentation keep owning the body.
+- **The driver is a PLACEHOLDER and its seam is one function: `_apply_intent()`.** Today it is a
+  billboarded `Label3D` coloured per intent, which makes the adapter's decision visible on every actor
+  at a glance. A real `AnimationTree`/`AnimationPlayer` replaces exactly that one function; everything
+  above it stays identical. NO animation clips, blend trees, root motion or
+  animation-driven hitboxes/timing were added - those remain deferred by explicit instruction.
+- **MEASURED IN THE SHIPPED BUILD:** `main.tscn` boots at **0 debugger errors**, `is_breaked: false`,
+  and a captured frame shows the arena rendering with an `IDLE` intent label over the player and the
+  combat overlay enumerating `HeavyBrute 180/180 [alive attack-capable targetable]`,
+  `TestAttacker 100/100 [alive attack-capable targetable]`, `PassiveNpc 60/60 [alive not-targetable]`
+  and `DummyActor`. **HUMAN-READ AND ACCEPTED:** the user read the running build and confirmed it
+  functioning, with the `IDLE` intent label legible above the actor in their own capture. What the
+  PROBE measured rather than the eye is the LABEL TRACKING through a fight: sprint, dodge, the three
+  attack phases and death were driven and asserted, not watched while moving.
+- **NPC RESPAWN IS SCAFFOLDING, NOT THE INTENDED DESIGN (user-stated 2026-09-14).** The long-term
+  goal is LEVEL-LIFETIME-based NPC respawn, not a timer. The current `respawn_delay` countdown is a
+  temporary stand-in that exists only because the test arena has no levels yet. Do NOT build
+  permanence assumptions on top of the timer, and do not treat 6 s (or the `.tres` 4.0 s) as a design
+  value.
+- **The archetype abstraction is now PROVEN, not merely present:**
+  `res://scenes/diagnostics/actor_contract_probe_debug.tscn` reports
+  `RESULT: ALL CHECKS PASSED (82)` and writes `res://actor_contract_probe_report.txt`, which names
+  `player=Player`, `npc=PassiveNpc`, `enemy:HeavyBrute=HeavyBrute`, `enemy:TestAttacker=TestAttacker`.
+  Two enemy variants, **one** behaviour script (`enemy_attacker.gd`, 1 distinct), **two** distinct
+  profiles, live values matching their `.tres`, and the profile proven to be a SEED rather than a live
+  authority (retuning the resource at runtime does not move a running attacker).
+  `Heavy Brute` vs `Arena Attacker` differ in SIX fields: windup, damage, recovery, range, cooldown,
+  active. **SUPERSEDED 2026-09-15.** This line read "**NOT yet human-played:** no human has moved,
+  attacked or fought in this build", which was true while M15/M16 were probe-only. It has been FALSE
+  since 2026-09-14: the M17/M18 playtest (8S, accept record 8U.8), the M19 playtest (8V.7) and the M20
+  handplay (8W.8) all happened in this build. The archetype measurements above are unchanged; only the
+  "never played" claim was stale.
+- **THREE DEFECTS THIS PASS, all now fixed, all recorded here so they are not repeated:**
+  1. `scenes/actors/test_attacker.tscn` was corrupted by writing nodes into it ONE `strReplace` AT A
+     TIME (six duplicate `Reaction`/`ActorState` blocks, duplicated `ext_resource` ids). It failed to
+     parse and the editor then REFUSED to reload it from disk, keeping its broken in-memory copy.
+     LESSON: build a scene with ONE whole-file write, never incremental node-by-node edits.
+  2. `passive_npc.tscn` mounted `passive_npc.gd` (which `extends CharacterBody3D`) on a plain `Node`
+     child while the `CharacterBody3D` ROOT had no script. A mismatched script/root type makes the
+     scene fail to instantiate, which took `test_environment.tscn` and `main.tscn` down with it -
+     THIS WAS THE "DOES NOT BOOT" REPORT. The script now sits on the `CharacterBody3D` root.
+  3. `passive_npc.gd` referenced the brand-new `ActorProfile` type before the editor had registered
+     that `class_name`, so the script failed to PARSE while it was being authored. That was a
+     REGISTRATION-TIMING symptom of writing files during an editor pass, NOT the cause of the boot
+     failure - and the `preload` workaround it prompted caused a worse, silent defect. The property is
+     now declared with the global `class_name`, exactly as the enemy's already was.
+- **`can_act()` was missing from `ActorState` and is now added, DELEGATED to `CombatParticipant`** so
+  the contract never becomes a second opinion about whether an actor may act.
+- **THE NPC'S PROFILE IS NOW ASSIGNED, and getting there exposed a defect worth remembering.** The
+  property was declared as `@export var profile: <preload const type>`. An exported property typed by a
+  `preload()` CONST does NOT register as a bindable property, so the scene's `profile = ExtResource(...)`
+  line was SILENTLY DROPPED: the actor ran with no archetype while looking fully wired everywhere, and
+  only the probe's behavioural check caught it. It is now declared with the global `class_name`
+  (`@export var profile: ActorProfile`), the SAME mechanism `EnemyAttacker` already uses for
+  `EnemyAttackProfile`. The old `preload` workaround was aimed at a class-registration parse failure
+  that was NOT the cause of the boot defect (that was the script-on-the-wrong-node-type problem above)
+  - do not reintroduce it.
+- **Current active task: MILESTONE 15 - SHARED COMBATANT FOUNDATION (player / enemy / NPC +
+  animation-facing state + archetype data).** Requested by the user 2026-09-14. The milestone built
+  one shared actor vocabulary (`ActorState`), one archetype DATA layer (`ActorProfile` for identity
+  and lifecycle, `EnemyAttackProfile` for attack tuning), a hit-reaction component, and the first NPC
+  archetype (`PassiveNpc`), and it wired all of them into the arena.
+- **Milestone 15 status: IMPLEMENTED + MEASURED AT RUNTIME. The boot failure is FIXED and PROVEN.**
+  `main.tscn` boots with **0 debugger errors** and `is_breaked: false`, and a captured frame renders the
+  arena with the HUD, combat overlay, input overlay and save/load panel all live. The earlier
+  "debugger breakpoint" reading recorded in this file was WRONG and is superseded: no breakpoints are
+  set anywhere in the project (`script_editor_cache.cfg` shows `breakpoints: PackedInt32Array()` on
+  every script). The project genuinely was not loading.
+- **MILESTONE 15.5 - SECOND ENEMY ARCHETYPE, MEASURED.** The arena now carries a `HeavyBrute` beside
+  the original `TestAttacker`. Both instantiate the SAME `scripts/combat/enemy_attacker.gd`; they
+  differ only by archetype resource. The probe reports `RESULT: ALL CHECKS PASSED (82)` and writes
+  `res://actor_contract_probe_report.txt` listing `player=Player`, `npc=PassiveNpc`,
+  `enemy:HeavyBrute`, `enemy:TestAttacker`, with both variants' live tuning matching their `.tres`
+  (Heavy Brute windup 1.05 / damage 34.0 / range 3.40 / cooldown 2.20 / health 180.0 against Arena
+  Attacker 0.60 / 20.0 / 2.80 / 1.60 / 100.0), ONE distinct behaviour script for 2 variants, and the
+  profiles confirmed as SEED not authority (retuning a profile at runtime does not move a running
+  attacker).
+- **NOT yet human-played.** No human has moved, attacked or fought in this build, and the pre-existing
+  probes (`ui_hud_probe_debug` 165/165, `targeting_probe_debug` 78/78, the attack / damage / parry /
+  dodge / save-load families) were NOT re-run this pass. Their previous results stand as history, not
+  as a re-verification. Do not describe the existing systems as re-baselined.
+- **Defect found and fixed during this pass:** the first version of `scenes/actors/test_attacker.tscn`
+  was corrupted by repeated single-node `strReplace` edits into it (six duplicate `Reaction` /
+  `ActorState` blocks, duplicated `ext_resource` ids) and would not load at all. Repaired with one
+  whole-file write. `ActorState` also called a method name that did not exist (`_get_actor()`), which
+  made the whole script fail to parse. Both are recorded in the manifest (C1).
 - **The engagement rule is a STAND-IN, not a system.** "Engaged" today means damaged within 4 s or
   currently locked. **No aggro, threat or deaggro system exists**, and enemy AI does not exist. The
   single function `EnemyHealthBars.is_engaged()` is the recorded seam where enemy AI will be asked
@@ -94,16 +256,47 @@ It is not duplicated here on purpose.
 
 ## Known defects and open items
 
-- **`grounding_probe_debug` FAILS one check** - `TestAttacker` rests at -0.020 against the probe's
-  0.02 tolerance. PRE-EXISTING, surfaced by a regression re-run, left UNFIXED deliberately because
-  the fix is combat-actor collision height, outside that task (12.3).
+- **`grounding_probe_debug` - RE-MEASURED 2026-09-14 during Milestone 17. The recorded failure has
+  MOVED, and the entry above it in earlier notes is now WRONG.** The earlier record was "`TestAttacker`
+  rests at -0.020 against the probe's 0.02 tolerance". Re-run twice, identically:
+
+      TestAttacker  -0.001  PASS   (was the failing actor; gravity now settles it)
+      HeavyBrute    -0.000  PASS
+      DummyActor     0.000  PASS
+      Player        -0.001  PASS
+      TargetA/B/C    0.000  PASS
+      PassiveNpc    -0.139  FAIL
+
+  So the milestone did NOT fix and did NOT break the attacker: giving the enemy bodies real gravity
+  and `move_and_slide()` settled `TestAttacker` from -0.020 to -0.001, inside tolerance. The ONE
+  failing actor is now `PassiveNpc`, and it is the same CHECK failing on a different actor.
+  MEASURED: this milestone touched neither `passive_npc.gd`, `passive_npc.tscn` nor any step
+  geometry, so the NPC's float cannot have been introduced by a change to the NPC. NOT ESTABLISHED:
+  whether the NPC also floated before this pass. The previous record named only ONE failing actor,
+  but a partial record is also possible, and no earlier full grounding transcript was found - so this
+  is NOT claimed either way. Reproduced twice, so it is stable rather than flaky.
+  LIKELY CAUSE, from measured geometry rather than guesswork: `PassiveNpc` is authored at
+  `X = -4, Z = 6`, and `Course/StepLane/Step14` is a `BoxShape3D` of `Vector3(6, 0.14, 6)` centred at
+  `X = -7, Z = 6` - so it spans exactly to `X = -4`. The NPC stands ON the step's edge, resting
+  0.14 m up, while the probe's downward ray down its centre hits the open floor at `y = 0`. The
+  probe reports `collision=0.139` against `surface=0.000`, which is what that geometry predicts.
+  That makes this a PROBE-GEOMETRY edge case rather than a broken actor.
+  NOT FIXED, and deliberately NOT guessed at: it is outside Milestone 17's scope, the fix is either
+  moving a scene-authored actor or changing the probe's sampling, and neither belongs in an
+  enemy-engagement pass. Recorded here so the next session does not re-discover it as new.
 - **Group-order dependence in the arena reset** - `DeathComponent._resolve_attacker()` falls back to
   group order when `attacker_path` is empty, so a second attacking enemy could silently change which
   attacker the player reset restores. Fragile, NOT yet a defect (12.3).
-- **BACKSTEP ORIENTATION (2026-09-12 entry) - OUTSTANDING, reconcile before relying on it.** 12.3
-  still carries this as an OPEN confirmed defect, while the gameplay half was implemented and
-  measured by 8N (2026-09-13) and the presentation half was accepted as Milestone 11. That entry has
-  NOT been re-verified since. This consolidation deliberately did NOT flip it to fixed.
+- **BACKSTEP ORIENTATION (2026-09-12 entry) - RECONCILED 2026-09-15; no longer outstanding.** 12.3
+  carried this as an OPEN confirmed defect while the gameplay half was confirmed by the user's own
+  playtest (8N.6, 2026-09-13) and the presentation half was accepted as Milestone 11 (2026-09-13).
+  The 2026-09-14 consolidation deliberately did NOT flip it, because flipping a defect entry needs a
+  pass that checks the specific claim rather than assuming. That check was made on 2026-09-15 and the
+  entry is now CLOSED, with its original wording retained inside it for audit. NOT a new measurement:
+  no probe was run, and the two anchors above are the evidence.
+  STILL OPEN, and deliberately NOT closed by that reconciliation: the SEPARATE residual item recorded
+  at 8N.6 and 8O.4 - the HUMAN read of the facing marker WHILE MOVING, dodging and backstepping. A
+  still frame cannot show it and no human has reported it.
 - Tuning, NOT defects: dodge i-frame timing for feel; enemy windup readability and cadence; parry
   window readability without animation.
 
@@ -133,12 +326,26 @@ banking and shops, checkpoints and world persistence, inventory, ranged combat, 
 NO LONGER on this list - it is the ACTIVE milestone (section 8P). Lock-on-RELATIVE dodge direction
 remains deferred even though lock-on itself is being built (8P.5).
 
+AMENDED 2026-09-14 by Milestone 17 (section 8S): "enemy AI / pursuit / navigation" is now PARTLY
+DELIVERED and must not be described as wholly unbuilt. DELIVERED: detection radius, direct-steering
+pursuit to strike range, rate-limited facing, return-to-mark on lost detection, a recorded spawn
+mark, and an `is_engaged()` authority for the health bars. STILL DEFERRED, explicitly: navigation
+and pathfinding, obstacle avoidance, multi-enemy coordination, threat tables, strafing / circling /
+spacing, attacking while moving, leash-distance tuning, and enemy-position save/load.
+
+AMENDED 2026-09-14 by Milestone 18 (section 8T). **HITSTOP IS NO LONGER DEFERRED AND IS NO LONGER
+UNBUILT** - it is DELIVERED and now USER-ACCEPTED (8U.8). **STAGGER IS PARTLY DELIVERED**: an incoming
+hit is classified against a per-actor `stagger_threshold`, and a hit at or above it INTERRUPTS a
+committed enemy swing through that enemy's own attack state machine. STILL DEFERRED: poise, hitstun,
+knockback, interrupt armor, and any stagger that displaces a body. Stated precisely because an earlier
+line here read "poise, stagger, hitstun, knockback and hitstop remain deferred AND unbuilt", which
+became false when Milestone 18 shipped.
+
 ## Current open decision
 
-**None blocking Milestone 12.** The user selected and approved target lock-on on 2026-09-14 and its
-control contract was settled in the same exchange (toggle on the existing `lock_on` binding, separate
-cycle-left / cycle-right actions), so no open question prevents the work. The NEXT milestone after 12
-is still unselected and unapproved.
+**No open decision blocks the accepted work.** Milestone 18 is ACCEPTED (8U.8). The NEXT milestone is
+**unselected and unapproved**; a recommendation with its reasoning and its alternatives is recorded at
+8U.9 and awaits the user's choice.
 
 ---
 
@@ -194,9 +401,872 @@ Evidence behind each row is in section 0.
 | 12 | Target lock-on (toggle, cycle, auto-release, camera framing) | 8P | ACCEPTED 2026-09-14 - user playtest; probe 78/78 |
 | 13 | Minimal UI pass (HUD, lock-on indicator, pause, save/load controls) | 8Q | ACCEPTED 2026-09-14 - user read; probe 142/142 |
 | 14 | Enemy health bars (damage reveals, disengagement hides) | 8R | IMPLEMENTED + MEASURED 2026-09-14 (probe 165/165); NOT yet human-read |
+| 17 | Minimal enemy engagement (detect, approach, face, stop at strike range) | 8S | ACCEPTED BY THE USER 2026-09-14 - human playtest; probe ALL CHECKS PASSED |
+| 18 | Combat feedback: hitstop, enemy attack interruption, death credit reset | 8T, 8U | ACCEPTED BY THE USER 2026-09-14 - HUMAN PLAYTEST after the reach change (8U.8). Hitstop, enemy attack interruption and the death credit reset were all confirmed IN THE HAND. Probe evidence behind it: reach probe 22/22, live_combat_credit 54/54, all 14 regression suites green, 0 errors. |
+| 19 | Soulslike death-drop loop (drop carried Credits on death, retrieve the stake, a second death destroys it) | 8V | ACCEPTED BY THE USER 2026-09-14 - HUMAN PLAYTEST (8V.7), accepted for a DEVELOPMENT STATE. Probe 51/51; every M18/M17-era regression suite green; 0 errors. Three runtime defects were found and fixed during the pass (8V.3). ONE UNRELATED SUITE IS RED: `ui_hud_probe_debug` 15 of 165, a pre-existing probe defect in its synthetic lock target, diagnosed in 8V.4 and NOT caused by this milestone. DEFERRED BY THE USER: an on-screen button prompt for the death stake. |
+| 20 | UI cleanup and layout unification (shared regions, explicit layer order, INPUT FOUNDATION reflow) | 8W | ACCEPTED BY THE USER 2026-09-14 - HANDPLAYED. One refinement was requested during review (8W.5, the INPUT FOUNDATION two-column reflow) and is applied and re-measured. Probe `input_panel_layout_probe_debug` ALL CHECKS PASSED (13, including the driven narrow-width reflow and its restoration); `focus_input_routing_probe_debug` ALL CHECKS PASSED; `main.tscn` 0 errors. Acceptance record: 8W.8. Deliberate trades recorded in 8W.7, including the centred death message overlaying the diagnostics. |
 
 Delivered milestone sections 8N and 8O were appended at the END of the file, after section 16, so
 they do not follow numerical order. That is an ordering artifact, not a missing record.
+
+---
+
+## Milestone 17 - Minimal enemy engagement (section 8S, recorded 2026-09-14)
+
+STATUS: ACCEPTED BY THE USER 2026-09-14 after HUMAN PLAYTESTING. Applied, statically clean, measured
+by its own probe, and then CONFIRMED IN PLAY: the user reported that human testing shows the enemy
+engagement concept is implemented correctly. The manual-play criterion in this milestone's acceptance
+bar is therefore satisfied by the user's own testing.
+
+RECORDED PRECISELY, because the two are different kinds of evidence and this project does not blur
+them. The PROBE measured detection, approach, the stop distance, facing convergence, the committed
+facing lock, defeat and reset - mechanically, in the real loop. The USER'S PLAYTEST is what confirms
+it reads correctly in motion, which no probe here can measure. Neither one substitutes for the other.
+
+WHAT WAS BUILT. An enemy is no longer a fixture. It notices the player inside `detection_radius`,
+walks to its own `engage_range`, turns to face at a finite rate, stops, and hands control back to
+the UNCHANGED attack loop from Milestone 8. One new component, one new data field, one recorded
+spawn mark, one yaw-ownership contract. No navigation, no AI state machine, no per-archetype code.
+
+  res://scripts/combat/enemy_locomotion.gd                     EnemyLocomotion (new, class_name)
+  res://scripts/diagnostics/enemy_engagement_probe_debug.gd    the probe (new)
+  res://scenes/diagnostics/enemy_engagement_probe_debug.tscn   its scene (new)
+  res://resources/enemies/test_attacker_actor.tres             movement record (new)
+  res://resources/enemies/heavy_brute_actor.tres               movement record (new)
+
+WHY MOVEMENT WAS THE RIGHT NEXT STEP, and what it unblocked. Every enemy body is a
+`CharacterBody3D` with NO script, so its `velocity` was permanently zero and `ActorState.is_moving()`
+answered false for every enemy for the whole life of the arena. That made the presentation intent
+`locomotion` - already implemented and already accepted in the animation adapter - UNREACHABLE for
+anything except the player. With gravity and `move_and_slide()` in place, the enemy's shared state
+became real for the first time: `is_moving()`, `flat_speed()`, `is_grounded()` and
+`has_ground_report()` all now report real values for an enemy.
+
+MEASURED, from the probe: the attacker's recorded intent history across one full engagement is
+`["idle", "locomotion", "idle", "attack_windup", "attack_active", "attack_recovery", "locomotion",
+"dead", "idle", "locomotion"]`. `locomotion` is now a reachable intent for an enemy, and the
+adapter still never reports an intent the actor did not earn.
+
+THE YAW-OWNERSHIP CONTRACT (settled here, and the only structural risk in this milestone).
+Two systems can write `rotation.y` on one body, so exactly one may own it at a time:
+
+  - NO attack committed  ->  `EnemyLocomotion` owns yaw, turning at its own `turn_speed_degrees`.
+  - An attack committed  ->  `EnemyAttacker` owns the locked facing, exactly as before.
+  - `EnemyAttacker._face_target()` DEFERS when a sibling answers `owns_uncommitted_facing()`, and
+    then writes no yaw at all. A sibling that does not answer the method changes nothing.
+  - With NO Locomotion component present, `EnemyAttacker` behaves byte-for-byte as it did before
+    this milestone, so every archived scene and probe result stays valid.
+
+This is the same shape as the project's recorded dodge rule: body orientation during a committed
+action belongs to the locked gameplay facing, not to current velocity.
+
+THE RECORDED SPAWN MARK. `EnemyLocomotion` captures `_body.global_transform` once at `_ready()`,
+following the `PassiveNpc._spawn_transform` pattern, and restores it through its OWN `reset()`. The
+same mark serves the RETURNING state and the arena reset. There is no second restore mechanism.
+
+DATA-DRIVEN ARCHETYPES, PROVEN BY MEASUREMENT. `detection_radius` was added to `EnemyAttackProfile`
+in the Engagement group its own header had earmarked for it. `move_speed`, `acceleration` and
+`turn_speed_degrees` come from the EXISTING `ActorProfile.Locomotion` group, seeded once at
+`_ready()`. The two archetypes were measured moving at DIFFERENT speeds from those profiles
+(2.60 m/s vs 1.70 m/s), with different detection radii (12 m vs 9 m) and different turn rates.
+No per-archetype movement script exists.
+
+RESET WIRING. `DeathComponent._restore_arena_actors()` now also asks each restored actor's
+`Locomotion` to reset, duck-typed through `has_method("reset")`, exactly as it already does for
+health and defeat. Measured on fresh re-runs after this change:
+`player_death_reset_probe_debug` ALL CHECKS PASSED (38) and `new_run_reset_probe_debug` ALL CHECKS
+PASSED (32). A revived enemy that still detects the player from its mark legitimately RESUMES
+PURSUIT - recorded as an expected consequence of this milestone, not as drift.
+
+PERSISTENCE LIMITATION EXPOSED BY MOVEMENT (recorded, NOT fixed). Enemy POSITION is restored by
+NEW RUN (through `GameStateSave._spawn_transforms`) and by the player-death encounter reset
+(through the locomotion mark). A LOAD does NOT restore enemy position: `GameStateSave._capture_world()`
+records health, defeated and paid, and no transform. Movement makes that gap visible for the first
+time - a loaded game leaves enemies wherever the fight left them rather than on their marks. It is
+NOT a regression (nothing repositioned enemies before this milestone either, because they never
+moved), and it was deliberately left alone: the brief forbade enemy-position save/load here.
+
+KNOWN ENEMY COLLISION BEHAVIOUR (read from code, not playtested). Both enemy bodies are
+`collision_layer = 2`, `collision_mask = 3`, so two enemies pursuing one player physically block and
+shove each other, and `move_and_slide()` does not push the player's own `CharacterBody3D`. An enemy
+that walks into the player blocks rather than shoves. Acceptable for this slice; stated rather than
+left to be discovered.
+
+ENGAGEMENT REPORTING - AND A BRIEF CONFLICT RESOLVED IN FAVOUR OF THE NON-GOAL. `EnemyLocomotion`
+now EXPOSES `is_engaged()`, which is the real authority the health-bar module was recorded as
+waiting for in section 8R. `EnemyHealthBars.is_engaged()` was deliberately NOT rewired to consult it,
+and `scripts/ui/enemy_health_bars.gd` is UNCHANGED by this milestone (verified: identical hash to its
+pre-milestone state).
+
+The brief asked for both "update the `EnemyHealthBars.is_engaged()` seam to use the locomotion
+authority where appropriate" AND "do not change the health-bar reveal/display rule", and listed
+"aggro-based health-bar display changes" as an explicit NON-GOAL. Those clauses cannot both hold:
+`is_engaged()` is the ONLY gate in `_sync_bar()` - there is no separate "already revealed" flag - so
+making it return true for a merely-DETECTING enemy would reveal an undamaged, unlocked bar. That is
+precisely the aggro-based display change the non-goal forbids, and it would also break the accepted
+UI assertion that releasing a lock lets the bar hide again.
+
+So the display rule was left exactly as it was, and the seam is documented as REACHABLE BUT
+UNCONSUMED. Wiring it is the deferred feel decision (section 8R: whether the bar shows on
+lock-on, on damage, while aggroed, or permanently for bosses), and it is now a one-line change in
+one function with a real authority to call rather than a hypothetical one.
+
+PROBES RE-RUN FRESH FOR THIS PASS, after the change, every one of them recorded from its own run:
+`enemy_engagement_probe_debug` (new; ALL CHECKS PASSED), `actor_contract_probe_debug` (82),
+`animation_adapter_probe_debug` (54), `targeting_probe_debug` (78), `new_run_reset_probe_debug` (32),
+`player_death_reset_probe_debug` (38), `grounding_probe_debug` (the failing ACTOR changed - see the
+corrected entry above). The first four match their previously recorded counts exactly.
+NOT re-run in this pass, and therefore reported only as history and NOT as fresh verification:
+`ui_hud_probe_debug` and `enemy_attack_probe_debug`. The engagement probe does assert lock-on
+acquisition/release and health-bar tracking and reveal behaviour directly, but that is a scoped
+claim, not a substitute for re-running those two suites.
+
+DELIBERATELY NOT BUILT HERE: navigation, pathfinding, obstacle avoidance, multi-enemy coordination,
+threat tables, strafing, circling, spacing, attacking while moving, combos, a second attack, ranged
+anything, jumping, separate leash-distance tuning, poise, stagger, hitstun, knockback, hitstop,
+interruption, rig swaps, animation clips, animation driver work, enemy-position save/load,
+aggro-based health-bar display, and lock-on-relative dodge.
+
+---
+
+## Milestone 18 - Combat feedback and the death loop (section 8T, recorded 2026-09-14)
+
+STATUS: **MILESTONE 18 IS ACCEPTED BY THE USER 2026-09-14 - HUMAN PLAYTEST.** CORRECTED 2026-09-15:
+this header previously read "applied and probe-proven only - it is NOT accepted", which was true when
+the pass landed and was overtaken by the acceptance at 8U.8. The acceptance was already recorded later
+in this same section (8U.8: the user's "Confirmed working via playtest."); only this header was left
+standing. What follows is the measurement basis, unchanged: applied, statically clean, and ALL THREE
+fixes are measured at runtime by a probe that observes the effect rather than the code path.
+
+THREE LIVE-PLAYTEST DEFECTS, three separate root causes. They were diagnosed before anything was
+changed, and the diagnosis is recorded here because two of the three were NOT what the symptom
+suggested.
+
+### 8T.1 HITSTOP DID NOT EXIST. There was nothing to fix.
+
+ROOT CAUSE, MEASURED: a project-wide search for `hitstop` / `hit_stop` / `hitStop` returned ZERO
+matches in any `.gd` or `.tscn`. The only hit feedback was
+`scripts/diagnostics/hit_feedback_debug.gd` - a tweened damage number and a material flash, with NO
+time component at all. The confirmed-hit signal `HitboxComponent.hit_landed` (line 19, emitted at line
+118) had exactly TWO consumers, both diagnostics (`combat_debug_overlay.gd:337`,
+`hit_feedback_debug.gd:54`), and no gameplay system read it.
+
+So the report "hitstop does not work" was accurate and the cause was that no such system was ever
+built. Nothing had regressed.
+
+POST-MILESTONE-16 CORRECTION: the Milestone 17 investigation recorded hitstop as "a feature that does
+not exist" - that was CORRECT. The user's playtest then reported it as a broken feature, which is the
+same fact from the player's side.
+
+### 8T.2 NOTHING COULD INTERRUPT AN ENEMY ATTACK.
+
+ROOT CAUSE, MEASURED: `enemy_attacker.gd` already HAD `cancel_attack()` - it ends the attack,
+deactivates the hitbox, hides the telegraph and returns the phase to IDLE. Its callers were
+`EnemyAttacker.reset()`, `EnemyDeathComponent._cancel_committed_attack()` and the death/reset path.
+THERE WAS NO HIT-DRIVEN CALLER, so a committed swing was uninterruptible by construction.
+`health_reaction_component.gd` already classified every hit against `stagger_threshold` and emitted
+`signal staggered(amount)` at line 39 - and that signal was CONNECTED NOWHERE IN THE PROJECT.
+`stagger_threshold` defaulted to 0.0, so no hit could stagger an enemy even in principle.
+
+The mechanism existed and the signal existed; only the wire between them was missing.
+
+### 8T.3 DEATH DID NOT RESET CREDITS, and had a second independent defect behind it.
+
+ROOT CAUSE, MEASURED: `death_component.gd` contained ZERO references to Credits or the ledger. Its
+`reset_playable_state()` restored health, stamina, position, committed actions and the arena's enemies
+and touched the economy not at all. The ONLY credit reset in the project was on NEW RUN
+(`game_state_save.gd:759`), which is a different lifecycle - which is exactly why "new run resets
+Credits" was true and "death resets Credits" was not.
+
+THE SECOND DEFECT, and it would still have been wrong after fixing the first: death revives every
+enemy through `_restore_arena_actors()`, but `CreditLedger._rewarded` - the per-run reward history
+keyed by defeat-component instance id - was NOT cleared. So after a death every revived enemy was
+alive, killable and targetable and permanently worth ZERO Credits. Resetting the balance alone would
+have left that in place.
+
+### 8T.4 THE RECORDED CONTRACT THIS SUPERSEDES
+
+Roadmap section 8L.7 recorded the OPPOSITE decision, in these words: "carried Credits SURVIVE the
+player's death and reset. They are not dropped, lost, halved or banked." It was an explicit, recorded
+choice, and `game_state_death_loop_probe_debug.gd:194-197` pinned it in a comment and a print. The
+user has now overruled that decision. 8L.7 is SUPERSEDED, not violated silently, and the pinning
+comment in that probe has been updated to state the new rule and to name where the reset is asserted.
+
+### 8T.5 THE FIXES
+
+HITSTOP - `scripts/combat/hit_stop.gd` (new, `class_name HitStop`), one node as a DIRECT CHILD of the
+game root in `main.tscn`. It watches every member of the new `HitboxComponent.GROUP_HITBOX` group and
+on `hit_landed` freezes `event.source` and `event.victim` for `duration` (0.075 s, exported).
+
+  THE MECHANISM, and both alternatives are REFUSED with reasons recorded in the class header:
+
+  - NOT `Engine.time_scale`. `cascadia_input.gd:535` records that "Nothing in Cascadia writes
+    `Engine.time_scale`", and `_keep_clock_running()` (line 538) forces it back to 1.0 whenever it is
+    <= 0.0 while the tree is not paused - so a zero-scale hitstop would be ERASED ON THE NEXT FRAME.
+    A non-zero micro-scale is refused too: two probes assert the scale stays exactly 1.0.
+  - NOT `get_tree().paused`. Pause belongs to `PauseMenu` and is a different concern.
+  - INSTEAD: the two participant SUBTREES have per-frame callbacks switched off with
+    `propagate_call` over `[set_process, set_physics_process]` - the idiom Godot's own documentation
+    recommends for freezing a subtree. `process_mode` is NEVER touched, so no actor can be stranded in
+    `PROCESS_MODE_DISABLED`; two existing probes assert the player stays `PROCESS_MODE_INHERIT` and
+    they are this mechanism's regression guard. `set_process_input` is deliberately NOT called, so the
+    input layer keeps buffering presses during a freeze.
+
+  The countdown is `Time.get_ticks_msec()` on a service that is never inside a frozen subtree - never
+  accumulated delta, which would be the stall risk. A concurrent hit EXTENDS the release point and adds
+  new participants rather than double-freezing, and `_exit_tree` releases as a safety net.
+
+INTERRUPTION - `EnemyAttacker` now subscribes to its sibling `Reaction.staggered` and answers it.
+`interrupt_attack()` ends the attack through the EXISTING `cancel_attack()` (so the damage window
+really closes), applies the enemy's NORMAL `attack_cooldown`, and emits `attack_interrupted`.
+`on_hit_received()` RE-VALIDATES the amount against the reaction component's own `would_stagger()`
+rather than trusting the signal, so the threshold decision keeps exactly one owner even if the method
+is called by hand. `health_reaction_component.gd` still cancels nothing - the interrupt-armor decision
+lives in the attack state machine, exactly as that component's own header requires.
+
+THE COOLDOWN IS LOAD-BEARING, not polish: without it the enemy is idle on the very next frame and
+instantly re-windups, which reads as the interruption having done nothing at all.
+
+CREDITS - `CreditLedger` gained `reset_on_death` (exported, default true), a `death_resets` counter,
+`_watch_death_circuits()` subscribing to `DeathComponent.GROUP_DEATH`, and `on_player_death()` which
+resets the carried balance to `starting_credits`, clears `credits_earned`, and clears `_rewarded` so a
+revived enemy is worth Credits again. `awards`, every refusal counter and `loads` are LIFETIME
+counters and are deliberately LEFT ALONE - clearing them would destroy the diagnostics that make the
+module checkable. `_watched`/`_watched_deaths` are live signal connections and are left alone so
+re-scanning cannot double-connect.
+
+THE SUBSCRIPTION IS SCOPED TO THE PLAYER ON PURPOSE: `DeathComponent.GROUP_DEATH` holds the
+player-controlled actor, while an enemy carries `EnemyDeathComponent` in a deliberately DIFFERENT
+group, so "an enemy was defeated" and "the player died" can never reach the same handler.
+
+ARCHETYPE THRESHOLDS ARE DATA, and were chosen to make the difference measurable against the player's
+REAL damages (`player_combat.gd`: light 15.0, heavy 32.0):
+
+    TestAttacker  Reaction.stagger_threshold = 12.0   a LIGHT hit (15) interrupts it
+    HeavyBrute    Reaction.stagger_threshold = 20.0   a light hit (15) does NOT; a heavy (32) does
+
+That is the same shape as the project's existing archetype data: the difference between the two
+enemies is two numbers in two scenes, and no per-archetype script exists.
+
+### 8T.6 PROBE RESULTS, all fresh runs this pass
+
+`combat_feedback_probe_debug` (NEW) - `RESULT: ALL CHECKS PASSED`. It is deliberately an EFFECT probe,
+not a code-path probe, because "a hitstop function exists and is called" is exactly the claim that can
+be true while nothing freezes. Measured:
+
+  - AC2 a confirmed hit started a hitstop; the enemy body did NOT move while frozen (drift 0.0000 m)
+    and its ATTACK PHASE CLOCK did not advance (0.0000 s) across 14 frozen physics frames - the
+    measurement that distinguishes a real freeze from a counter being incremented.
+  - AC3 `Engine.time_scale` stayed EXACTLY 1.0 and the tree was never paused for the whole freeze,
+    proving neither forbidden mechanism was used.
+  - AC4 the freeze ended on its own; no participant left in the frozen set; both participants
+    restored their physics processing; BOTH still report `PROCESS_MODE_INHERIT` (never changed).
+  - AC6 the lighter archetype is interrupted by a light hit and the heavier one is NOT, both by data.
+  - AC8/AC9 a real defeat paid 100 Credits, then a real player death returned the carried balance to
+    the run's starting value and cleared the reward history, while the LIFETIME award counter was
+    left intact.
+
+REGRESSION SUITES RE-RUN, every count matching its previously recorded value:
+
+    actor_contract_probe_debug         ALL CHECKS PASSED (82)
+    animation_adapter_probe_debug      ALL CHECKS PASSED (54)
+    targeting_probe_debug              ALL CHECKS PASSED (78)
+    new_run_reset_probe_debug          ALL CHECKS PASSED (32)
+    player_death_reset_probe_debug     ALL CHECKS PASSED (38)
+    credit_economy_probe_debug         ALL CHECKS PASSED
+    game_state_death_loop_probe_debug  ALL CHECKS PASSED
+    focus_input_routing_probe_debug    ALL CHECKS PASSED  (the hitstop regression guard: asserts the
+                                       player stays in the normal process mode and the scale is 1.0)
+    enemy_engagement_probe_debug       ALL CHECKS PASSED  (M17 still intact; archetype speeds still
+                                       2.60 vs 1.70, so the threshold edits did not disturb movement)
+
+NOT RE-RUN this pass, and therefore reported only as history: `ui_hud_probe_debug` and
+`enemy_attack_probe_debug`. The latter is the one most likely to be affected by the enemy-facing
+changes and SHOULD be re-run before this milestone is treated as fully regression-clean.
+
+### 8T.7 THE STALE-OPEN-BUFFER ERRORS, re-confirmed
+
+`state:diagnostics` reports three script errors in `open_script_buffers`: two in `cascadia_input.gd`
+for `TARGET_CYCLE_LEFT` / `TARGET_CYCLE_RIGHT` and one in `hit_stop.gd` for
+`HitboxComponent.GROUP_HITBOX`. ALL THREE ARE STALE ANALYSIS OF OPEN EDITOR TABS, not defects:
+
+    state:script-errors for each file returns an EMPTY list (hit_stop.gd, cascadia_input.gd,
+    hitbox_component.gd, credit_ledger.gd, combat_feedback_probe_debug.gd, all 0)
+    GameActions.TARGET_CYCLE_LEFT / TARGET_CYCLE_RIGHT exist at game_actions.gd:60-61
+    HitboxComponent.GROUP_HITBOX exists at hitbox_component.gd:24
+    and at RUNTIME the hitstop froze 3 times, which is only possible if GROUP_HITBOX resolved.
+
+Do not re-flag this class of error without confirming it outside `open_script_buffers`.
+
+---
+
+## Milestone 18 RE-VERIFICATION and two live-play gaps (section 8U, recorded 2026-09-14)
+
+WHY THIS SECTION EXISTS: the user re-reported the SAME three problems that section 8T had already
+diagnosed and fixed (hitstop, enemy attack interruption, death credit reset). This pass did NOT
+re-implement any of them. It re-ran the relevant probes on FRESH RUNS and then audited the one thing
+the probes structurally cannot see: the difference between the probe's vantage point and live play.
+
+### 8U.1 RE-VERIFIED THIS PASS - all three 8T fixes are live, on fresh runs
+
+    combat_feedback_probe_debug        ALL CHECKS PASSED      (hitstop effect, interruption by data, credit reset)
+    live_combat_credit_probe_debug     ALL CHECKS PASSED (54)  <- the LIVE path, nothing stood down
+    enemy_attack_probe_debug           ALL CHECKS PASSED      (observed a real 75 ms freeze of 2 participants)
+
+`live_combat_credit_probe_debug` is the decisive one, and it exists precisely because
+`combat_feedback_probe_debug` isolates itself: it calls `stand_down_all()`, disables each enemy's
+`Locomotion`, and opens the player's damage window with a direct `hitbox.activate()`. The live probe
+instead drives the player's REAL attack state machine (`PlayerCombat.try_start()` and its own
+STARTUP -> ACTIVE phase advance) against REAL auto-attacking enemies. Measured, live:
+
+  - AC1 hitstop: 4 frozen frame(s), drift 0.0000 m, phase clock moved 0.0000 s, duration 0.075 s.
+  - AC4 interrupt: attacked=2 interrupted=2 recovered=true; the enemy committed a NEW swing afterwards.
+  - AC6 credits: 100 -> 0 on a real lethal hit through the real hurtbox chain, `death_resets=1`,
+    `loads=0`, and the LIFETIME `awards` counter deliberately left at 1.
+
+The root causes recorded in 8T.1 / 8T.2 / 8T.3 therefore stand as the diagnosis of record:
+hitstop did not exist (now `scripts/combat/hit_stop.gd`); nothing could interrupt a committed swing
+(now `EnemyAttacker.interrupt_attack()` answering the pre-existing `Reaction.staggered`); and death
+touched the economy not at all (now `CreditLedger.on_player_death()`).
+
+### 8U.2 THE LIVE-PLAY GAP THE PROBES CANNOT SEE - the player is OUT-RANGED
+
+MEASURED FROM THE SCENE FILES, not inferred:
+
+    player  AttackHitbox offset z -1.1, BoxShape3D depth 1.2 (half 0.6)  -> forward reach 1.7 m
+    enemy   hurtbox radii: TestAttacker 0.45, HeavyBrute 0.55
+    => the player's attack CONNECTS at 1.7 + 0.45 = 2.15 m (TestAttacker), 1.7 + 0.55 = 2.25 m (HeavyBrute)
+
+    TestAttacker  engage_range 2.80 - stop_margin 0.40 -> it STOPS at 2.40 m  (0.25 m BEYOND player reach)
+    HeavyBrute    engage_range 3.40 - stop_margin 0.40 -> it STOPS at 3.00 m  (0.75 m BEYOND player reach)
+
+    enemy   AttackHitbox: TestAttacker offset z -1.7 depth 2.4 -> reach 2.9 m
+                          HeavyBrute   offset z -2.2 depth 3.2 -> reach 3.8 m
+    => an enemy strikes a 0.6 m player hurtbox from up to 3.5 m / 4.4 m, far outside its own stop range
+
+CONSEQUENCE IN LIVE PLAY: an enemy walks to its own stand-off, which is OUTSIDE the player's attack
+reach, and swings. A player standing at the natural combat distance swings back and WHIFFS. The
+interruption mechanism is correct and proven, but the attack that has to trigger it does not CONNECT.
+The probe cannot see this because it TELEPORTS the player to exactly 1.8 m (`const STAND_DISTANCE`),
+which is inside the player's reach by construction.
+
+This is a TUNING asymmetry, not a code defect, and BOTH sides of it are user-accepted tuning
+(M4 player attack, M8 enemy attack, M17 engagement). It is therefore recorded as an OPEN DECISION and
+was NOT changed unilaterally.
+
+### 8U.3 THE SECOND LIVE-PLAY GAP - the brute is immune to the light attack BY DESIGN
+
+8T.5 set `HeavyBrute Reaction.stagger_threshold = 20.0` against the player's `LIGHT_DAMAGE = 15.0`
+(`HEAVY_DAMAGE = 32.0`). So light-attacking a HeavyBrute mid-swing produces NO interruption, by
+recorded intent. A player who light-attacks the big enemy, watches it swing straight through, and
+reports "attacks do not interrupt" is describing the design rather than a defect. The TestAttacker
+(threshold 12.0) IS interrupted by that same light hit.
+
+### 8U.4 THE USER'S DECISIONS (2026-09-14)
+
+8U.2 - extend the player's attack reach ONLY enough to make the EXISTING enemy stand-off distances
+playable, and tune it against BOTH archetypes. Not an arbitrarily large weapon.
+
+8U.3 - KEEP HeavyBrute heavy-only. A light hit must still NOT interrupt it.
+
+No gameplay file, scene or tuning value had been modified when these were put to the user; the
+accepted M17 engagement behaviour (stop distance, speeds, leash) was untouched throughout.
+
+### 8U.5 THE REACH FIX, IMPLEMENTED
+
+`scenes/test_environment.tscn`, `Player/AttackHitbox` and its `Shape`:
+
+    before  offset z -1.10, BoxShape3D depth 1.2 (half 0.60)  -> reach 1.70 m, near edge 0.50 m
+    after   offset z -1.55, BoxShape3D depth 2.1 (half 1.05)  -> reach 2.60 m, near edge 0.50 m
+
+The NEAR EDGE IS UNCHANGED at 0.50 m, so the swing still starts at the body and reads as a melee
+attack rather than being inflated around the player. The box is MOVED FORWARD and LENGTHENED. 2.60 m
+covers both stand-offs (2.40 m and 3.00 m) with 0.20-0.25 m of margin and is the smallest round
+value that does.
+
+WHAT WAS DELIBERATELY NOT CHANGED: enemy `engage_range`, `stop_margin`, move speeds, detection
+radii, leash behaviour, enemy attack ranges and damage, and every `stagger_threshold`. This is a
+PLAYER-SIDE geometry change only.
+
+### 8U.6 THE MISSING VERIFICATION - reach measured AT the stand-off
+
+`scripts/diagnostics/player_attack_reach_probe_debug.gd` + its `.tscn` (NEW, diagnostic pair).
+Every probe in 8U.1 TELEPORTS the player to a hard-coded 1.8 m, which is inside the reach by
+construction, so a reach that cannot cover the stand-off is invisible to all of them. This probe
+instead sets the player at each archetype's OWN `Locomotion.stopping_distance()` and drives the
+player's REAL `PlayerCombat.try_start()` path.
+
+Fresh run this pass: `RESULT: ALL CHECKS PASSED (22)`. Measured:
+
+    geometry: reach 2.600 m, spans 0.500 m -> 2.600 m forward
+    stand-off read from each enemy's own Locomotion: TestAttacker 2.400 m, HeavyBrute 3.000 m
+    AC1 a real LIGHT attack DAMAGED TestAttacker at its own 2.40 m stand-off (100 -> 85)
+    AC2 that LIGHT hit INTERRUPTED its committed swing (0 -> 1), phase IDLE, damage window CLOSED
+    AC3 a real HEAVY attack DAMAGED HeavyBrute at 3.00 m (165 -> 133) and INTERRUPTED it (0 -> 1)
+    AC3 a LIGHT hit was REFUSED by HeavyBrute - the heavy-only contract holds
+    AC4 feel guards: reach 2.600 <= 3.000 m, near edge 0.500 <= 0.900 m
+
+### 8U.7 PROBE RESULTS, all fresh runs this pass (2026-09-14)
+
+    player_attack_reach_probe_debug     ALL CHECKS PASSED (22)   NEW this pass
+    live_combat_credit_probe_debug      ALL CHECKS PASSED (54)   real path: 4 frozen frames,
+                                                                drift 0.0000 m, phase moved
+                                                                0.0000 s; attacked=2 interrupted=2
+                                                                recovered=true; 100 -> 0 on death,
+                                                                death_resets=1, loads=0
+    combat_feedback_probe_debug         ALL CHECKS PASSED        freezes=3, releases=2
+    enemy_attack_probe_debug            ALL CHECKS PASSED        phases WINDUP/ACTIVE/RECOVERY once
+                                                                each; 5 frames excluded as
+                                                                hitstop-frozen (independent read)
+    enemy_engagement_probe_debug        ALL CHECKS PASSED        M17 intact: stop 2.40/3.00,
+                                                                speeds 2.60/1.70, leash intact
+    player_death_reset_probe_debug      ALL CHECKS PASSED (38)
+    new_run_reset_probe_debug           ALL CHECKS PASSED (32)
+    credit_economy_probe_debug          ALL CHECKS PASSED
+    game_state_death_loop_probe_debug   ALL CHECKS PASSED        post-death LOAD still restores
+    game_state_save_load_probe_debug    ALL CHECKS PASSED        save/load unaffected
+    focus_input_routing_probe_debug     ALL CHECKS PASSED        scale 1.000, process mode intact
+    actor_contract_probe_debug          ALL CHECKS PASSED (82)
+    targeting_probe_debug               ALL CHECKS PASSED (78)
+    animation_adapter_probe_debug       ALL CHECKS PASSED (54)
+
+ZERO errors across every run (`state:diagnostics`: total_errors 0).
+
+WHAT THIS DOES AND DOES NOT PROVE. The three behaviours are now measured at the distances live play
+actually produces, through the real player attack path with nothing stood down, and they pass. That
+is MEASUREMENT, not a human read. It cannot establish feel: whether the 2.60 m reach still reads as
+a melee attack, whether hitstop reads as impact, or whether the combat spacing plays well. Those are
+the user's to judge. Milestone 18 is therefore still NOT accepted.
+
+REMAINING LIMITATIONS, recorded rather than implied:
+
+  - The reach fix makes the existing stand-off PLAYABLE; it does not make the spacing GOOD. Enemy
+    stop distance and player reach are now consistent, but the resulting combat distance has not
+    been tuned for feel by a human.
+  - HeavyBrute remains uninterruptible by light attacks BY DECISION (8U.3). A player who
+    light-attacks it mid-swing and watches it swing through is seeing the design.
+  - No poise, hitstun or knockback system exists; a stagger ends the swing and applies the normal
+    cooldown, and nothing else.
+
+### 8U.8 ACCEPTED BY THE USER - HUMAN PLAYTEST, 2026-09-14
+
+STATUS: **MILESTONE 18 IS ACCEPTED.** The user played the game after the reach change and reported
+"Confirmed working via playtest." That is a HUMAN read of the running game, and it is the read that
+8T and 8U.1-8U.7 were carrying forward.
+
+WHAT THE HUMAN READ COVERS, and it is the part no probe in this project can supply:
+
+  - hitstop reads as IMPACT in the hand, not merely as a counter that increments;
+  - a light attack INTERRUPTS the TestAttacker's committed swing;
+  - a heavy attack interrupts the HeavyBrute, and a light attack does NOT (the heavy-only contract
+    of 8U.3 reads as intended in play, not as a defect);
+  - the player's death resets carried Credits as intended.
+
+WHAT THIS DOES NOT CLOSE, recorded so it is not implied: Milestone 14 (enemy health bars) is still
+IMPLEMENTED + MEASURED and NOT human-read. The reach of 2.60 m was accepted in play, which settles
+the "does it still read as a melee attack" question 8U.7 explicitly left open.
+
+NO gameplay, scene or tuning value changed to make this acceptance happen. The only files written by
+this pass are documentation.
+
+### 8U.9 RECOMMENDED NEXT GOAL - NOT APPROVED, awaiting the user's decision
+
+RECOMMENDATION: **Milestone 19 - the Soulslike death-drop loop.** On the player's death, the carried
+balance is dropped as a RETRIEVABLE stake at the death position; returning to it reclaims it, and a
+second death before reclaiming destroys the previous stake.
+
+WHY THIS IS THE SENSIBLE NEXT GOAL:
+
+  - Milestone 18 made death reset carried Credits to `starting_credits`. That DELETES the balance
+    with no way to get it back, so the economy is currently punitive without being a loop: there is a
+    penalty and no retrieval. The drop-and-retrieve stake is what makes a Soulslike death a decision
+    rather than only a loss.
+  - It is PURE GAMEPLAY - no assets, no animation, no new presentation. That matches the project
+    identity rule ("the foundation must behave correctly using primitive geometry and placeholder
+    presentation") and needs only a primitive marker.
+  - It builds directly on the death path Milestone 18 just created and the user just accepted, so
+    the area is fresh and the contracts are already in place (`DeathComponent.GROUP_DEATH`,
+    `CreditLedger.on_player_death()`, the existing save/load contract).
+  - It is ALREADY RECORDED as future work rather than invented here - section 13 of this file lists
+    "Player death Credit loss / retrieval (drop carried Credits on death, recover them on the corpse,
+    or lose them permanently). RECORDED AS FUTURE WORK, NOT IMPLEMENTED."
+  - It is a bounded milestone: one stake node, one reclaim trigger, one second-death rule, plus the
+    save/load question of whether an unreclaimed stake survives a save.
+
+ALTERNATIVES, recorded with their trade-offs rather than discarded:
+
+  - ANIMATION INTEGRATION. The highest-signal deferred item on the list, and nearly every
+    readability limitation in this file traces to it (the parry window "is hard to READ without
+    animation", 8C). It is also the largest and the only one that requires ART ASSETS, so it is a
+    different kind of milestone from everything delivered so far.
+  - ENEMY NAVIGATION AND MULTI-ENEMY COORDINATION. Navigation, pathfinding, obstacle avoidance,
+    threat tables and strafing are all explicitly still deferred (see the amendment above). Valuable,
+    but the arena is a single open room today, so navigation buys less than it will once there is a
+    level.
+
+STATUS: SUPERSEDED BY 8V. The user selected this goal, and Milestone 19 is now BUILT. Kept for audit
+as the record of why this was chosen.
+
+---
+
+## Milestone 19 - The Soulslike death-drop loop (section 8V, recorded 2026-09-14)
+
+STATUS: **MILESTONE 19 IS ACCEPTED BY THE USER 2026-09-14 FOR THE CURRENT DEVELOPMENT STATE -
+HUMAN PLAYTEST (record now written at 8V.7 below).** CORRECTED 2026-09-15: this header previously read
+"NOT human-playtested ... it is NOT accepted", which was true when the pass landed and was overtaken by
+the user's playtest. The measurement basis, unchanged: BUILT, statically clean, and MEASURED at runtime
+by a probe that observes the effect rather than the code path (51 checks, ALL PASSED). The remaining
+polish - an on-screen button prompt for the death stake - is DEFERRED BY THE USER, not a defect.
+
+### 8V.1 THE MECHANIC
+
+When the player dies, the carried balance above `starting_credits` is DROPPED as a retrievable stake
+at the spot the player fell, and the balance then resets as Milestone 18 already established. Walking
+back onto the stake reclaims it. A SECOND death before reclaiming DESTROYS the previous stake, so an
+unclaimed death costs those Credits for good. Dying with nothing to drop still destroys the standing
+stake - an empty pocket must not leave the previous stake alive to collect later.
+
+This closes the gap 8U.9 identified: Milestone 18 gave death a PENALTY with no retrieval, which is a
+loss rather than a loop. It is the mechanic section 13 has carried since Milestone 9 as "Player death
+Credit loss / retrieval ... RECORDED AS FUTURE WORK, NOT IMPLEMENTED".
+
+### 8V.2 THE IMPLEMENTATION
+
+`CreditLedger` (existing owner) gained the stake as run-local state: `has_stake()`,
+`stake_amount()`, `stake_position()`, `place_stake()`, `reclaim_stake()` (transactional - the stake is
+gone whether or not the balance was empty, and it deliberately does NOT count as an `award`),
+`clear_stake()`, the signals `stake_placed` / `stake_reclaimed` / `stake_lost`, the counters
+`stakes_placed` / `stakes_reclaimed` / `stakes_lost`, and the `drop_on_death` policy export.
+
+`on_player_death()` remains the ONE place a death's cost is decided. It now places the stake from the
+balance the death is ABOUT TO TAKE, then empties the balance - that order is the whole rule, because
+the stake has to be created while `credits` still holds it.
+
+`reset_credits()` (NEW RUN) and `restore_carried_credits()` (LOAD) both destroy a standing stake. A
+stake is run-local and is NOT saved, so a loaded world must not pay for a death it never saw - the
+same double-dip guard each path already applies to reward history.
+
+`scripts/economy/credit_stake.gd` + `scenes/props/credit_stake.tscn` (NEW): ONE primitive marker
+node, instanced as `CreditStake` under `TestEnvironment` in `scenes/test_environment.tscn`. It OWNS
+NO TRUTH - it reads `has_stake()` / `stake_amount()` / `stake_position()` and calls
+`reclaim_stake()`, exactly as the HUD reads the ledger rather than storing a copy. It is hidden
+(`visible = false`) when nothing is standing.
+
+### 8V.3 THREE DEFECTS FOUND AND FIXED DURING THIS PASS
+
+All three were found by MEASUREMENT, not by reading the code, and each is recorded because the
+mechanism looked correct before it was run.
+
+1. THE STAKE WAS CLAIMED INSIDE ITS OWN CREATION SIGNAL. `place_stake()` emits `stake_placed`; the
+   marker swept immediately and reclaimed it, because the player was standing on the death spot.
+   `on_player_death()` then overwrote `credits` afterwards, so the Credits were destroyed with NO
+   stake left. Fixed by making the death transaction atomic and by gating the claim.
+
+2. THE CORPSE RECLAIMED ITS OWN STAKE. `reset_playable_state()` clears `_dead` BEFORE
+   `_restore_position()`, so the player briefly reports ALIVE while still standing where it fell. A
+   dead-claimant gate alone was therefore insufficient; the fix is a dead gate AND a departure
+   requirement.
+
+3. THE REAL DEFECT: THE CLAIM READ STALE OVERLAP. Claiming used `get_overlapping_bodies()`, which
+   lags live transforms by one physics step. On the revive frame the stake still saw the player
+   overlapping while liveness and departure had both already cleared, so REVIVING HANDED THE CREDITS
+   STRAIGHT BACK and the mechanic did nothing. MEASURED before the fix, from the probe report:
+   `stake at (0.0, 0.0, 0.0), player at (6.0, 0.3, 6.0), distance 0.100 m, armed=false` - a stale
+   overlap read reported as a 0.100 m claim. Fixed by making the claim DISTANCE-driven and
+   overlap-free, so no stale physics read can author a claim. This one would have shipped as
+   "the stake sometimes works".
+
+### 8V.4 PROBE RESULTS, fresh runs this pass
+
+`death_drop_credit_probe_debug` (NEW) - `RESULT: ALL CHECKS PASSED (51)`. It writes
+`res://death_drop_credit_probe_report.txt` (the project's existing report-file convention) so the
+full result survives console truncation. Scenarios, all through the REAL death circuit, the REAL
+hurtbox chain and the REAL stake node - the probe moves a body and waits, it never calls
+`reclaim_stake()`:
+
+    A  the death dropped exactly one stake of 500 at 0.000 m from the death spot, emptied the
+       balance, and made the marker armed and visible
+    B  the actor's OWN auto-reset revived the player WITHOUT resetting the balance a second time or
+       placing a second stake, and the stake was still standing afterwards
+    C  standing on the stake CLAIMED it, returned exactly 500, hid the marker, and did NOT count as
+       an award (the lifetime award counter was untouched)
+    D  a second death dropped its own stake of 700, and the NEXT death DESTROYED the unclaimed stake
+       and dropped only the new balance - the one-stake rule, with no double-drop
+    E  an empty-pocket death destroyed the standing stake and created NOTHING (4 checks). This
+       scenario also STATES its own premise and asserts it, so it cannot pass or fail for an
+       invisible reason
+    F  a NEW RUN cleared the standing stake, reset the balance and zeroed the stake history
+    G  a LOAD cleared the standing stake and restored the saved balance, without running the death
+       reset
+
+REGRESSION SUITES RE-RUN with the drop in place:
+
+    live_combat_credit_probe_debug      ALL CHECKS PASSED (54)  (M18 still intact end to end)
+    actor_contract_probe_debug          ALL CHECKS PASSED (82)  (the new arena node disturbs nothing)
+    targeting_probe_debug               ALL CHECKS PASSED (78)  (lock-on is intact; see the note below)
+    new_run_reset_probe_debug           ALL CHECKS PASSED (32)
+    credit_economy_probe_debug          ALL CHECKS PASSED
+    player_death_reset_probe_debug      ALL CHECKS PASSED (38)
+    game_state_death_loop_probe_debug   ALL CHECKS PASSED
+    main.tscn                           0 runtime errors (the shipped scene boots with the stake in it)
+
+ONE SUITE IS NOT GREEN, AND IT IS NOT THIS MILESTONE'S. `ui_hud_probe_debug` reports
+`15 of 165 FAILED`, reproduced identically on a second fresh run. THIRTEEN of the fifteen are
+"the lock is taken on the probe target" and its four release scenarios, plus two dependent counts.
+The failures are CONFINED to lock-on against the probe's own SYNTHETIC enemy and involve no Credits,
+no stake and no ledger state.
+
+DIAGNOSIS, measured rather than assumed - it is a PROBE defect, not a product one:
+  - `ui_hud_probe_debug` builds its temporary enemy with a `HealthComponent` and nothing else. Its
+    own report confirms this: it PASSES "the temporary enemy carries a HealthComponent" and "the
+    temporary enemy is tracked", and then FAILS to lock it.
+  - `targeting_probe_debug`, which builds its temporary targets WITH a `CombatParticipant` ("the
+    temporary target carries a CombatParticipant" PASSES), locks them successfully and reports
+    ALL CHECKS PASSED (78) - including locks on temporary targets and lock release on defeat,
+    invalidation, range and player death.
+  - So target eligibility requires a `CombatParticipant` (the single validity authority,
+    `CombatParticipant.is_usable_target()`), and the ui_hud probe's synthetic enemy has never had
+    one. `_targeting.is_locked()` ALSO passes while the lock is on a DIFFERENT actor, which is why
+    the probe reports a lock being "genuinely held" and still cannot lock ITS target.
+  - M19 touched neither targeting, lock-on, `CombatParticipant`, nor the health-bar module's
+    tracked set. Nothing in this milestone's change set can reach these checks.
+
+RECORDED AS AN OPEN DEFECT, NOT SMOOTHED OVER: `ui_hud_probe_debug` needs its temporary enemy
+composed like the one in `targeting_probe_debug`. That is a DIAGNOSTIC fix, it belongs to whoever
+next touches the HUD suite, and it is NOT part of Milestone 19. Do not describe the suite as green
+until it is fixed. Note also that the console reported a window focus loss during the run, so a
+contributing environmental cause cannot be fully excluded - but the `CombatParticipant` gap above is
+a sufficient explanation on its own and is confirmed by the two probes disagreeing about the same
+operation.
+
+### 8V.5 CONTRACTS ADDED
+
+  - A run has exactly ONE stake. A second death DESTROYS the first; it is never merged, banked or
+    stacked.
+  - Reclaiming is a TRANSACTION, not an award: `awards` and `credits_awarded` are untouched, while
+    `credits_earned` IS restored so earned-vs-carried cannot disagree.
+  - A stake is RUN-LOCAL and is NOT saved. Both the NEW RUN and the LOAD paths destroy one.
+  - A claim requires a LIVING player that has LEFT the stake and come back. The stake is walked back
+    to, never collected where the player fell.
+  - Claiming is DISTANCE-driven. Overlap queries are explicitly NOT an authority here, because they
+    lag live transforms by a physics step and can author a claim the player never made.
+  - The stake node OWNS NO TRUTH: it reads the ledger and is hidden when nothing is standing.
+
+### 8V.6 REMAINING LIMITATIONS, recorded rather than implied
+
+  - NOT human-playtested AT THE TIME THIS LIST WAS WRITTEN. Everything above is probe measurement.
+    **SUPERSEDED 2026-09-15: the user handplayed the stake on 2026-09-14 and accepted it for the current
+    development state - see 8V.7, written below.** The measured claims here are unchanged; only the
+    "no human has seen it" limitation was overtaken. Whether the 1.60 m pickup radius feels right is
+    still the user's call and is not claimed either way.
+  - An unreclaimed stake does NOT survive a save/load, and there is no persistence of one across
+    sessions. That is a deliberate scoping decision, not an oversight.
+  - There is no "lost Credits" record once a stake is destroyed by a second death - the amount is
+    reported through `stake_lost` but nothing keeps it.
+  - The marker is deliberately a PRIMITIVE (a capsule and a sphere). No art, no glow, no label.
+
+### 8V.7 ACCEPTED BY THE USER - HUMAN PLAYTEST, 2026-09-14
+
+STATUS: **MILESTONE 19 IS ACCEPTED** for the current DEVELOPMENT STATE. The user handplayed the running
+game and confirmed it works: "Current pass has been handplayed and verified ... consider it
+functionally working at this point."
+
+This subsection was REFERENCED but never written until 2026-09-15 - the current-state block and the
+acceptance table both cited "8V.7" while section 8V stopped at 8V.6, which still read "NOT
+human-playtested". The citation was dangling and 8V.6 contradicted the accepted status. Both are now
+resolved; the acceptance claim itself is unchanged and is the user's own playtest report.
+
+WHAT THE HUMAN READ COVERS, and what it does NOT:
+
+  - The mechanic was played: death drops the carried balance above `starting_credits` as a retrievable
+    stake, walking back onto it reclaims it, and a second death destroys the previous stake.
+  - It was accepted FOR A DEVELOPMENT STATE, not as finished. The on-screen button prompt for the
+    death stake is EXPLICITLY DEFERRED BY THE USER - it is deferred polish, NOT a defect.
+  - The probe evidence behind it (51/51, `death_drop_credit_probe_debug`) is unchanged and is not
+    restated here.
+  - STILL NOT CLAIMED: that the 1.60 m pickup radius feels right, and that an unreclaimed stake
+    survives a save/load - it does not, by deliberate scoping (8V.6).
+
+---
+
+## Milestone 20 - UI cleanup and layout unification (section 8W, recorded 2026-09-14)
+
+STATUS: **ACCEPTED BY THE USER 2026-09-14 - HANDPLAYED.** CORRECTED 2026-09-15: this header
+previously read "but NOT accepted. It needs a human playtest ACROSS WINDOW SIZES", which was overtaken
+by the user's handplay and acceptance in 8W.8. The user handplayed the running game, requested one
+refinement (8W.5, the INPUT FOUNDATION two-column reflow, applied and re-measured), and confirmed:
+"Confirm this as accepted." M20 is therefore the HIGHEST ACCEPTED MILESTONE.
+
+This is a LAYOUT pass, NOT a gameplay milestone: no combat, input, save/load, credit or death-drop
+behaviour was changed. The 8W.7 trades are intentional and are part of what was accepted.
+
+ONE PROPERTY IS STILL NOT PROBE-VERIFIED, kept honest rather than smoothed over: a REAL window resize.
+This host cannot resize its own window from inside the game, so `adaptive_columns()` is driven at its
+CAUSE (granted a single-column width, then the full width again). The pass is ACCEPTED ON THE USER'S
+HANDPLAY, not on a probe measurement of a live resize - see 8W.7.
+
+### 8W.1 THE ROOT CAUSE - there was NO SHARED LAYOUT AUTHORITY
+
+MEASURED, not inferred. Six independent CanvasLayers each built their own Control tree and placed it
+with their own values, across THREE different strategies:
+
+    anchors                 game_hud.gd, save_load_debug_controls.gd
+    manual viewport maths   combat_debug_overlay.gd (`_reclamp`, using get_viewport_rect())
+    bare hardcoded position input_debug_overlay.gd (`position = Vector2(16,16)`), death_presentation_debug.gd
+
+Where two panels shared a screen corner, the separation was a hand-tuned MAGIC NUMBER.
+`save_load_debug_controls.gd` carried `offset_top = 62.0` whose OWN COMMENT admitted the value existed
+because at 8 it "covered the credits number completely", and `combat_debug_overlay.gd` recorded that
+"top-right collides with the input overlay in the narrow docked viewport".
+
+WHY A MAGIC DODGE BREAKS WHEN THE WINDOW IS RESIZED, which is the mechanism the user's report
+describes: the project runs `display/window/stretch/mode = canvas_items` with `aspect = expand` (base
+1152x648). Under `canvas_items` the panel CONTENT grows with the scaled theme font while a fixed pixel
+offset does NOT, so a gap tuned at one window size stops clearing its neighbour at another.
+
+ALSO MEASURED: NO CanvasLayer in `main.tscn` set an explicit `layer`, so all of them defaulted to 1 and
+z-order was decided by accidental TREE ORDER - `EnemyHealthBars` was declared LAST and therefore drew
+over `PauseMenu`.
+
+### 8W.2 WHAT REPLACED IT - `scripts/ui/screen_regions.gd`
+
+ONE layout authority. A panel no longer positions itself at all: it JOINS a reserved region and that
+region's host `VBoxContainer` lays it out. Regions are anchor fractions of the logical viewport, so
+they track a resize with no resize handler anywhere.
+
+    VITALS                   LEFT column, upper band    the shipped health/stamina readout - RESERVED
+    INPUT_DIAGNOSTICS        LEFT column, lower band    the input foundation table
+    TOP_RIGHT_STACK          right column, upper band    credits THEN save/load, in ONE shared stack
+    BOTTOM_RIGHT_DIAGNOSTICS right column, lower band    combat / targeting diagnostics
+    DEATH_MESSAGE            centre band, CENTRED       the "YOU DIED" message
+
+THE REGION LAYOUT BELOW IS THE USER'S REQUESTED ARRANGEMENT, implemented as 8W.5: health/stamina
+upper-left, input foundation lower-left, credits in the top-right with the save/load panel directly
+BENEATH it, combat diagnostics lower-right, pause centred.
+
+THE HAND-TUNED DODGE IS GONE. Credits and save/load are now SIBLINGS in one stack, so the space
+between them is that Container's `separation` - neither panel knows the other's height, and nothing
+needs re-tuning when the window changes.
+
+### 8W.3 EXPLICIT LAYER ORDER, replacing accidental tree order
+
+    enemy health bars (1)   above the world, below every panel
+    debug panels (2)        input + combat + save/load (they cannot collide: different regions)
+    death message (3)       above the other diagnostics while it is up
+    game HUD (4)            the shipped readouts, above the debug panels
+    pause overlay (8)       strictly above everything, so pause is never drawn over
+
+`main.tscn` carries these literally AND each script re-asserts its own from the constants, so the scene
+text and the running code can be read against each other. `GameHUD` is declared BEFORE
+`SaveLoadControls` so the HUD builds the shared top-right stack - it therefore runs on the HUD layer
+while the save/load panel is a child of it, and regular tree order no longer decides anything.
+
+### 8W.4 TWO REAL DEFECTS FOUND AND FIXED DURING THE PASS
+
+  - PANELS COLLAPSED TO THE TOP-LEFT. `save_load_debug_controls.gd` and `death_presentation_debug.gd`
+    each did `add_child(panel)` - parenting to their own CanvasLayer INSTEAD of the region column they
+    had just resolved. No Container ever laid them out, so both fell to (0,0). The user reported this
+    precisely: "the save debug panel now appears over the input diagnostics, the respawn window now
+    appears at the upper left instead of center". An earlier explanation of mine (node ordering) was
+    WRONG; ordering governed the credits/save stacking order only.
+  - THE TWO-COLUMN LAYOUT WAS UNREACHABLE. `ScrollContainer` did not stretch its child here: the panel
+    measured 389 px inside a 736 px bound, so the reflow container only ever saw the single-column
+    minimum and wrapped at EVERY window size. Two fixes: the bound now FILLS horizontally, and the
+    reflow decision is taken from the REGION's measured width and the table's minimum width is SET
+    from that decision (see 8W.5).
+
+### 8W.5 THE INPUT FOUNDATION REFINEMENT (user-requested, applied)
+
+The panel was too tall: 44 rows in one column pushed its bottom edge toward the window edge.
+
+  - SPLIT INTO TWO COLUMNS, balanced by ROW COUNT so the two halves come out a similar height without
+    reordering anything. The split is CONTIGUOUS - the early groups stay early - so the reading order
+    is column one top to bottom, then column two.
+  - REFLOW, NOT TWO CRAMPED COLUMNS. `ScreenRegions.adaptive_columns()` is an `HFlowContainer` that
+    shows two columns ONLY when both genuinely fit the width they were given, and stacks them
+    otherwise. The decision is made against the width the flow container actually HAS, measured at
+    runtime - not against the region host, which is wider by the panel's own margins.
+  - NO CLIPPING. `ScreenRegions.bound_to_region()` gives the panel a ScrollContainer bound to its
+    region, so its bottom edge cannot leave the viewport; the region's height is the limit, and any
+    excess is clipped inside a scrollable area rather than by the screen.
+  - COMPACTNESS WITHOUT SHRINKING THE TEXT: row separation 0 (Godot's default 4 px cost 232 px over 58
+    rows) and tighter column widths. The FONT SIZE was deliberately NOT reduced.
+
+### 8W.6 PROBE RESULTS - the one new probe, and the regression guard
+
+`input_panel_layout_probe_debug` (NEW) - `RESULT: ALL CHECKS PASSED (13)`. It writes
+`res://input_panel_layout_probe_report.txt` (the project's report-file convention) because the console
+tail truncates. MEASURED, at a 1152x889 logical canvas:
+
+    region host 760 px wide | panel bound 760 x 704 | panel 760 x 416
+    table split into exactly TWO blocks -> SIDE BY SIDE
+    two columns shown only because the pair FITS the width they were given (708 <= 740)
+    every input action still has a row (built 31, expected 31)
+    a width that fits ONE column makes the table STACK instead of crushing two columns (359 px)
+    restoring the width brings the two columns back
+
+THE NARROW CASE IS DRIVEN, NOT ASSUMED. This host cannot resize its own window, so the fallback is
+exercised at its CAUSE - the reflow container is granted a single-column width (exactly what a narrow
+window produces) and is then granted the full width again. That is the difference between "the rule is
+written down" and "the table demonstrably wraps and comes back".
+
+`focus_input_routing_probe_debug` - `RESULT: ALL CHECKS PASSED`. This is the REGRESSION GUARD that
+mattered most, because the new region hosts are full-band Controls and light/heavy attacks are bound to
+MOUSE BUTTONS. Verified: mouse CAPTURED (mode=2), capture re-taken by a click, Escape releases the
+cursor and the same key RESUMES, the recovering click did NOT start an attack, `Engine.time_scale`
+1.000, tree not paused, player in the normal process mode.
+
+`main.tscn` - boots at 0 errors (20 pre-existing warnings only).
+
+### 8W.7 DELIBERATE TRADES, and what is NOT verified
+
+  - THE DEATH MESSAGE OVERLAYS THE DIAGNOSTICS. It is centred by request, so it necessarily sits over
+    panels whose content is larger than the centre band. It is not raised above the HUD or the pause
+    overlay: it reads on top of the diagnostics only.
+  - SCROLLING NEEDS A WHEEL, AND THE MOUSE IS CAPTURED IN PLAY, so the ScrollContainer's bound is
+    reachable in principle but not by wheel in normal play. `mouse_filter` stayed IGNORE on purpose: a
+    ScrollContainer needs a Control that ACCEPTS the mouse to scroll, and this project has already paid
+    once for a debug panel that swallowed a click bound to an attack. The REFLOW is what keeps the
+    content reachable at a normal size - scrolling is the fallback of last resort, not the mechanism.
+  - THE INPUT TABLE PACKS AT THE TOP OF ITS BAND rather than hugging its bottom edge, so any overflow
+    goes off the bottom of the band instead of upward over the reserved health/stamina area.
+  - `adaptive_columns()` is an HFlowContainer ADAPTER, not a true CSS-style column reflow. Two
+    two-column arrangements were considered and refused: a GridContainer needs its column count fixed
+    at build time and cannot react to a resize, and manually re-parenting rows on `size_changed` would
+    have handed the panel back the private resize logic this pass exists to remove. The adapter is the
+    smallest mechanism that gives the asked-for BEHAVIOUR, and its limitation is recorded here.
+  - RESIZE ITSELF IS NOT PROBE-VERIFIED, and this is kept honest rather than smoothed over. The
+    no-clip property is enforced by the layout RULE - the region bounds the panel inside a scrollable
+    area, so its bottom edge cannot leave the viewport - plus a probe that DRIVES the reflow at a
+    narrow width, because this host cannot resize its own window from inside the game. The pass is
+    ACCEPTED on the user's handplay rather than on a probe measurement of a real resize.
+
+### 8W.8 ACCEPTED BY THE USER - HANDPLAYED, 2026-09-14
+
+The user handplayed the running game and confirmed the pass: "Confirm this as accepted."
+
+WHAT WAS ACCEPTED. The arrangement the user reviewed and accepted:
+
+    upper-left        HEALTH / STAMINA, in its own RESERVED region
+    lower-left        CASCADIA - INPUT FOUNDATION, two columns, bounded by its region
+    top-right         CREDITS, with the SAVE/LOAD panel directly BENEATH it in one shared stack
+    lower-right       CASCADIA - COMBAT
+    centre            the death message, centred and above the diagnostics
+    above everything  the pause overlay
+
+This CLOSES the milestone. The trades listed in 8W.7 are INTENTIONAL and are part of what was
+accepted - in particular the centred death message overlapping the diagnostics, which is what the
+user asked for by name when they asked for the respawn window to be centred.
+
+Two consequences of that arrangement, recorded so they are not rediscovered as surprises. Both are
+deliberate, both are verified, and neither is a defect:
+
+    - the death message draws over the input table's right column while the player is dead;
+    - the input table packs to the TOP of its band, so any overflow leaves the bottom of the band
+      rather than climbing into the reserved health/stamina area.
+
+Do not re-open this pass for either. If the user later wants them changed, that is a new request, not
+a defect against this milestone.
 
 ---
 
@@ -454,12 +1524,16 @@ above it wins.
 | - | Defeat coverage across the arena | ACCEPTED 2026-09-12 (measured AND user-verified) | The user reported that an enemy reaching 0 health did not show a defeated state, and that NO test asserted defeat coverage. Both were CORRECT: `TargetA/B/C` carried no death path at all, and every probe inspected actors BY NAME, so an unwired actor reaching zero health processed nothing while the whole suite still reported ALL CHECKS PASSED. Fix: `TargetA/B/C` wired to the EXISTING `EnemyDeathComponent` (mortal) + the EXISTING presentation adapter in `scenes/test_environment.tscn`; no new death system, no combat value or timing changed. The missing test now exists as `defeat_coverage_probe_debug`, driven by ENUMERATION of the `damageable` group so a newly added enemy is covered the moment it exists, and the player is excluded BY ARCHETYPE (`resets_actors`), not by name. `[DEFCOV] RESULT: ALL CHECKS PASSED`, 5/5 enemies each reading `is_defeated=true defeats=1 presentation=showing`; all 13 regression probes re-run and passed; `main.tscn` boots with 0 runtime errors. Rendered frame confirms red `DEFEATED` labels, tipped/darkened poses, and all five actors at `0/100 DEAD`. See 8K.12 |
 | - | Reusable actor combat readiness | IMPLEMENTED AND MEASURED; DEFECT FOUND IN PLAY AND FIXED (8K.12) | `defeat_coverage_probe_debug`: 5/5 damageable enemies reach the DEFEATED state with a VISIBLY showing presentation (TestAttacker, DummyActor, TargetA, TargetB, TargetC all `is_defeated=true defeats=1 presentation=showing`). The 8K.11 audit had wrongly concluded the static targets were intentional non-participants; they were a HOLE - no death path at all - and are now wired into the existing defeat component. `actor_combat_readiness_probe_debug`: ALL CHECKS PASSED. All 13 regression probes re-run and passed. Section 8K written BEFORE any implementation. Audit read from the live project: damageability (`HealthComponent` + `HurtboxComponent.damageable`), mortality (`EnemyDeathComponent.mortal`), attack capability (`EnemyAttacker`), per-actor debug presentation (`CombatDebugOverlay`) and group-based target selection (`EnemyAttacker.target_group`) ALREADY existed and were reused unchanged. The genuine gap was TARGET VALIDITY: `EnemyAttacker._get_target()` returned the first node in the group with no alive check, so a dead actor was still a valid target the attacker faced and swung at. `actor_combat_readiness_probe_debug`: RESULT: ALL CHECKS PASSED, 0 runtime errors - the dead target was refused with the DEAD cause (`target_refusals_dead 0 -> 2`) and NOT as out-of-range (`0 -> 0`), the attacker did not turn to face the corpse (`max drift 0.0000 rad`), a revived actor was targetable again, and a freed node was refused without raising. All twelve regression probes re-run and passed. See 8K.10 |
 
-- **Highest milestone reached: 11.** This bullet read "8" until 2026-09-13, when the wrap-up pass found
-  it CONTRADICTING the table above: Milestone 9 was DELIVERED as the credit economy (8L), Milestone 10
-  as game-state saving/loading (8M), and Milestone 11 as the readable facing indicator (8O). The old
-  wording also described M9 as "enemy pursuit", which is a DIFFERENT system that is still unstarted -
-  M9's ACTUAL delivered scope is section 8L and is unrelated to pursuit. Lock-on, pursuit, navigation
-  and real enemy AI all remain deferred (section 13).
+- **Highest milestone reached: 20.** CORRECTED 2026-09-15: this bullet read "11" and had done since
+  2026-09-13. It is the SAME staleness defect the bullet below already records twice - a status line
+  left standing after the status changed - and it contradicts the table directly above it, which now
+  carries rows through M20. The table above is authoritative; this bullet is the audit trail of how it
+  drifted. For the record: M12 (8P), M13 (8Q), M14 (8R, measured but not human-read), M15-M16 (accepted
+  on the user's manual read), M17 (8S), M18 (8U.8), M19 (8V.7 section, plus the record in the
+  current-state block) and M20 (8W.8) were all DELIVERED after the "11" written here.
+  The historical note this bullet carried is still true and is preserved: M9 was DELIVERED as the credit
+  economy (8L), NOT as "enemy pursuit", which is a DIFFERENT system that remains unstarted. Lock-on was
+  delivered as M12; pursuit, navigation and real enemy AI all remain deferred (section 13).
 - **Milestones 0-4: ACCEPTED.** All four were re-audited against the live project this
   pass and every probe was re-run rather than carried forward. No contradictory evidence
   was found and no defect in milestones 0-4 was discovered, so no repair was required.
@@ -3595,11 +4669,21 @@ after M7 is again the user's call.
 
 ### 12.1 Open script errors in the diagnostics panel (KNOWN, BENIGN, DO NOT CHASE)
 
-RE-CHECKED 2026-09-14 (documentation consolidation pass): `state:diagnostics` reports
-**0 errors and 38 warnings**, and `state:script-errors` for `open_script_buffers` returns an
-EMPTY list. The 38 warnings are case-mismatch import warnings from third-party asset kits,
+RE-CHECKED 2026-09-15 (roadmap reconciliation pass): `state:diagnostics` reports
+**0 errors, 0 debugger errors, `is_breaked: false`, and 20 warnings**, and `state:script-errors`
+for `open_script_buffers` returns an EMPTY list. THE ERRORS HALF IS UNCHANGED and remains the
+finding that matters: there are no script errors to chase, and the warning set is still recorded
+as benign. **RECORDED DISCREPANCY, not corrected:** the 2026-09-14 re-check below reported **38**
+warnings. This pass measured **20**. Both readings are recorded rather than one overwriting the
+other, because this pass did NOT re-classify the 20 to confirm they are the same case-mismatch
+import warnings - the count differs and the cause is unverified. Treat the classification below as
+inherited, not re-confirmed.
+
+RE-CHECKED 2026-09-14 (documentation consolidation pass): `state:diagnostics` reported
+**0 errors and 38 warnings**, and `state:script-errors` for `open_script_buffers` returned an
+EMPTY list. The 38 warnings were case-mismatch import warnings from third-party asset kits,
 recorded in `CASCADIA_DELETION_MANIFEST.md` under "Recurring: case-mismatch import warnings".
-The GameActions symptom described below was NOT reproducible this pass.
+The GameActions symptom described below was NOT reproducible that pass.
 
 When it was first recorded, `state:diagnostics` reported `20` script errors and `5` warnings.
 All 20 errors were ONE root cause:
@@ -3674,17 +4758,25 @@ Re-check before flagging it again.
   so its lowest point sits exactly 0.020 above the surface - precisely at the probe's 0.02
   TOLERANCE, where float rounding fails the comparison. Left UNFIXED deliberately (see 8I.8):
   the fix is a combat actor's authored collision/mesh/hurtbox heights, which is outside this task.
-- `[OPEN 2026-09-12: found in human playtest - CONFIRMED DEFECT]` BACKSTEP ORIENTATION. The body
-  turns during a backstep instead of retreating while facing forward, exactly as the static
-  reading in section 8F.2 predicted. Found independently by the user in play (section 8G.2
-  item 2). A facing indicator is needed to make the correction readable.
-  `[RECONCILE - NOT re-verified since 2026-09-13]` This entry was written 2026-09-12. Since then
-  the GAMEPLAY half was implemented and measured by the 8F authority pass (section 8N,
-  2026-09-13: `dodge_authority_probe_debug` ALL CHECKS PASSED) and the PRESENTATION half was
-  accepted as Milestone 11 (section 8O.15, the user's visual read). This entry has NOT been
-  updated to reflect that, and the 2026-09-14 consolidation deliberately did NOT flip it to
-  fixed - that needs a pass that re-verifies the specific claim. Treat the status above as
-  OUTSTANDING.
+- `[CLOSED 2026-09-15: reconciled against its own record - was OPEN, now resolved]` BACKSTEP
+  ORIENTATION. Original entry, 2026-09-12: the body turned during a backstep instead of retreating
+  while facing forward, exactly as the static reading in section 8F.2 predicted, found
+  independently by the user in play (section 8G.2 item 2). RECONCILED THIS PASS against two
+  records already in this file, neither of which is a new measurement:
+  - GAMEPLAY HALF - CLOSED BY THE USER'S OWN PLAYTEST, recorded at 8N.6 (2026-09-13): the user
+    reported that the evasion uses the player's last movement orientation and keeps that
+    orientation committed during the evasion, "exactly the behaviour 8F set out to produce".
+    8N.6 also records that no probe was re-run to restate it, and that every measured number is
+    unchanged. The mechanism is measured (`dodge_authority_probe_debug`, 8N) and the result was
+    confirmed in the hand.
+  - PRESENTATION HALF - CLOSED BY MILESTONE 11, accepted 2026-09-13 on the user's visual read
+    (section 0 milestone row; 8O.11 implementation, 8O.15 acceptance). The `FacingMarker` the
+    original entry asked for ("A facing indicator is needed to make the correction readable")
+    now exists and was accepted.
+  WHAT THIS ENTRY DOES NOT CLAIM: 8N.6 and 8O.4 both record a residual item - the HUMAN read of
+  the marker WHILE MOVING, dodging and backstepping - and that is tracked SEPARATELY below, not
+  closed here. The defect this entry recorded is resolved; the moving-read item is a different,
+  still-open verification item and is left standing.
 - `[UNVERIFIED]` The physical parry CONTROLLER binding (joypad button 9) was never pressed.
   The probe drove the keyboard binding only, so the controller path is unproven.
 - `[PARTIAL]` Sprint / Dodge / Backstep pass: every acceptance criterion passed by measurement
@@ -3785,9 +4877,13 @@ The window remains hard to READ without animation, which is a readability item, 
   death/reset state. Nothing here is built; only the negative requirement is honoured, that Milestone 9
   must not make those distinctions impossible later.
 - Player death Credit loss / retrieval (drop carried Credits on death, recover them on the corpse, or
-  lose them permanently). RECORDED AS FUTURE WORK, NOT IMPLEMENTED. For Milestone 9 the carried balance
-  explicitly SURVIVES the player's existing death and reset, and that choice is measured by the probe
-  rather than left implicit (section 8L.7).
+  lose them permanently). RECORDED AS FUTURE WORK, NOT IMPLEMENTED. **THE RULE PREVIOUSLY RECORDED ON
+  THIS LINE IS SUPERSEDED.** For Milestone 9 the carried balance "explicitly SURVIVES the player's
+  existing death and reset" (section 8L.7). **Milestone 18 REVERSED that decision at the user's
+  instruction**, and death now resets the carried balance to `starting_credits` and clears the per-run
+  reward history (8T.3, 8T.5; re-verified 8U.1; USER-ACCEPTED 8U.8). What is still DEFERRED and
+  unbuilt is the RETRIEVAL half - dropping the lost balance as a recoverable stake instead of
+  destroying it. That gap is the recommended next milestone (8U.9).
 - NPC relationship / faction behaviour. Recorded future work, NOT built. The audit for this pass found
   NO relationship state anywhere in the project, so this is an EXTENSION POINT rather than a gap: a
   `relationship` value (friendly / neutral / hostile) would belong on an actor identity component that
@@ -3802,7 +4898,11 @@ The window remains hard to READ without animation, which is a readability item, 
 - Broader actor identity and interaction systems. Deferred.
 - A non-damageable-by-design actor in the arena. Deferred; the `damageable` policy is probe-proven
   only, because every actor in the arena is damageable today (see 12.3).
-- Enemy stagger / poise.
+- Enemy stagger / poise. STAGGER IS PARTLY DELIVERED as of Milestone 18 (section 8T): a hit at or
+  above an actor's own `stagger_threshold` interrupts a committed enemy swing through that enemy's
+  attack state machine, and the player-facing consequence is now USER-ACCEPTED (8U.8). STILL DEFERRED:
+  POISE (a meter that must be broken before an interrupt can land), interrupt armor, hitstun, and
+  knockback.
 - Critical / visceral attacks.
 - Enemy AI.
 - Navigation.
@@ -6270,6 +7370,10 @@ feedback is legible are the user's read. A probe cannot grade them and must not 
 **IMPLEMENTED AND MEASURED 2026-09-14, INCLUDING THE NEW RUN FIX AND THE ESCAPE CONTRACT CHANGE.
 NOT YET HUMAN-ACCEPTED - awaiting the user's read of the HUD, the indicator, the pause, the save/load
 feedback, and a NEW RUN. Milestone 12 remains the highest ACCEPTED milestone.**
+
+[SUPERSEDED 2026-09-15: that closing sentence was the in-pass truth when 8Q.7 was written. M13 was
+accepted shortly afterwards, and the highest accepted milestone is now 20 - see the CURRENT STATE
+block at the top of this file. Kept verbatim for audit.]
 
 The user reviewed the first pass on 2026-09-14 and reported everything working EXCEPT one
 integration bug: **New Run did not reset the world** (see "The NEW RUN defect" below). That is now

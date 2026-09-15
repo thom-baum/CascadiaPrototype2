@@ -34,6 +34,15 @@ extends CanvasLayer
 ##
 ## This is deliberately NOT the combat debug overlay. That one is development tooling with a debug
 ## toggle; this HUD is part of the shipped game and is visible whenever the game runs.
+##
+## PLACEMENT IS NOT DECIDED HERE. Both readouts join a RESERVED SCREEN REGION from `ScreenRegions`,
+## the project's single layout authority: the credits readout joins the shared TOP-RIGHT STACK (which
+## the save/load diagnostic is stacked into as well, directly below it, separated by that stack's
+## Container separation) and health/stamina join the RESERVED VITALS region that no debug panel is
+## anchored into. Nothing in this file sets a `position`, an `offset` or an anchor value, and no
+## per-frame maths measures the viewport - before this pass the credits panel carried
+## `offset_left = -220 / offset_top = 10` and the vitals panel `offset_left = 14 / offset_top = -104`,
+## which is exactly the hand-tuned arithmetic that a resized window outgrows.
 
 @export_group("Wiring")
 ## The ledger that owns the carried balance. Leave EMPTY to resolve it through the ledger's own group,
@@ -67,7 +76,10 @@ var _connected := false
 
 
 func _ready() -> void:
-	layer = 2
+	# The shipped HUD sits ABOVE the debug panels and BELOW the pause overlay. The literal value is
+	# repeated on the GameHUD node in main.tscn and read here from the one authority, so the saved
+	# scene text and the running code can be read against each other.
+	layer = ScreenRegions.LAYER_GAME_HUD
 	_build_ui()
 	_resolve()
 	_refresh()
@@ -204,29 +216,32 @@ func _resolve() -> void:
 
 ## Build the HUD in code rather than in a scene: one control surface, no second file to keep in sync
 ## with the wiring above, and every mouse filter visible in the same place as the reason for it.
+##
+## There is deliberately NO full-rect root here any more. A full-rect Control is a hit-test surface
+## across the whole screen for no reason at all, and a root that is only there to hold two panels in
+## opposite corners is a layout decision this file has no business making. Each panel joins its own
+## RESERVED SCREEN REGION instead, and the region owns the geometry.
 func _build_ui() -> void:
-	var root := Control.new()
-	root.name = "Root"
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(root)
-
-	_build_credits(root)
-	_build_vitals(root)
+	_build_credits()
+	_build_vitals()
 
 
-## Carried Credits: a small panel in the TOP-RIGHT corner, anchored rather than positioned, so it
-## survives any viewport size - including the in-editor Play view.
-func _build_credits(root: Control) -> void:
+## Carried Credits: the first slot of the shared TOP-RIGHT STACK. The save/load diagnostic joins the
+## same stack and lands directly beneath this panel, so the space between the two comes from the
+## stack's Container separation rather than from an offset tuned by eye at one window size.
+func _build_credits() -> void:
+	var column := ScreenRegions.join(self, ScreenRegions.Region.TOP_RIGHT_STACK)
+
 	var panel := PanelContainer.new()
 	panel.name = "CreditsPanel"
-	panel.anchor_left = 1.0
-	panel.anchor_right = 1.0
-	panel.offset_left = -220.0
-	panel.offset_top = 10.0
-	panel.offset_right = -10.0
+	# The region sets the anchors and the width; this panel only says how it shrinks inside them. It is
+	# right-aligned in its slot so the number stays in the corner instead of stretching to the region
+	# edge, and vertical shrinking is what makes the panel exactly the height of its own text - which
+	# is what lets the stack separate it from the panel below by a real gap.
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_END
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(panel)
+	column.add_child(panel)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 12)
@@ -246,19 +261,24 @@ func _build_credits(root: Control) -> void:
 	margin.add_child(credits_label)
 
 
-## Health and Stamina: one panel in the BOTTOM-LEFT corner. Two bars plus two exact readouts, because
-## the bar is what reads at a glance and the numbers are what a playtest report can quote.
-func _build_vitals(root: Control) -> void:
+## Health and Stamina: one panel in the RESERVED VITALS region, the bottom strip of the centre band.
+##
+## THE REGION IS RESERVED. No debug panel is anchored into it - that is the point of moving this panel
+## out of the bottom-left corner, where a debug panel could have claimed the same strip. The panel
+## centres itself in its region and hangs from the bottom of it, so it grows UPWARD from the screen
+## edge when a row is added rather than pushing its own bottom off the screen.
+##
+## Two bars plus two exact readouts, because the bar is what reads at a glance and the numbers are
+## what a playtest report can quote.
+func _build_vitals() -> void:
+	var column := ScreenRegions.join(self, ScreenRegions.Region.VITALS)
+
 	var panel := PanelContainer.new()
 	panel.name = "VitalsPanel"
-	panel.anchor_top = 1.0
-	panel.anchor_bottom = 1.0
-	panel.offset_left = 14.0
-	panel.offset_top = -104.0
-	panel.offset_right = 330.0
-	panel.offset_bottom = -14.0
+	panel.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(panel)
+	column.add_child(panel)
 
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 12)
@@ -268,17 +288,17 @@ func _build_vitals(root: Control) -> void:
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(margin)
 
-	var column := VBoxContainer.new()
-	column.name = "Rows"
-	column.add_theme_constant_override("separation", 6)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_child(column)
+	var rows := VBoxContainer.new()
+	rows.name = "Rows"
+	rows.add_theme_constant_override("separation", 6)
+	rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.add_child(rows)
 
-	var health_row := _build_row(column, "HealthRow", "HEALTH", Color(0.85, 0.26, 0.24, 1))
+	var health_row := _build_row(rows, "HealthRow", "HEALTH", Color(0.85, 0.26, 0.24, 1))
 	health_label = health_row[0]
 	health_bar = health_row[1]
 
-	var stamina_row := _build_row(column, "StaminaRow", "STAMINA", Color(0.36, 0.72, 0.42, 1))
+	var stamina_row := _build_row(rows, "StaminaRow", "STAMINA", Color(0.36, 0.72, 0.42, 1))
 	stamina_label = stamina_row[0]
 	stamina_bar = stamina_row[1]
 

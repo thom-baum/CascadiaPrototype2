@@ -15,9 +15,12 @@ extends Node3D
 ## and it asserts the things that must not happen: no duplicated reward, no revived enemy, no second
 ## ledger or save service, no duplicated signal, and no run left stranded in a transitional state.
 ##
-## It also pins the EXISTING death contract rather than inventing a death-loss rule: the carried
-## balance is untouched by death, because no death-loss mechanic exists yet and this probe must not
-## pretend one does.
+## It also pins the death-credit contract. THAT CONTRACT CHANGED and this note is the record: the old
+## rule (roadmap 8L.7) was that carried Credits SURVIVE the player's death. Death now RESETS the
+## carried balance to the run's starting value and clears the per-run reward history. The
+## authoritative assertion for the reset lives in `combat_feedback_probe_debug` (AC8/AC9), which
+## drives the real death signal; what THIS probe still owns is that a LOAD after a death restores the
+## recorded balance, which the new rule does not change.
 ##
 ## Recorded in CASCADIA_DELETION_MANIFEST.md. Delete with its scene.
 
@@ -191,9 +194,13 @@ func _finish() -> void:
 		"repeated post-death loads did not compound the balance")
 	_expect(_ledger.awards == awards_before, "repeated post-death loads granted no awards")
 
-	# 10. The existing death contract, pinned rather than assumed: death does NOT delete Credits,
-	# because no death-loss mechanic exists yet and this probe must not imply one.
-	print("[DEATHLOOP] death contract: death left the carried balance at %d (no death-loss rule exists)"
+	# 10. The death-credit contract, RECORDED HERE BECAUSE IT CHANGED. It used to be that death left
+	# carried Credits untouched (roadmap 8L.7). Death now RESETS the carried balance to the run's
+	# starting value and clears the per-run reward history, so a revived enemy is worth Credits again.
+	# The reset itself is asserted where it can be driven directly, in `combat_feedback_probe_debug`
+	# (AC8/AC9). What THIS probe owns is the interaction the change must not break: a LOAD after a
+	# death still restores the balance the save recorded, which the assertions above already require.
+	print("[DEATHLOOP] death contract: death now RESETS carried Credits (asserted by combat_feedback_probe_debug); a post-death LOAD still restores the recorded %d, asserted above"
 		% _saved_value)
 
 	_restore_backup()

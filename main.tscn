@@ -10,10 +10,11 @@
 [ext_resource type="Script" uid="uid://b6pjn2tox4u3q" path="res://scripts/core/game_state_save.gd" id="8_kek77"]
 [ext_resource type="Script" uid="uid://ce6qe4c324yxo" path="res://scripts/diagnostics/save_load_debug_controls.gd" id="9_4c57u"]
 [ext_resource type="Script" uid="uid://djds7ph5wvpie" path="res://scripts/player/targeting_component.gd" id="10_targeting"]
-[ext_resource type="Script" path="res://scripts/ui/game_hud.gd" id="11_gamehud"]
-[ext_resource type="Script" path="res://scripts/ui/lock_on_indicator.gd" id="12_lockindicator"]
-[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="13_pausemenu"]
-[ext_resource type="Script" path="res://scripts/ui/enemy_health_bars.gd" id="14_enemybars"]
+[ext_resource type="Script" uid="uid://dew7v37x40lcx" path="res://scripts/ui/game_hud.gd" id="11_gamehud"]
+[ext_resource type="Script" uid="uid://civof04tft2i7" path="res://scripts/ui/lock_on_indicator.gd" id="12_lockindicator"]
+[ext_resource type="Script" uid="uid://ut2gaut5yirf" path="res://scripts/ui/pause_menu.gd" id="13_pausemenu"]
+[ext_resource type="Script" uid="uid://bd83a41r82yhu" path="res://scripts/ui/enemy_health_bars.gd" id="14_enemybars"]
+[ext_resource type="Script" uid="uid://cqn6s4pg7u0dm" path="res://scripts/combat/hit_stop.gd" id="15_hitstop"]
 
 [node name="Cascadia" type="Node3D" unique_id=58351916]
 
@@ -21,15 +22,18 @@
 script = ExtResource("1_input")
 
 [node name="InputDebugOverlay" type="CanvasLayer" parent="." unique_id=1167515309]
+layer = 2
 script = ExtResource("3_overlay")
 
 [node name="CombatDebugOverlay" type="CanvasLayer" parent="." unique_id=884701187]
+layer = 2
 script = ExtResource("5_lquwl")
 
 [node name="HitFeedback" type="Node3D" parent="." unique_id=1411193814]
 script = ExtResource("5_7mycd")
 
 [node name="DeathPresentation" type="CanvasLayer" parent="." unique_id=1964161842]
+layer = 3
 script = ExtResource("6_deathpres")
 
 [node name="CreditLedger" type="Node" parent="." unique_id=1755937333]
@@ -40,22 +44,28 @@ script = ExtResource("8_kek77")
 player_actor_path = NodePath("")
 debug_logging = true
 
+[node name="GameHUD" type="CanvasLayer" parent="." unique_id=2030043640]
+layer = 4
+script = ExtResource("11_gamehud")
+
 [node name="SaveLoadControls" type="CanvasLayer" parent="." unique_id=1866228881]
+layer = 2
 script = ExtResource("9_4c57u")
 
 [node name="Targeting" type="Node" parent="." unique_id=1102736415]
 script = ExtResource("10_targeting")
 
-[node name="GameHUD" type="CanvasLayer" parent="."]
-script = ExtResource("11_gamehud")
-
-[node name="LockOnIndicator" type="Node3D" parent="."]
+[node name="LockOnIndicator" type="Node3D" parent="." unique_id=1126962285]
 script = ExtResource("12_lockindicator")
 
-[node name="PauseMenu" type="CanvasLayer" parent="."]
+[node name="PauseMenu" type="CanvasLayer" parent="." unique_id=978820238]
+layer = 8
 script = ExtResource("13_pausemenu")
 
-[node name="EnemyHealthBars" type="CanvasLayer" parent="."]
+[node name="EnemyHealthBars" type="CanvasLayer" parent="." unique_id=900771440]
 script = ExtResource("14_enemybars")
+
+[node name="HitStop" type="Node" parent="." unique_id=1556240011]
+script = ExtResource("15_hitstop")
 
 [node name="TestEnvironment" parent="." unique_id=10485837 instance=ExtResource("2_env")]
