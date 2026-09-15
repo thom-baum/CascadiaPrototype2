@@ -103,18 +103,31 @@ sections; this block is the entry point, not a replacement for them.
   `0.0000 m`, `visual collision nodes: 0`, and the control that matters - the skeleton is **still
   moving**, so in-place was achieved by removing travel rather than by freezing the animation.
   `main.tscn` 0 errors / 0 debugger errors / 22 warnings. Full record: section 8Z.
-- **Milestone 22 - APPROVED BY THE USER 2026-09-15 AS THE NEXT MILESTONE. NOT started.** Give ONE enemy a
-  real imported model and its own `AnimationSet`, driven by the **SAME** `AnimationAdapter` with **NO code
-  change to it**, in order to FALSIFY the swappability claim Milestone 21's architecture rests on. That
-  claim is currently UNFALSIFIED rather than proven: exactly ONE set exists
-  (`resources/animation/player_fist.animset.tres`) and exactly ONE actor wears a visual driver
-  (`Player/Visual`), so "the controller stays the same and the set changes" has never been exercised. This
-  milestone also forces the enemy DEATH-POSE OWNERSHIP decision recorded at 8X.6, which becomes live the
-  moment an enemy skeleton animates. **STEP 0 IS AN ASSET RECON AND ITS RESULT IS NOT ASSUMED**: the
-  milestone needs a rigged non-player model, no candidate has been checked, and if none exists the work
-  STOPS AND REPORTS rather than re-using the player's model on an enemy. TWO OPEN DECISIONS REMAIN THE
-  USER'S: which enemy wears the rig, and which model. Full scope, boundaries, acceptance criteria and the
-  recorded fallback: **section 8AA** at the end of this file.
+- **Milestone 22 - ANIMATIONSET SWAPPABILITY AND ENEMY DEATH-POSE OWNERSHIP - APPLIED + PROBE-MEASURED +
+  ACCEPTED BY THE USER 2026-09-15.** The Milestone 21 claim - *the controller and adapter stay the same
+  while the assigned `AnimationSet` changes* - is now **PROVEN, not merely unfalsified**. `TestAttacker`
+  wears an imported rigged visual (`scenes/actors/enemy_visual.tscn`), its own set
+  (`resources/animation/enemy_attacker.animset.tres`), and the **SAME** `AnimationAdapter` with
+  `animation_adapter.gd` **byte-for-byte unchanged** and no enemy-specific script or branch anywhere in the
+  tree. The proof is not a resource comparison: the ENEMY's live adapter was handed the PLAYER's set and
+  required to relocate its resolutions to the other set's data with no code change, no new node and no
+  restart, then relocate back - all three windows armed on a REAL slot change with **0 mismatches and 20/20
+  following the assigned set**, which an `if actor_is_enemy` branch cannot pass. Same slot, different clip
+  through data alone: `locomotion` `core_main_walk_F_01.fbx` vs `unarmed_main_walk_F_01.fbx`, and `idle`
+  `core_main_idle_01.fbx` vs `unarmed_main_idle_01.fbx`. The five-outcome fallback policy is unchanged and
+  OBSERVED on the enemy (exact / fallback via a declared `stagger -> hurt` / neutral on `parry` / missing),
+  never faked. Enemy visual subtree owns **ZERO collision nodes**, and every enemy clip is **IN PLACE
+  (0.0000 m)** with vertical motion intact. Skeleton movement is measured directly (bones
+  `464.893 -> 448.143`) with a STOPPED-driver control holding still (`442.191 -> 442.191`), because
+  `is_playing()` alone is not proof. **DEATH-POSE OWNER: Option A - the ANIMATION owns the final pose**,
+  declared (`pose_body_meshes = false`), readable (`pose_owner_name()` = `visual:Visual`), and measured: the
+  competing transform/material writer wrote NOTHING across all 45 held frames. `enemy_animation_swappability_probe_debug`
+  (NEW) reports **`ALL CHECKS PASSED (131)`**; every listed regression probe re-run fresh and passed;
+  `main.tscn` 0 errors / 0 debugger errors / 22 warnings. The player's model was REUSED as an explicitly
+  authorised TEMPORARY VALIDATION FIXTURE, superseding the 8AA.6 draft for this milestone only. **TWO STALE
+  PROBE EXPECTATIONS REMAIN OPEN** (`actor_death_probe_debug` 2 failures, `enemy_death_probe_debug` 5) on
+  enemy revival that an earlier milestone deliberately introduced and this one did not touch - reported, not
+  patched, and NOT resolved by this acceptance. Full record: **section 8AB** at the end of this file.
 - **Milestone 14 - ENEMY HEALTH BARS - IMPLEMENTED + MEASURED, still not human-read.** Requested by the user 2026-09-14 as the
   remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
   implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
@@ -8384,11 +8397,15 @@ not a defect to keep reporting.
 
 ## Milestone 22 - AnimationSet swappability and enemy death-pose ownership (section 8AB, recorded 2026-09-15)
 
-STATUS: **APPLIED, statically clean, PROBE-MEASURED. NOT human-accepted.** The new swappability probe passes
-**ALL CHECKS PASSED (131)** and `main.tscn` boots at **0 errors / 0 debugger errors / 22 warnings**. The
-central Milestone 21 claim - *the controller and adapter stay the same while the assigned `AnimationSet`
-changes* - is now **PROVEN, not merely unfalsified**. Acceptance remains the user's step: the milestone is
-NOT accepted until they handplay it and say so.
+STATUS: **ACCEPTED BY THE USER (2026-09-15).** Applied, statically clean, probe-measured, and then
+explicitly accepted by the user, who instructed that it be recorded as accepted before publishing. The new
+swappability probe passes **ALL CHECKS PASSED (131)** and `main.tscn` boots at **0 errors / 0 debugger
+errors / 22 warnings**. The central Milestone 21 claim - *the controller and adapter stay the same while the
+assigned `AnimationSet` changes* - is now **PROVEN, not merely unfalsified**.
+
+Acceptance is recorded on the USER'S OWN STATEMENT, not inferred from a passing probe or a clean boot. It
+covers the milestone as scoped at 8AB.1, and it does NOT retroactively resolve the two stale probe
+expectations recorded at 8AB.12, which remain open. See 8AB.16 for the full acceptance record.
 
 ### 8AB.1 SCOPE IMPLEMENTED
 
@@ -8613,5 +8630,39 @@ They CANNOT grade appearance. Please inspect:
 - The enemy's `stagger` slot is a declared fallback to `hurt` because the pack ships no stagger clip, and
   `parry` remains `neutral` - both correct per policy, both still missing content.
 - No enemy attack animation is wired beyond the single `attack:arena_attacker` slot.
-- This is APPLIED and PROBE-MEASURED. It is **NOT human-accepted**, and acceptance is not automatic.
+- This is APPLIED, PROBE-MEASURED and USER-ACCEPTED. See 8AB.16.
+
+### 8AB.16 ACCEPTANCE RECORD
+
+**STATUS: ACCEPTED BY THE USER - recorded 2026-09-15.**
+
+The user reviewed the milestone and explicitly instructed that it be recorded as accepted before publishing
+the changes. Acceptance is the user's decision to make, and this records it as such. It was NOT inferred
+from a passing probe, from the boot result, or from any claim made by the implementation.
+
+WHAT ACCEPTANCE COVERS:
+
+- Milestone 22 as scoped at 8AB.1: one test enemy on the shared generic `AnimationAdapter` with its own
+  `AnimationSet`, the data-driven same-slot/different-clip proof, the unchanged fallback policy, the
+  measured visual/gameplay separation, and **Option A** (the animation owns the defeat pose) as the single
+  recorded pose owner.
+- The `enemy_animation_swappability_probe_debug` result of `ALL CHECKS PASSED (131)` and the fresh
+  regression set at 8AB.11.
+- The reuse of the player's model as a TEMPORARY VALIDATION FIXTURE, which the Milestone 22 brief
+  authorised and which 8AB.3 records as superseding the 8AA.6 draft.
+
+WHAT ACCEPTANCE DOES NOT COVER, stated so this is not read as wider than it is:
+
+- The human-playtest questions at 8AB.14 were accepted as a whole by the user's instruction. The
+  individual answers were NOT dictated into this record and are NOT fabricated here - whatever the user
+  saw by eye is theirs to state, and this file does not assume it.
+- The two stale probe expectations at 8AB.12 remain **OPEN**. They fail on behaviour that an earlier
+  milestone deliberately introduced and that this milestone did not touch. Accepting Milestone 22 does not
+  silently resolve them, and no probe was edited to make them pass.
+- The limitations at 8AB.15 still stand: the enemy wears the player's mesh, only one enemy was converted,
+  and `stagger` / `parry` remain fallback / neutral because the pack ships no clip for either.
+
+PUBLICATION: committed locally as `e7b99b91dd88bb97991a4552ceda805e38364249` (13 files changed, 6 added,
+0 deleted) BEFORE this acceptance record was written; the record itself is a follow-up commit on `main`.
+Per the project rule recorded 2026-09-15, the USER performs the push - no push was attempted from here.
 
