@@ -4370,3 +4370,52 @@ BY-DESIGN `slot 'parry' has no clip` report, which is the fallback policy being 
 get_bone_global_pose(i)`, which is a `Transform3D`, from a function declared to return `Vector3`. A
 parse error. Fixed by taking `.origin`. Recorded because it is the second time this pass that a
 probe's own type error - not a game defect - was the thing standing between the work and its evidence.
+
+---
+
+## Milestone 22 - artifacts recorded (section 8AB, recorded 2026-09-15)
+
+**NO FILE WAS DELETED OR REPLACED IN THIS PASS.** Nothing was removed, renamed or moved, so no entry below
+is a DELETED or REPLACED record. These are new artifacts and recorded changes, added to the ledger for the
+same reason the Milestone 21 entries were: the ledger answers "what exists and is it disposable", and a new
+temporary artifact is exactly the kind of thing it exists to track.
+
+### New files (temporary, cleanup candidates)
+
+- `scripts/diagnostics/enemy_animation_swappability_probe_debug.gd` - the Milestone 22 falsifier, 131 checks.
+  It is the probe that would FALSIFY the Milestone 21 swappability claim if the adapter ignored its assigned
+  set, so it is temporary diagnostic scaffolding, not production code. Safe To Delete: Yes, once the
+  swappability property is covered by a permanent test or the architecture is no longer in question.
+- `scenes/diagnostics/enemy_animation_swappability_probe_debug.tscn` - the probe's standalone entry scene.
+  Safe To Delete: Yes, with its script.
+- `scenes/actors/enemy_visual.tscn` - the enemy's visual fixture: the imported model, an `AnimationPlayer`
+  and an `AnimationSet` assignment. It is a TEMPORARY VALIDATION FIXTURE that currently reuses the PLAYER's
+  model, which is explicitly not final enemy art. Safe To Delete: No while `test_attacker.tscn` instances
+  it; replace rather than delete when a real enemy rig exists.
+- `resources/animation/enemy_attacker.animset.tres` - the enemy's `AnimationSet`. This is DATA, not
+  scaffolding: it is the swappable content the milestone exists to demonstrate and should OUTLIVE the probe.
+  Safe To Delete: No.
+- `res://enemy_animation_swappability_report.txt` - the durable probe transcript, same convention as the
+  other `*_report.txt` evidence files. Safe To Delete: Yes, once the milestone record is accepted.
+
+### Recorded changes to existing files
+
+- `scenes/actors/test_attacker.tscn`: `animation_set` on the `Animation` node, the `Visual` instance,
+  `visible = false` on the capsule `Mesh`, and `pose_body_meshes = false` on `DeathPresentation`. Every
+  gameplay node is untouched and still on the body. This change is INTENDED TO PERSIST - it is the milestone
+  result, not a cleanup candidate.
+- `scripts/diagnostics/enemy_death_presentation_debug.gd`: gained the explicit defeat-pose ownership
+  contract (`pose_body_meshes`, `visual_path`, `pose_owner_name()`, `owns_body_pose()`,
+  `writes_body_mesh()`, `_resolve_visual()`). The chosen owner for `TestAttacker` is the ANIMATED VISUAL,
+  which is Option A in the milestone brief. The file remains a temporary diagnostic that is already recorded
+  as a cleanup candidate elsewhere in this manifest - this pass does not change that status.
+
+### A pre-existing stale expectation, recorded rather than repaired
+
+`actor_death_probe_debug` (2 failures) and `enemy_death_probe_debug` (5 failures) both assert that the
+player's reset must NOT revive a defeated enemy. The project deliberately does the opposite now - see
+roadmap line 141 and `DeathComponent._restore_arena_actors()` - and `player_death_reset_probe_debug`
+asserts the new behavior and passes 38/38. Both failing probes are UNMODIFIED in this pass and
+`death_component.gd` was not touched, so this is a stale expectation from an earlier milestone rather than a
+Milestone 22 regression. **Left in place deliberately**: they are another milestone's acceptance probes, and
+editing them to produce a green board would conceal the finding instead of recording it.

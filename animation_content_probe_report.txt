@@ -83,7 +83,7 @@ PASS  the driver still resolves a clip through the lookup after the reset (slot=
 post-reset: slot=idle clip=core_main_idle_01 playing=core_main_idle_01
 PASS  the model's skeleton carries real bones (59)
 PASS  BONES ACTUALLY MOVED while a clip played, so the clips bound to THIS skeleton (59 bones)
-bone signature: early=456.532 late=443.339 moved=true
+bone signature: early=456.534 late=443.339 moved=true
 PASS  with the driver STOPPED the skeleton holds still, so THIS driver is what poses it (59 bones)
 stopped control: a=443.192 b=443.192 held=true
 

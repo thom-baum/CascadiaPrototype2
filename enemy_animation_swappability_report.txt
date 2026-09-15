@@ -1,0 +1,164 @@
+PASS  the player actor is discoverable by the 'player_actor' group
+PASS  the test enemy 'TestAttacker' is present in the arena
+player: Player
+enemy:  TestAttacker (CharacterBody3D)
+PASS  the player carries the shared AnimationAdapter node
+PASS  the enemy carries an AnimationAdapter node
+PASS  both adapter nodes carry a script
+PASS  the enemy runs THE SAME adapter script OBJECT as the player, not a copy of it
+PASS  that shared script is the generic adapter (res://scripts/animation/animation_adapter.gd)
+PASS  both adapters are wired to their own actor's shared state
+PASS  no enemy-specific adapter implementation exists anywhere in the tree (found [])
+adapter script: res://scripts/animation/animation_adapter.gd (shared by both actors)
+PASS  the player carries a visual in the 'visual_driver' group
+PASS  the enemy carries a visual in the 'visual_driver' group
+player visual: Visual (Node3D)
+enemy visual:  Visual (Node3D)
+PASS  both visuals run the SAME visual driver script (no second driver implementation)
+PASS  player: the visual is a CHILD of the gameplay body, so it inherits its transform
+PASS  player: the visual declares NO positional offset of its own (origin=(0.0, 0.0, 0.0))
+PASS  player: the visual subtree owns NO collision node at any depth (0)
+PASS  player: the visual joined no gameplay group beyond its own (found [])
+PASS  enemy: the visual is a CHILD of the gameplay body, so it inherits its transform
+PASS  enemy: the visual declares NO positional offset of its own (origin=(0.0, 0.0, 0.0))
+PASS  enemy: the visual subtree owns NO collision node at any depth (0)
+PASS  enemy: the visual joined no gameplay group beyond its own (found [])
+PASS  player: the visual resolved its imported model
+PASS  player: the imported model carries a Skeleton3D (a rigged character)
+PASS  player: the imported model carries a skinned MeshInstance3D
+PASS  enemy: the visual resolved its imported model
+PASS  enemy: the imported model carries a Skeleton3D (a rigged character)
+PASS  enemy: the imported model carries a skinned MeshInstance3D
+PASS  the player adapter has an AnimationSet assigned
+PASS  the ENEMY adapter has an AnimationSet assigned
+PASS  the two actors are assigned DISTINCT AnimationSet RESOURCES, not one shared resource
+PASS  the two sets are different sets ('Player Fist' vs 'Arena Attacker (TestEnemy)')
+PASS  the enemy set identifies the ENEMY rather than the player ('Arena Attacker (TestEnemy)')
+PASS  
+player set: Player Fist (res://resources/animation/player_fist.animset.tres)
+enemy set:  Arena Attacker (TestEnemy) (res://resources/animation/enemy_attacker.animset.tres)
+PASS  the player's VISUAL registered the same set its ADAPTER resolves against
+PASS  the enemy's VISUAL registered the same set its ADAPTER resolves against
+PASS  the enemy visual is wired to its model child
+PASS  player set: slot 'locomotion' resolves EXACT to real content
+PASS  enemy set: slot 'locomotion' resolves EXACT to real content
+PASS  both sets name a clip for slot 'locomotion'
+PASS  THE PROOF - the SAME slot 'locomotion' resolves to DIFFERENT clips: player='core_main_walk_F_01.fbx'  enemy='unarmed_main_walk_F_01.fbx'
+PASS  player slot 'locomotion' resolves to a clip the PLAYER's visual registered
+PASS  the player's visual did NOT register the enemy's clip for 'locomotion', so the two sets are genuinely different content
+PASS  enemy slot 'locomotion' resolves to a clip the ENEMY's visual registered
+PASS  the enemy's visual did NOT register the player's clip for 'locomotion'
+PROOF slot 'locomotion':
+    player -> res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_walk_F_01.fbx
+    enemy  -> res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Main Hand/unarmed_main_walk_F_01.fbx
+PASS  player set: slot 'idle' resolves EXACT to real content
+PASS  enemy set: slot 'idle' resolves EXACT to real content
+PASS  both sets name a clip for slot 'idle'
+PASS  THE PROOF - the SAME slot 'idle' resolves to DIFFERENT clips: player='core_main_idle_01.fbx'  enemy='unarmed_main_idle_01.fbx'
+PASS  player slot 'idle' resolves to a clip the PLAYER's visual registered
+PASS  the player's visual did NOT register the enemy's clip for 'idle', so the two sets are genuinely different content
+PASS  enemy slot 'idle' resolves to a clip the ENEMY's visual registered
+PASS  the enemy's visual did NOT register the player's clip for 'idle'
+PROOF slot 'idle':
+    player -> res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_idle_01.fbx
+    enemy  -> res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Main Hand/unarmed_main_idle_01.fbx
+PASS  the enemy set carries the enemy's OWN attack slot 'attack:arena_attacker' as exact content
+PASS  the player set has no exact content for the enemy's attack slot 'attack:arena_attacker' (got 'neutral')
+enemy attack slot 'attack:arena_attacker' -> unarmed_main_charged_attack_01_full.fbx (player set: neutral)
+PASS  POLICY exact: a populated enemy slot reports EXACT
+PASS  POLICY fallback: enemy slot 'stagger' reports FALLBACK, not exact (got 'fallback')
+PASS  POLICY: a MISSING enemy slot is NOT reported as exact content
+PASS  POLICY: the declared substitute actually supplies a clip ('core_main_hit_reaction_medium_R_01.fbx')
+PASS  POLICY: the substitute is named in the result, so the outcome is auditable ('hurt')
+POLICY fallback: 'stagger' -> core_main_hit_reaction_medium_R_01.fbx (declared substitute for 'stagger')
+PASS  POLICY neutral: the undeclared enemy slot 'parry' falls to the neutral stand-in (got 'neutral')
+PASS  POLICY: the neutral note NAMES the slot that was missing ('no content for 'parry'; neutral slot 'idle' stands in')
+PASS  POLICY: the neutral outcome supplies the set's declared neutral slot's clip
+POLICY neutral: 'parry' -> unarmed_main_idle_01.fbx (no content for 'parry'; neutral slot 'idle' stands in)
+PASS  POLICY: an unknown slot key is never reported as exact content
+POLICY unknown slot -> 'neutral'
+PASS  POLICY: the PLAYER's set still reports neutral for its own missing slot, so semantics are global and unchanged
+PASS  the enemy visual runs the SAME in-place correction as the player (convert_to_in_place)
+PASS  the enemy visual owns an AnimationPlayer
+PASS  the enemy registered 7 real clip(s) from its own set
+PASS  enemy clip 'core_main_death_01' is IN PLACE (horizontal travel 0.0000 m)
+PASS  enemy clip 'core_main_hit_reaction_medium_R_01' is IN PLACE (horizontal travel 0.0000 m)
+PASS  enemy clip 'core_main_roll_to_idle_F_01' is IN PLACE (horizontal travel 0.0000 m)
+PASS  enemy clip 'core_main_run_F_01' is IN PLACE (horizontal travel 0.0000 m)
+PASS  enemy clip 'unarmed_main_charged_attack_01_full' is IN PLACE (horizontal travel 0.0000 m)
+PASS  enemy clip 'unarmed_main_idle_01' is IN PLACE (horizontal travel 0.0000 m)
+PASS  enemy clip 'unarmed_main_walk_F_01' is IN PLACE (horizontal travel 0.0000 m)
+worst enemy horizontal travel across 7 clip(s): 0.0000 m
+PASS  the enemy's walk still has VERTICAL motion, so in place was not achieved by freezing it (0.0800 m)
+PASS  the enemy is still a CharacterBody3D
+PASS  the enemy still carries its authored 'Collision' node
+PASS  the enemy still carries its authored 'Hurtbox' node
+PASS  the enemy still carries its authored 'AttackHitbox' node
+PASS  the enemy still carries its authored 'Health' node
+PASS  the enemy still carries its authored 'Death' node
+PASS  the enemy still carries its authored 'DeathPresentation' node
+PASS  the enemy still carries its authored 'Attacker' node
+PASS  the enemy still carries its authored 'Locomotion' node
+PASS  the enemy still carries its authored 'ActorState' node
+PASS  the enemy still carries its authored 'Animation' node
+PASS  the enemy still carries its authored 'Reaction' node
+PASS  the enemy still carries its authored 'Participant' node
+PASS  the enemy's gameplay collision shape is still present and non-empty
+PASS  the enemy visual is a child of the BODY and not of a collider
+PASS  the enemy still carries its capsule Mesh node
+PASS  the enemy's primitive capsule is hidden now that a real model is worn
+PASS  the enemy carries its defeat presentation
+PASS  the enemy carries the defeat authority (EnemyDeathComponent)
+PASS  the defeat presentation publishes the pose-ownership query
+PASS  the defeat presentation publishes the pose OWNER NAME
+PASS  the presentation DECLARES it is NOT the defeat-pose owner (pose_body_meshes is FALSE)
+PASS  pose_body_meshes is FALSE on the scene, so the declaration is authored rather than defaulted
+PASS  the declared defeat-pose owner is the enemy VISUAL, and that visual exists ('visual:Visual')
+PASS  the declared pose owner has content to pose with: enemy slot 'dead' resolves EXACT
+declared defeat-pose owner: visual:Visual
+enemy 'dead' clip: core_main_death_01.fbx
+PASS  as shipped (enemy set): the window recorded live resolutions (20 frames)
+as shipped (enemy set): armed on a live slot change=true (waited 13 frame(s) to arm)
+PASS  as shipped (enemy set): every live resolution equals the ASSIGNED set's answer (20 sample(s), 0 mismatch(es))
+PASS  as shipped (enemy set): on the slots where the two sets DISAGREE the adapter followed the assigned set (20/20)
+as shipped (enemy set): 20 sample(s), slots seen ["idle", "locomotion"], mismatches 0, disagreeing slots 20
+PASS  enemy given the PLAYER set: the window recorded live resolutions (20 frames)
+enemy given the PLAYER set: armed on a live slot change=true (waited 5 frame(s) to arm)
+PASS  enemy given the PLAYER set: every live resolution equals the ASSIGNED set's answer (20 sample(s), 0 mismatch(es))
+PASS  enemy given the PLAYER set: on the slots where the two sets DISAGREE the adapter followed the assigned set (20/20)
+enemy given the PLAYER set: 20 sample(s), slots seen ["idle"], mismatches 0, disagreeing slots 20
+PASS  after the swap the two adapters are STILL the same script object (the change was data only)
+PASS  the enemy adapter node is the same node it started as (nothing was re-created)
+PASS  the adapter still resolves to the shared generic script after the swap
+PASS  the swapped adapter is still the ENEMY's own Animation node
+PASS  enemy set RESTORED: the window recorded live resolutions (20 frames)
+enemy set RESTORED: armed on a live slot change=true (waited 32 frame(s) to arm)
+PASS  enemy set RESTORED: every live resolution equals the ASSIGNED set's answer (20 sample(s), 0 mismatch(es))
+PASS  enemy set RESTORED: on the slots where the two sets DISAGREE the adapter followed the assigned set (20/20)
+enemy set RESTORED: 20 sample(s), slots seen ["locomotion"], mismatches 0, disagreeing slots 20
+PASS  the enemy's skeleton carries real bones (59)
+PASS  the ENEMY SKELETON ACTUALLY MOVED while a clip played (59 bones), so the visual is animated rather than frozen
+enemy bone signature: early=464.893 late=448.143
+PASS  the enemy's health reached zero through the normal damage chain
+PASS  the EXISTING defeat path processed the enemy
+PASS  exactly ONE defeat was processed (1)
+PASS  the defeat presentation reports it is showing (is_showing)
+PASS  the world-space DEFEATED label is raised ('DEFEATED')
+PASS  after defeat the presentation still does NOT own the pose
+PASS  the ONE declared owner after defeat is the visual ('visual:Visual')
+PASS  the enemy adapter is asking for the 'dead' slot ('dead')
+PASS  the adapter resolved 'dead' to the enemy set's dead clip through the real lookup
+PASS  the ENEMY VISUAL is playing that dead clip, so animation owns the final pose
+deads slot resolved: res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_death_01.fbx
+PASS  the capsule's pre-defeat transform was captured
+PASS  the capsule transform was IDENTICAL on every one of the 45 held frames (1 distinct value(s))
+PASS  the capsule material_override was IDENTICAL on every held frame (1 distinct value(s))
+PASS  the competing transform writer stopped: the capsule holds its PRE-DEFEAT transform
+PASS  the competing material writer stopped: the capsule holds its PRE-DEFEAT material
+PASS  the capsule is still hidden after defeat, so the rigged pose is the only body read
+death hold: 1 distinct transform(s), 1 distinct material(s) over 45 frames
+capsule transform before defeat: [X: (1.0, 0.0, 0.0), Y: (0.0, 1.0, 0.0), Z: (0.0, 0.0, 1.0), O: (0.0, 0.92, 0.0)]
+PASS  with the driver STOPPED the enemy skeleton holds still, so THIS driver is what poses it
+enemy stopped control: a=442.191 b=442.191
+
+RESULT: ALL CHECKS PASSED (131)

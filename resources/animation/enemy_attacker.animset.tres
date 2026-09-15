@@ -1,0 +1,20 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/animation/animation_set.gd" id="1_set"]
+
+[resource]
+script = ExtResource("1_set")
+display_name = "Arena Attacker (TestEnemy)"
+neutral_slot = "idle"
+slots = {
+"idle": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Main Hand/unarmed_main_idle_01.fbx"),
+"locomotion": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Main Hand/unarmed_main_walk_F_01.fbx"),
+"sprint": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_run_F_01.fbx"),
+"dodge": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_roll_to_idle_F_01.fbx"),
+"hurt": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_hit_reaction_medium_R_01.fbx"),
+"dead": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Core/core_main_death_01.fbx"),
+"attack:arena_attacker": PackedStringArray("res://assets/characters/Nephilite Studios/Fist Animation Set/Animations/Fist Animations/Fist Main Hand/unarmed_main_charged_attack_01_full.fbx")
+}
+fallbacks = {
+"stagger": "hurt"
+}

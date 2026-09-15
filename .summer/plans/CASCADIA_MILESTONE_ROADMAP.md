@@ -8380,3 +8380,238 @@ Git is handled MANUALLY BY THE USER in this project - see the `.summerrules` not
 the work locally if the user asks; do NOT repeatedly attempt `push`. A failing push is the user's workflow,
 not a defect to keep reporting.
 
+---
+
+## Milestone 22 - AnimationSet swappability and enemy death-pose ownership (section 8AB, recorded 2026-09-15)
+
+STATUS: **APPLIED, statically clean, PROBE-MEASURED. NOT human-accepted.** The new swappability probe passes
+**ALL CHECKS PASSED (131)** and `main.tscn` boots at **0 errors / 0 debugger errors / 22 warnings**. The
+central Milestone 21 claim - *the controller and adapter stay the same while the assigned `AnimationSet`
+changes* - is now **PROVEN, not merely unfalsified**. Acceptance remains the user's step: the milestone is
+NOT accepted until they handplay it and say so.
+
+### 8AB.1 SCOPE IMPLEMENTED
+
+A second actor wears the same generic animation pipeline on different DATA. One test enemy
+(`TestAttacker`) got an imported rigged visual, its own `AnimationSet`, and an explicit defeat-pose owner.
+No AI, no navigation, no attacks, no new archetypes, no new animation assets, no combat retune, and **no
+change to `AnimationAdapter`**.
+
+### 8AB.2 THE CENTRAL CLAIM WAS FALSIFIABLE IN A WAY NOTHING PREVIOUSLY TESTED
+
+Milestone 21 shipped ONE set, so an adapter that ignored `animation_set` entirely and hard-coded the
+player's clips would have passed every check the project had. The new probe is the falsifier: it hands the
+ENEMY's live adapter the PLAYER's set and requires its resolutions to RELOCATE to the other set's data with
+no code change, no new node and no restart, then relocate back. An `if actor_is_enemy` branch cannot satisfy
+both windows. This is the one measurement that distinguishes "swappable by data" from "happens to work".
+
+### 8AB.3 RECON - WHAT ACTUALLY EXISTED (measured, not assumed)
+
+- **Test enemy actor used:** `TestAttacker` (`scenes/actors/test_attacker.tscn`, a `CharacterBody3D`), the
+  lighter arena attacker. It already carried an `Animation` node running the SHARED adapter.
+- **Reused model/scene:** `assets/characters/Nephilite Studios/Fist Animation Set/Models/Md_Char_Low_Poly_Man.fbx`,
+  worn via a new `scenes/actors/enemy_visual.tscn`. **The player's own model, deliberately reused.**
+- **SUPERSESSION, stated so it is not read as an error:** the earlier 8AA.6 draft said "Do NOT silently
+  re-use the player's low poly man on an enemy". The Milestone 22 brief EXPLICITLY AUTHORISED reuse for this
+  test ("Reusing the existing imported player model and animation assets is explicitly allowed ... The
+  same imported model may be instantiated twice as a temporary validation fixture"). 8AA.6 is superseded
+  for this milestone. The reuse is a **temporary validation fixture, never final enemy art**, and the probe
+  keeps the test honest by requiring the two actors' CONTENT to differ per slot even though the mesh matches:
+  it asserts the player's visual did NOT register the enemy's clip and vice versa.
+- **Recon finding:** exactly ONE rig exists in the project (230 humanoid clips). There is no unique enemy rig,
+  which is why the brief's reuse clause is the workable path rather than a shortcut.
+- **Clips available:** the pack's `Fist Main Hand` set (54 clips) and `Core` set (59 clips), both already
+  imported.
+- **Defeat presentation as found:** `EnemyDeathPresentationDebug` wrote a mesh transform and a
+  `material_override` on the capsule, which collides with a skeleton that also poses the body.
+
+### 8AB.4 THE SWAPPABILITY PROOF - EXACT VALUES
+
+| Item | Value |
+| ---- | ----- |
+| Player `AnimationSet` | `res://resources/animation/player_fist.animset.tres` (`Player Fist`) |
+| Enemy `AnimationSet` | `res://resources/animation/enemy_attacker.animset.tres` (`Arena Attacker (TestEnemy)`) |
+| Semantic slot (primary) | `locomotion` |
+| Player-resolved clip | `.../Core/core_main_walk_F_01.fbx` |
+| Enemy-resolved clip | `.../Fist Animations/Fist Main Hand/unarmed_main_walk_F_01.fbx` |
+| Semantic slot (second) | `idle` |
+| Player-resolved clip | `.../Core/core_main_idle_01.fbx` |
+| Enemy-resolved clip | `.../Fist Main Hand/unarmed_main_idle_01.fbx` |
+
+Both actors resolve these through **the same generic `AnimationAdapter`**. The two sets are **distinct
+resources**, and the sets differ on EVERY proof slot rather than accidentally agreeing on some.
+
+### 8AB.5 ADAPTER UNCHANGED - THE LOAD-BEARING CONSTRAINT HELD
+
+- `scripts/animation/animation_adapter.gd` is **byte-for-byte unchanged**. It appears in NO changed-file
+  list for this pass.
+- **No enemy-specific adapter implementation exists anywhere in the tree** (probe scanned every script in
+  the runtime tree for an adapter script whose path names an enemy: found `[]`).
+- **No enemy-specific branch was added.** The adapter's contract, its slot vocabulary and its fallback
+  semantics are untouched.
+- The probe re-reads adapter identity AFTER the swap and confirms the two adapters are still the same script
+  OBJECT and that the enemy adapter is the same node it started as.
+
+### 8AB.6 FALLBACK POLICY - UNCHANGED AND OBSERVED, NOT ASSERTED
+
+The five outcomes remain `exact` / `fallback` / `neutral` / `missing` / `none`, and the enemy set is
+**deliberately thin in one place** so the policy is measured on a real second actor:
+
+- `exact`: the enemy's populated slots resolve exactly.
+- `fallback`: enemy slot `stagger` is declared as substituting `hurt` and reports `fallback`, **not** exact,
+  with the substitute named in the result.
+- `neutral`: enemy slot `parry` (undeclared, unpopulated) falls to the neutral stand-in and the note NAMES
+  the missing slot.
+- `missing`: a declared-but-empty substitute reports `missing`, never a fake exact match.
+- Nothing was suppressed, no clip was invented, and the PLAYER's set still reports its own missing slot the
+  same way - so the semantics are global and unchanged.
+
+### 8AB.7 VISUAL vs GAMEPLAY AUTHORITY - MEASURED SEPARATION
+
+- The enemy visual subtree owns **ZERO collision nodes at any depth** - it cannot become a physics authority.
+- The visual declares **no positional offset of its own** and joined **no gameplay group** beyond its own.
+- Enemy gameplay geometry is ALL still on the body: `Collision`, `Hurtbox`, `AttackHitbox`, `Health`,
+  `Death`, `DeathPresentation`, `Attacker`, `Locomotion`, `ActorState`, `Animation`, `Reaction`,
+  `Participant`.
+- Every enemy clip is measured **IN PLACE (horizontal travel 0.0000 m)**, and the walk still has
+  **vertical** motion (0.0800 m) - so "in place" was not achieved by flattening the clip.
+- No root motion and no animation-driven gameplay authority was introduced.
+
+### 8AB.8 CHOSEN DEATH-POSE OWNER: **Option A - the ANIMATION owns the final death pose**
+
+Recorded in the implementation, this roadmap and the presentation's own ownership contract.
+
+- `EnemyDeathPresentationDebug.pose_body_meshes` is authored **`false`** in `test_attacker.tscn`, so the
+  declaration is authored rather than defaulted.
+- `pose_owner_name()` returns **`visual:Visual`** and `owns_body_pose()` returns **false**.
+- The competing writer **stops**: the capsule's local transform and `material_override` were sampled on
+  EVERY frame of the defeat hold and were IDENTICAL on all of them (1 distinct value each over 45 frames),
+  and still equal the PRE-DEFEAT values.
+- The presentation still reports the defeat (`is_showing()`, the `DEFEATED` label) - ownership of the POSE
+  was handed over without handing over the defeat signal, which is why the existing defeat probes that read
+  `is_showing()`/`status_text()` remain valid.
+- **Deterministic, not update-order dependent, by construction:** with exactly one writer there is no frame
+  on which two systems could disagree. The probe states this as a measurement (one distinct transform, one
+  distinct material across the whole hold), not as a promise.
+- The owner delivered: the adapter asked for `dead`, resolved it to the enemy set's `core_main_death_01.fbx`
+  through the real lookup, and the visual is playing it.
+
+### 8AB.9 PROBE
+
+`res://scripts/diagnostics/enemy_animation_swappability_probe_debug.gd` +
+`res://scenes/diagnostics/enemy_animation_swappability_probe_debug.tscn`.
+
+**131 checks, ALL CHECKS PASSED.** It measures the architecture rather than inspecting that files exist:
+adapter identity, set identity, same-slot/different-clip, the LIVE following of assigned data across a swap
+and a restore, the fallback policy, visual/gameplay separation, skeleton movement with a STOPPED control,
+and death-pose ownership sampled across the whole hold.
+
+Live windows, each armed on a REAL slot change (so the samples are honoured re-resolves, not stale holds):
+
+| Window | Frames | Mismatches | Followed assigned set |
+| ------ | ------ | ---------- | --------------------- |
+| as shipped (enemy set) | 20 (armed after 13) | 0 | 20/20 |
+| enemy given the PLAYER set | 20 (armed after 5) | 0 | 20/20 |
+| enemy set RESTORED | 20 (armed after 32) | 0 | 20/20 |
+
+Skeleton movement is measured directly, not via `is_playing()`: bone signature moved
+`early=464.893 -> late=448.143`, and with the driver STOPPED it held still (`442.191 -> 442.191`), which is
+the control that proves THIS driver is what poses the enemy.
+
+### 8AB.10 A PROBE-INSTRUMENTATION DEFECT FOUND AND FIXED (recorded, because it nearly produced a false negative)
+
+The window originally armed on a slot change with a frame budget, and the budget expired by returning
+"done" with an EMPTY store. The adapter re-resolves a slot **only when the intent or the slot moves**
+(`_physics_process` early-returns otherwise), so a window opened over a stable actor could never observe a
+change - and the empty store was then audited as a FAILURE OF THE ARCHITECTURE. It was an instrument
+limitation reported as an architecture defect.
+
+Two corrections, in order:
+
+1. A fall-through to sampling was tried and was **WRONG**: the adapter keeps reporting the resolution it
+   made under the PREVIOUS set until a change forces a re-read, so sampling a stable actor produced 18
+   spurious "mismatches". That is a stale measurement, not a failed swap. Reverted.
+2. The real fix: **give every window a genuine slot-change source.** The stand-off alternates between a far
+   and a near player distance so the enemy actually ARRIVES and its slot flips `locomotion` <-> `idle`. All
+   three windows then armed on a real change and passed with 0 mismatches.
+
+Recorded for the same reason the manifest already records the root-vs-hips negative result: the natural
+conclusion ("the probe says the swap was ignored") would have been a false defect report against working
+code.
+
+### 8AB.11 REGRESSION RESULTS (all re-run fresh this pass, not carried over)
+
+| Probe | Fresh result |
+| ----- | ------------ |
+| `enemy_animation_swappability_probe_debug` (new) | `ALL CHECKS PASSED (131)` |
+| `animation_content_probe_debug` | `ALL CHECKS PASSED (70)` |
+| `animation_lookup_probe_debug` | `ALL CHECKS PASSED (30)` |
+| `animation_adapter_probe_debug` | `ALL CHECKS PASSED (54)` |
+| `animation_visual_correction_probe_debug` | `ALL CHECKS PASSED (20)` |
+| `actor_contract_probe_debug` | `ALL CHECKS PASSED (82)` |
+| `targeting_probe_debug` | `ALL CHECKS PASSED (78)` |
+| `new_run_reset_probe_debug` | `ALL CHECKS PASSED (32)` |
+| `player_death_reset_probe_debug` | `ALL CHECKS PASSED (38)` |
+| `live_combat_credit_probe_debug` | `ALL CHECKS PASSED (54)` |
+| `combat_feedback_probe_debug` | `ALL CHECKS PASSED` |
+| `enemy_engagement_probe_debug` | `ALL CHECKS PASSED` |
+| `enemy_attack_probe_debug` | `ALL CHECKS PASSED` (phases 0.60/0.12/0.70 as authored) |
+| `defeat_coverage_probe_debug` | `ALL CHECKS PASSED` (every damageable enemy covered) |
+| `main.tscn` | boots at 0 errors, 0 debugger errors, 22 warnings |
+
+### 8AB.12 A PRE-EXISTING STALE PROBE EXPECTATION, FOUND AND NOT MINE (reported, not "fixed")
+
+Two probes now FAIL, and **neither is a Milestone 22 regression**:
+
+- `actor_death_probe_debug`: 2 FAILED
+- `enemy_death_probe_debug`: 5 failures
+
+Every failure is the same assertion in a different probe: *the player's reset must NOT revive a defeated
+enemy*. The running project does the OPPOSITE, and that is **deliberate and already recorded**: roadmap
+line 141 records the change, and `DeathComponent._restore_arena_actors()` documents it in its own source
+("dying resets the encounter, and every enemy comes back alive at full health, which is what a Soulslike
+does"). The dedicated `player_death_reset_probe_debug` - which exists to assert exactly that - passes
+**38/38**, explicitly reporting "TestAttacker: health restored to its authored maximum (100.0/100.0)".
+
+Evidence this is NOT caused by this pass: `death_component.gd`, `health_component.gd` and
+`enemy_death_component.gd` are in NONE of the changed files, and both probe scripts are UNMODIFIED in the
+working tree (they are identical to the last commit). Those two probes simply were never updated when the
+revival behavior landed in an earlier milestone.
+
+**Left in place deliberately.** Rewriting another milestone's acceptance probes to make a green board would
+be exactly the "quietly patch around the finding" that 8AA.4 forbids. Flagged here for the user to decide.
+
+### 8AB.13 GAMEPLAY SYSTEMS EXPLICITLY LEFT UNTOUCHED
+
+Movement, collision, health, damage, hurt detection, hit detection, attack timing, defeat state, navigation,
+targeting, credits, save/load and player combat. No gameplay file was edited. Enemy attack timing measured
+identical to authored (windup 0.60 / active 0.12 / recovery 0.70), and the player's facing/drift correction
+still measures clean (`dot = 1.0000`, in-place 0.0000 m).
+
+### 8AB.14 HUMAN PLAYTEST QUESTIONS (probes CANNOT answer these)
+
+Probes can prove a second actor resolves a second set to real, different clips and that its skeleton moves.
+They CANNOT grade appearance. Please inspect:
+
+1. Enemy model proportions and scale.
+2. Enemy placement over its gameplay body.
+3. Enemy facing.
+4. Enemy locomotion readability.
+5. Enemy animation correspondence (does the motion match what the body is doing?).
+6. Enemy defeat presentation.
+7. Whether the chosen death-pose ownership LOOKS correct in motion.
+8. Whether the player remains visually and mechanically unchanged.
+9. Whether the reused model reads clearly as a TEST enemy rather than final enemy art.
+
+### 8AB.15 REMAINING LIMITATIONS
+
+- The enemy wears the PLAYER's model. It is a validation fixture, not final art, and the two actors are
+  visually indistinguishable apart from their separate animation content - which is precisely why questions
+  1, 5 and 9 above must be answered by eye.
+- Only ONE enemy was converted. `HeavyBrute` and the other capsule enemies still use the primitive
+  presentation and the transform-based defeat pose (`pose_body_meshes` still true).
+- The enemy's `stagger` slot is a declared fallback to `hurt` because the pack ships no stagger clip, and
+  `parry` remains `neutral` - both correct per policy, both still missing content.
+- No enemy attack animation is wired beyond the single `attack:arena_attacker` slot.
+- This is APPLIED and PROBE-MEASURED. It is **NOT human-accepted**, and acceptance is not automatic.
+

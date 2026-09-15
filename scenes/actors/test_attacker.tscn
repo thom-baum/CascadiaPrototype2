@@ -10,9 +10,11 @@
 [ext_resource type="Script" uid="uid://dyyvqg1kibed" path="res://scripts/combat/health_reaction_component.gd" id="8_reaction"]
 [ext_resource type="Script" uid="uid://bgu3srwroa2wk" path="res://scripts/actors/actor_state.gd" id="9_actorstate"]
 [ext_resource type="Resource" path="res://resources/enemies/test_attacker_attack.tres" id="10_profile"]
-[ext_resource type="Script" path="res://scripts/animation/animation_adapter.gd" id="11_uke6e"]
-[ext_resource type="Script" path="res://scripts/combat/enemy_locomotion.gd" id="12_locomotion"]
+[ext_resource type="Script" uid="uid://bmclwgsoxmaef" path="res://scripts/animation/animation_adapter.gd" id="11_uke6e"]
+[ext_resource type="Script" uid="uid://pp3cc46rklpf" path="res://scripts/combat/enemy_locomotion.gd" id="12_locomotion"]
+[ext_resource type="Resource" path="res://resources/animation/enemy_attacker.animset.tres" id="12_p0qrx"]
 [ext_resource type="Resource" path="res://resources/enemies/test_attacker_actor.tres" id="13_movement"]
+[ext_resource type="PackedScene" path="res://scenes/actors/enemy_visual.tscn" id="15_lueyt"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
@@ -54,6 +56,7 @@ shape = SubResource("CapsuleShape3D_body")
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=11754410]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+visible = false
 material_override = SubResource("StandardMaterial3D_body")
 mesh = SubResource("CapsuleMesh_body")
 
@@ -90,6 +93,7 @@ script = ExtResource("5_death")
 
 [node name="DeathPresentation" type="Node3D" parent="." unique_id=279463252]
 script = ExtResource("6_deathpres")
+pose_body_meshes = false
 
 [node name="Participant" type="Node" parent="." unique_id=1342801164]
 script = ExtResource("7_c3asi")
@@ -104,7 +108,10 @@ script = ExtResource("9_actorstate")
 
 [node name="Animation" type="Node3D" parent="." unique_id=1632089426]
 script = ExtResource("11_uke6e")
+animation_set = ExtResource("12_p0qrx")
 
-[node name="Locomotion" type="Node" parent="."]
+[node name="Locomotion" type="Node" parent="." unique_id=1335990786]
 script = ExtResource("12_locomotion")
 profile = ExtResource("13_movement")
+
+[node name="Visual" parent="." unique_id=1091529095 instance=ExtResource("15_lueyt")]
