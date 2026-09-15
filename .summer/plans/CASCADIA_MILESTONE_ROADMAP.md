@@ -59,16 +59,18 @@ sections; this block is the entry point, not a replacement for them.
   2026-09-15 and is kept here, demoted rather than deleted, because it is the evidence for M13.
   Milestone 12 (target lock-on) was the previous highest accepted, accepted the same day on its own
   playtest; its record stands at 8P.
-- **Milestone 21 - ANIMATION LOOKUP ARCHITECTURE (SLICE A) - APPLIED + PROBE-MEASURED, NOT accepted
-  and NOT human-playtested.** The presentation layer can now carry attack IDENTITY, not just "attacking":
+- **Milestone 21 - ANIMATION LOOKUP ARCHITECTURE (SLICE A) - APPLIED + PROBE-MEASURED. Its acceptance is
+  SUBSUMED into Milestone 21 as a whole, which IS accepted - see the ACCEPTED bullet below and 8Z.8.**
+  The presentation layer can now carry attack IDENTITY, not just "attacking":
   `AttackDefinition.id` / `key()`, `ActorState.attack_id()`, `AnimationIntent`, and `AnimationSet` (the
   swappable slot -> clip mapping layer with a five-outcome fallback policy). `animation_lookup_probe_debug`
   reports `RESULT: ALL CHECKS PASSED (30)`, including the central claim measured directly: one attack held
   ONE slot (`attack:light`) for 33 committed frames while the coarse intent moved through all three phases,
   and light vs heavy resolve to DIFFERENT slots. Regressions green: adapter probe 54/54, actor contract
   82/82, live combat credit 54/54; `main.tscn` 0 errors.
-- **Milestone 21 - ANIMATION CONTENT PIPELINE (SLICE B) - APPLIED + PROBE-MEASURED, NOT accepted and NOT
-  human-playtested.** The Nephilite pack's low poly man is now the PLAYER'S VISUAL CHILD, wearing real
+- **Milestone 21 - ANIMATION CONTENT PIPELINE (SLICE B) - APPLIED + PROBE-MEASURED. Its acceptance is
+  SUBSUMED into Milestone 21 as a whole, which IS accepted - see the ACCEPTED bullet below and 8Z.8.**
+  The Nephilite pack's low poly man is now the PLAYER'S VISUAL CHILD, wearing real
   imported clips, with every gameplay element untouched. `animation_content_probe_debug` reports
   **`RESULT: ALL CHECKS PASSED (70)`** - including the two checks that separate "a clip is playing" from
   "the character is animating": the model's **59-bone skeleton ACTUALLY MOVES** while a clip plays
@@ -86,8 +88,8 @@ sections; this block is the entry point, not a replacement for them.
   feedback ALL PASSED, enemy engagement ALL PASSED, focus/input routing ALL PASSED (run 2).
   `attack_probe_debug` remains RED on its ACTIVE-duration check - a PROBE measurement artifact caused by
   hitstop that PREDATES this work (12.5), not a regression. Full record: section 8Y.
-- **Milestone 21 - ANIMATION INTEGRATION CORRECTION PASS - APPLIED + PROBE-MEASURED, NOT accepted and NOT
-  human-playtested.** The two hand-reported visual defects were REPRODUCED AS MEASUREMENTS and then
+- **Milestone 21 - ANIMATION INTEGRATION CORRECTION PASS - APPLIED + PROBE-MEASURED + ACCEPTED BY THE
+  USER 2026-09-15.** The two hand-reported visual defects were REPRODUCED AS MEASUREMENTS and then
   fixed at the visual layer only, with no gameplay file touched. (1) The model is authored facing **+Z**
   while gameplay forward is **-Z** - measured from the REST pose foot-to-toe vector, `dot = -1.000`,
   exactly opposed - fixed with a 180-degree yaw on the model INSTANCE, verified afterwards at
@@ -8196,4 +8198,45 @@ is left entirely alone. Settling the transform-versus-clip question for ENEMIES 
 - **`backstep` remains mapped but unreachable** - `AnimationIntent` maps every evasion to `dodge`.
 - **The intent Label3D is still on by default** (`show_label`), which is why labels render over the
   arena. It is the prototype driver, not shipping UI.
+
+### 8Z.8 ACCEPTED BY THE USER - 2026-09-15
+
+STATUS: **MILESTONE 21 IS ACCEPTED AS A WHOLE.** The user reviewed the running build and instructed that
+it be confirmed as accepted. Acceptance is RECORDED here on that instruction: it is the user's decision,
+not an inference from a probe result, and no probe in this project can produce it.
+
+WHAT IS BEING ACCEPTED - the whole of Milestone 21, in three parts, each with its own record:
+
+    SLICE A    (8X)  the lookup architecture - identity on the contract, AnimationIntent, AnimationSet,
+                     the five-outcome fallback policy
+    SLICE B    (8Y)  the content pipeline - the pack's low poly man as the PLAYER's visual child, ten
+                     imported clips registered, every gameplay-reachable slot resolving EXACT
+    CORRECTION (8Z)  facing and in-place - 180-degree yaw on the model instance, and horizontal travel
+                     removed from the Hips track with Y preserved
+
+BASIS OF ACCEPTANCE, stated precisely, because the evidence levels are NOT equal:
+
+  - The USER has seen the model in the running game, standing where the gameplay body is, at player
+    scale, with the primitive capsule hidden. That is a HUMAN read of the shipped build, and it is what
+    the corrections were for.
+  - The MEASUREMENTS behind the corrections are probe measurements: facing agreement `dot = 1.0000`,
+    every clip in place at `0.0000 m`, drift from the body `0.0000 m`, `visual collision nodes: 0`, and
+    the skeleton still moving - so in-place was achieved by removing travel, NOT by freezing animation.
+  - Acceptance therefore covers: the model is the player's visual, correctly oriented relative to
+    gameplay, in place, and animating, with gameplay authority untouched.
+
+WHAT THE ACCEPTANCE DOES NOT COVER, recorded so it is not later mistaken for verified:
+
+  - IN-MOTION FEEL. Strafe coherence, foot-slide against real translation, and whether locomotion
+    cadence matches body speed were NOT judged. They are TUNING; no value was changed to chase them.
+  - ENEMY PRESENTATION. Enemies remain primitive capsules. Milestone 21 gave ONE actor a real model.
+  - PARRY has NO content in this pack and resolves NEUTRAL against the idle stand-in. Intended and
+    visible, not faked.
+  - `backstep` remains mapped but UNREACHABLE - `AnimationIntent` maps every evasion to `dodge`, because
+    the contract does not expose roll-versus-backstep. The clip is authored and waiting.
+  - Milestone 14's ENEMY HEALTH BARS remain not human-read. This milestone did not touch them.
+  - The intent `Label3D` is still ON by default over every actor. Prototype driver, not shipping UI.
+
+CONSEQUENCE FOR THE NEXT MILESTONE: **NONE is selected or approved by this record.** The project rule is
+explicit - a roadmap entry is not approval, and an acceptance is not a queue.
 
