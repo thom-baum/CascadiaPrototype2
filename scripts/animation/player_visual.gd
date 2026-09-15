@@ -28,9 +28,17 @@ extends Node3D
 ## AnimationPlayer under a stable name. The result is cached and SHARED, so a second actor wearing
 ## the same set costs nothing.
 ##
-## ROOT MOTION IS STRIPPED, deliberately. The pack's clips animate the armature node as well as its
-## bones, which would slide the model out of the body that owns it. Any track that targets a NODE
-## rather than a BONE is removed on extraction, so gameplay keeps every metre it owns.
+## TWO KINDS OF UNWANTED MOTION ARE REMOVED ON EXTRACTION, and they are DIFFERENT problems that
+## needed separate fixes - conflating them is how the first pass missed one of them:
+##
+##   1. NODE-level tracks. The pack animates the armature node as well as its bones, which would
+##      slide the model out of the body that owns it. `_strip_node_tracks` removes any track that
+##      targets a node rather than a bone. MEASURED: this pack has NONE in any clip.
+##   2. HIPS-level translation. This is the one that actually displaces the character here: the pack
+##      bakes whole-body travel onto the `Hips` BONE, which is a legitimate bone track and survives
+##      (1) untouched. `_flatten_horizontal_travel` removes its horizontal component.
+##
+## Both exist so gameplay keeps every metre it owns. Neither changes gameplay.
 
 ## Sources already extracted this session, keyed by res:// path. Shared across every instance:
 ## an Animation is immutable data, so one copy serves the whole arena.
@@ -46,6 +54,16 @@ static var _source_cache: Dictionary = {}
 @export var report_missing_sources := true
 ## Blend time between clips, in seconds. Purely presentational.
 @export var blend_time := 0.12
+## Convert TRAVELLING clips into IN-PLACE clips on extraction.
+##
+## MEASURED, not assumed. This pack bakes whole-body travel onto the HIPS BONE rather than the root
+## (the root carries no position track at all), so `_strip_node_tracks` cannot see it: walk travels
+## 1.59 m, sprint 3.78 m, the roll 4.63 m, the heavy attack 2.93 m - and NO clip returns to its
+## start, so every loop snapped the character back to where it began.
+##
+## Gameplay owns every metre an actor moves, so horizontal translation is removed and the vertical
+## motion that makes a walk read as a walk is kept. See `_flatten_horizontal_travel`.
+@export var convert_to_in_place := true
 
 ## Emitted when the playing clip changes. Diagnostic seam.
 signal clip_changed(from_clip: String, to_clip: String)
@@ -61,6 +79,8 @@ var _current := ""
 var _current_loop := false
 ## Node-level tracks stripped across every extracted clip. Diagnostic, not decoration.
 var stripped_tracks := 0
+## Hips/root position tracks flattened to in-place across every extracted clip. Diagnostic.
+var in_place_tracks := 0
 
 ## The group every visual driver joins, so an actor's adapter can find its driver without a
 ## hand-authored path. The adapter spells the same name as its own literal on purpose: referring to
@@ -197,6 +217,10 @@ func _extract(source: String) -> Animation:
 		var stripped := _strip_node_tracks(found)
 		if stripped > 0:
 			stripped_tracks += stripped
+		if convert_to_in_place:
+			var flattened := _flatten_horizontal_travel(found)
+			if flattened > 0:
+				in_place_tracks += flattened
 	_source_cache[source] = found
 	return found
 
@@ -228,6 +252,58 @@ static func _strip_node_tracks(animation: Animation) -> int:
 			animation.remove_track(i)
 			removed += 1
 	return removed
+
+
+## A stable, readable name for a clip: its file name without the extension. The pack's own
+## internal animation names are not used, because the set is addressed by source and a file name
+## is the one identity a set author can see on disk.
+## Remove HORIZONTAL travel from a clip so it animates IN PLACE, keeping its vertical motion.
+##
+## WHY THIS IS A DIFFERENT PROBLEM FROM `_strip_node_tracks`, and why the first attempt at this
+## missed it. Stripping node tracks removes translation applied to the imported SCENE ROOT. This pack
+## instead bakes the body's travel onto the HIPS BONE - a perfectly legitimate bone track that
+## survives a subname-based strip. So the character walked forward inside its own body and snapped
+## back on every loop. MEASURED on the real pack before this ran: walk travelled 1.59 m, sprint
+## 3.78 m, the roll 4.63 m, the heavy attack 2.93 m, and NOT ONE of them returned to its start.
+##
+## X and Z are pinned to the FIRST key's value rather than to zero, so each clip keeps the authored
+## centring it was built around. Y is left UNTOUCHED: the bob, the crouch and the fall are what make
+## the motion read, and none of them competes with gameplay for horizontal ground.
+##
+## Gameplay is unaffected either way - this changes only what the presentation layer plays.
+static func _flatten_horizontal_travel(animation: Animation) -> int:
+	var flattened := 0
+	for track in animation.get_track_count():
+		if animation.track_get_type(track) != Animation.TYPE_POSITION_3D:
+			continue
+		if not _is_whole_body_bone(animation.track_get_path(track)):
+			continue
+		var keys := animation.track_get_key_count(track)
+		if keys < 2:
+			continue
+		var first: Vector3 = animation.track_get_key_value(track, 0)
+		var changed := false
+		for key in range(1, keys):
+			var value: Vector3 = animation.track_get_key_value(track, key)
+			var flat := Vector3(first.x, value.y, first.z)
+			if not flat.is_equal_approx(value):
+				animation.track_set_key_value(track, key, flat)
+				changed = true
+		if changed:
+			flattened += 1
+	return flattened
+
+
+## Whether a track path names a bone that carries the WHOLE body, which is the set of bones whose
+## translation can displace the character. Matched case-insensitively. The ROOT is included even
+## though this pack leaves it untracked, so a differently authored pack that puts its travel on the
+## root is handled by the same rule rather than needing a second mechanism.
+static func _is_whole_body_bone(path: NodePath) -> bool:
+	var count := path.get_subname_count()
+	if count == 0:
+		return false
+	var bone := String(path.get_subname(count - 1)).to_lower()
+	return bone == "root" or bone == "hips"
 
 
 ## A stable, readable name for a clip: its file name without the extension. The pack's own

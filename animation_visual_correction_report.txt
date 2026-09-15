@@ -1,0 +1,54 @@
+player=Player  visual=Visual  model=Model
+model world basis -Z = (0.0, 0.0, 1.0)
+player world basis -Z = (0.0, 0.0, -1.0)
+
+--- FACING ---
+model forward (local, rest) = (0.0, 0.0, 1.0)
+model forward (world)       = (0.0, 0.0, -1.0)
+gameplay forward (world)    = (0.0, 0.0, -1.0)
+agreement (dot) = 1.0000
+PASS  the model's forward axis AGREES with the gameplay body's forward (dot 1.0000)
+
+--- REGISTERED CLIPS (what the driver actually plays) ---
+registered: 10 clip(s)
+PASS  at least one real clip is registered (10)
+  core_main_back_step_medium_01              flat=0.0000 m  vertical=0.4410 m
+PASS  clip 'core_main_back_step_medium_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_death_01                         flat=0.0000 m  vertical=0.7091 m
+PASS  clip 'core_main_death_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_hit_reaction_medium_f_01         flat=0.0000 m  vertical=0.2588 m
+PASS  clip 'core_main_hit_reaction_medium_f_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_idle_01                          flat=0.0000 m  vertical=0.0041 m
+PASS  clip 'core_main_idle_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_roll_to_idle_F_01                flat=0.0000 m  vertical=0.9521 m
+PASS  clip 'core_main_roll_to_idle_F_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_sprint_F_01                      flat=0.0000 m  vertical=0.0700 m
+PASS  clip 'core_main_sprint_F_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_stance_broken_f_01               flat=0.0000 m  vertical=0.3062 m
+PASS  clip 'core_main_stance_broken_f_01' is IN PLACE (horizontal travel 0.0000 m)
+  core_main_walk_F_01                        flat=0.0000 m  vertical=0.0727 m
+PASS  clip 'core_main_walk_F_01' is IN PLACE (horizontal travel 0.0000 m)
+  unarmed_dw_charged_attack_01_release_full  flat=0.0000 m  vertical=0.2934 m
+PASS  clip 'unarmed_dw_charged_attack_01_release_full' is IN PLACE (horizontal travel 0.0000 m)
+  unarmed_dw_light_attack_01                 flat=0.0000 m  vertical=0.1137 m
+PASS  clip 'unarmed_dw_light_attack_01' is IN PLACE (horizontal travel 0.0000 m)
+PASS  the walk clip still has VERTICAL motion, so it was not flattened (0.0727 m)
+
+--- GAMEPLAY AUTHORITY ---
+PASS  the player is still a CharacterBody3D
+PASS  the player still carries its authored Collision shape
+PASS  the player still carries its Hurtbox
+PASS  the player still carries its AttackHitbox
+PASS  the visual subtree owns NO collision nodes, so it cannot become a physics authority (0)
+visual collision nodes: 0
+
+--- ATTACHMENT (model offset from the body, while locomotion plays) ---
+worst offset change over 60 frames: 0.0000 m
+PASS  the model did NOT drift away from the body (worst 0.0000 m)
+adapter slot during sampling: 'idle'
+
+--- SKELETON STILL ANIMATES (control against freezing it) ---
+bone signature before=4.813 after=4.586
+PASS  the skeleton is STILL MOVING, so in-place was not achieved by freezing it
+
+RESULT: ALL CHECKS PASSED (20)

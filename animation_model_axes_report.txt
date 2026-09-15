@@ -1,0 +1,73 @@
+--- HIERARCHY ---
+player global: (0.0, 0.000911, 12.0)
+body forward (gameplay) is the body's own -Z, because FacingMarker/Nose sits at local z=-0.4
+player -> visual path: Visual
+visual -> model path:  Model
+visual local: pos=(0.0, 0.0, 0.0) rot=(0.0, 0.0, 0.0)
+model  local: pos=(0.0, 0.0, 0.0) rot=(0.0, 0.0, 0.0)
+skeleton local: pos=(0.0, 0.0, 0.0) rot=(0.0, 0.0, 0.0)
+
+--- BONES (59) ---
+  0:Root, 1:Hips, 2:Spine_01, 3:Spine_02, 4:Spine_03, 5:Neck, 6:Head, 7:Eyes, 8:Eyebrows, 9:Head_Attachment, 10:Clavicle_L, 11:Shoulder_L, 12:Elbow_L, 13:Hand_L, 14:Thumb_01_L, 15:Thumb_02_L, 16:Thumb_03_L, 17:IndexFinger_01_L, 18:IndexFinger_02_L, 19:IndexFinger_03_L, 20:IndexFinger_04_L, 21:Finger_01_L, 22:Finger_02_L, 23:Finger_03_L, 24:Finger_04_L, 25:Prop_Attachment_L, 26:Shield_Attachment_L, 27:Tome_Attachment_L, 28:Clavicle_R, 29:Shoulder_R, 30:Elbow_R, 31:Hand_R, 32:Thumb_01_R, 33:Thumb_02_R, 34:Thumb_03_R, 35:IndexFinger_01_R, 36:IndexFinger_02_R, 37:IndexFinger_03_R, 38:IndexFinger_04_R, 39:Finger_01_R, 40:Finger_02_R, 41:Finger_03_R, 42:Finger_04_R, 43:Prop_Attachment_R, 44:Target, 45:UpperLeg_R, 46:LowerLeg_R, 47:Ankle_R, 48:Ball_R, 49:Toes_R, 50:UpperLeg_L, 51:LowerLeg_L, 52:Ankle_L, 53:Ball_L, 54:Toes_L, 55:Hips_Attachment, 56:Fx_Attachment, 57:Prop_Attachment_Extra1, 58:Prop_Attachment_Extra2
+
+--- MODEL FORWARD AXIS (from rest pose geometry) ---
+toe bones:  [48, 49, 53, 54]
+foot bones: [47, 52]
+head bones: [6, 9]
+  Ankle_R -> Ball_R : forward=(0.0, 0.0, 1.0)  (azimuth 0.0 deg)
+  Ankle_R -> Toes_R : forward=(0.0, 0.0, 1.0)  (azimuth -0.0 deg)
+  Ankle_L -> Ball_L : forward=(0.0, 0.0, 1.0)  (azimuth -0.0 deg)
+  Ankle_L -> Toes_L : forward=(0.0, 0.0, 1.0)  (azimuth -0.0 deg)
+  VERDICT: model forward (rest) is (0.0, 0.0, 1.0), azimuth -0.0 deg from +Z
+  dot(model_forward, gameplay_forward=-Z) = -1.000
+  => OPPOSED: the model is authored facing BACKWARDS, so a 180 deg yaw correction is required.
+
+--- CLIPS (10 in the assigned set) ---
+
+core_main_idle_01  len=2.67s  tracks=30 (node=0 bone=30)
+  Hips pos3d: keys=16 first=(-0.0082, 0.8485, 0.0277) last=(-0.0082, 0.8485, 0.0277) span=(0.0065, 0.0041, 0.0015) | flat=0.0066 m
+
+core_main_walk_F_01  len=1.13s  tracks=22 (node=0 bone=22)
+  Hips pos3d: keys=20 first=(0.0, 0.8371, 0.0) last=(0.0, 0.8371, 1.5867) span=(0.0286, 0.0727, 1.5867) | flat=1.5869 m
+       ^ TRAVELS 1.5869 m horizontally; start-to-end offset 1.5867 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+core_main_sprint_F_01  len=0.60s  tracks=22 (node=0 bone=22)
+  Hips pos3d: keys=6 first=(0.0337, 0.7723, -0.047) last=(0.0337, 0.7723, 3.733) span=(0.0701, 0.07, 3.7801) | flat=3.7807 m
+       ^ TRAVELS 3.7807 m horizontally; start-to-end offset 3.7801 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+core_main_roll_to_idle_F_01  len=1.10s  tracks=22 (node=0 bone=22)
+  Hips pos3d: keys=34 first=(0.0, 0.8371, 0.0) last=(-0.0082, 0.8485, 4.6335) span=(0.0808, 0.9521, 4.6335) | flat=4.6342 m
+       ^ TRAVELS 4.6342 m horizontally; start-to-end offset 4.6335 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+core_main_back_step_medium_01  len=1.00s  tracks=25 (node=0 bone=25)
+  Hips pos3d: keys=30 first=(-0.0082, 0.8485, 0.0277) last=(-0.0082, 0.8485, -2.7385) span=(0.0139, 0.441, 2.9679) | flat=2.9679 m
+       ^ TRAVELS 2.9679 m horizontally; start-to-end offset 2.7662 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+core_main_hit_reaction_medium_f_01  len=1.37s  tracks=22 (node=0 bone=22)
+  Hips pos3d: keys=40 first=(0.0206, 0.9051, 0.1428) last=(-0.0082, 0.8485, -0.9491) span=(0.0944, 0.2588, 1.1363) | flat=1.1402 m
+       ^ TRAVELS 1.1402 m horizontally; start-to-end offset 1.0922 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+core_main_stance_broken_f_01  len=2.97s  tracks=40 (node=0 bone=40)
+  Hips pos3d: keys=87 first=(0.0206, 0.9051, 0.1428) last=(-0.0082, 0.8485, -0.4852) span=(0.1023, 0.3062, 1.1675) | flat=1.1719 m
+       ^ TRAVELS 1.1719 m horizontally; start-to-end offset 0.6287 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+core_main_death_01  len=2.27s  tracks=38 (node=0 bone=38)
+  Hips pos3d: keys=56 first=(-0.0082, 0.8485, 0.0277) last=(0.1264, 0.1406, 1.1193) span=(0.1489, 0.7091, 1.1167) | flat=1.1266 m
+       ^ TRAVELS 1.1266 m horizontally; start-to-end offset 1.0999 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+unarmed_dw_light_attack_01  len=1.33s  tracks=38 (node=0 bone=38)
+  Hips pos3d: keys=41 first=(-0.0082, 0.8485, 0.0277) last=(0.0606, 0.8485, 1.5739) span=(0.1663, 0.1137, 1.6053) | flat=1.6138 m
+       ^ TRAVELS 1.6138 m horizontally; start-to-end offset 1.5478 m
+       ^ and it does NOT return to its start: looping this clip WILL jump
+
+unarmed_dw_charged_attack_01_release_full  len=1.83s  tracks=38 (node=0 bone=38)
+  Hips pos3d: keys=55 first=(-0.0261, 0.5714, 0.2504) last=(0.1648, 0.8485, 3.1763) span=(0.2101, 0.2934, 2.9259) | flat=2.9334 m
+       ^ TRAVELS 2.9334 m horizontally; start-to-end offset 2.9321 m
+       ^ and it does NOT return to its start: looping this clip WILL jump

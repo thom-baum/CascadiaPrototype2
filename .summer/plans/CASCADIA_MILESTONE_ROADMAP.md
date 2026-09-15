@@ -86,6 +86,21 @@ sections; this block is the entry point, not a replacement for them.
   feedback ALL PASSED, enemy engagement ALL PASSED, focus/input routing ALL PASSED (run 2).
   `attack_probe_debug` remains RED on its ACTIVE-duration check - a PROBE measurement artifact caused by
   hitstop that PREDATES this work (12.5), not a regression. Full record: section 8Y.
+- **Milestone 21 - ANIMATION INTEGRATION CORRECTION PASS - APPLIED + PROBE-MEASURED, NOT accepted and NOT
+  human-playtested.** The two hand-reported visual defects were REPRODUCED AS MEASUREMENTS and then
+  fixed at the visual layer only, with no gameplay file touched. (1) The model is authored facing **+Z**
+  while gameplay forward is **-Z** - measured from the REST pose foot-to-toe vector, `dot = -1.000`,
+  exactly opposed - fixed with a 180-degree yaw on the model INSTANCE, verified afterwards at
+  `dot = 1.0000`. (2) The drift was **NOT root motion and NOT node tracks**: the pack bakes whole-body
+  travel onto the **HIPS BONE**, which the existing subname-based strip correctly preserved, so the
+  character walked inside its own body and snapped back on every loop (walk 1.59 m, sprint 3.78 m, roll
+  4.63 m, heavy 2.93 m, and not one returned to its start). Fixed by `_flatten_horizontal_travel()`,
+  which pins X/Z to each track's first key and leaves **Y untouched** so the bob and the roll's 0.95 m
+  tuck still read. `animation_visual_correction_probe_debug` (NEW) reports
+  **`RESULT: ALL CHECKS PASSED (20)`**: every clip `IN PLACE (0.0000 m)`, drift from the body
+  `0.0000 m`, `visual collision nodes: 0`, and the control that matters - the skeleton is **still
+  moving**, so in-place was achieved by removing travel rather than by freezing the animation.
+  `main.tscn` 0 errors / 0 debugger errors / 22 warnings. Full record: section 8Z.
 - **Milestone 14 - ENEMY HEALTH BARS - IMPLEMENTED + MEASURED, still not human-read.** Requested by the user 2026-09-14 as the
   remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
   implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
@@ -8060,4 +8075,125 @@ honest statement is: 1 of 2 runs red on one look assertion, cause unidentified.
    reported `Node './AnimationPlayer' was modified from inside an instance, but it has vanished`. The
    files on disk were correct throughout. Resolved by opening the sub-scene itself and then re-opening
    the environment. Recorded because it LOOKED like a broken scene and was not one.
+
+---
+
+## Milestone 21 - Animation integration CORRECTION PASS (section 8Z, recorded 2026-09-15)
+
+STATUS: **APPLIED, statically clean, MEASURED.** `main.tscn` boots at **0 errors / 0 debugger errors /
+22 warnings**. Both reported defects were reproduced as MEASUREMENTS first and then fixed at the visual
+layer only. **NOT human-playtested, so NOT accepted** - and the facing fix in particular is the kind of
+claim that a person has to confirm in motion, not a probe.
+
+### 8Z.1 THE TWO REPORTED DEFECTS, AND WHAT THEY ACTUALLY WERE
+
+The user reported (1) the model facing the wrong direction relative to the capsule and movement, and
+(2) the model drifting or teleporting away from the capsule while animating.
+
+BOTH were reproduced as numbers before anything was changed, and the second one was **NOT what the
+first pass believed it was**. That first pass had claimed `_strip_node_tracks` was sufficient protection
+against a clip moving the character. It is not, and the measurement says so precisely.
+
+### 8Z.2 ROOT CAUSE 1 - THE MODEL IS AUTHORED FACING +Z, GAMEPLAY FACES -Z
+
+MEASURED from the skeleton's REST pose, which no clip and no driver can influence: the foot-to-toe
+vector is the model's own forward axis. All four ankle->toe pairs agreed:
+
+    Ankle_R -> Ball_R : (0, 0, 1)      Ankle_L -> Toe_L : (0, 0, 1)
+    VERDICT: model forward = +Z, azimuth 0.0 deg
+    dot(model_forward, gameplay_forward=-Z) = -1.000
+
+Gameplay forward is the body's own **-Z** (the `FacingMarker/Nose` sits at local `z=-0.4`). A dot of
+exactly -1.000 is a 180-degree opposition, so the model was authored facing BACKWARDS relative to the
+convention this project already uses.
+
+FIX: a 180-degree yaw on the model INSTANCE inside `scenes/actors/player_visual.tscn`, i.e.
+`Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)`. The gameplay body's convention was NOT touched - a
+presentation-layer mismatch is fixed in the presentation layer. VERIFIED after the fix:
+`model forward (world) = (0,0,-1)`, `gameplay forward (world) = (0,0,-1)`, `agreement (dot) = 1.0000`.
+
+NOTE FOR THE FUTURE: a walk clip CANNOT be used to derive a facing axis in this pack, because every
+locomotion clip is authored IN PLACE - there is no root displacement to compare. The rest-pose foot
+geometry is the reliable source, and it is what this probe used.
+
+### 8Z.3 ROOT CAUSE 2 - THE TRAVEL IS ON THE HIPS BONE, NOT ON THE ROOT OR A NODE
+
+This is the defect the first pass MISSED, and the reason it missed it is worth recording: the strip it
+wrote keys on SUBNAMES, and it correctly noted that a bone track carries a subname. But it only ever
+reasoned about NODE tracks. MEASURED, the truth is the opposite of what it assumed:
+
+    node-level tracks in ANY clip of the set:      0   (so `_strip_node_tracks` removed NOTHING)
+    ROOT bone world position across a clip:        never moves (drift 0.0000 m over 10 samples)
+    HIPS bone pos3d, horizontal travel per clip:
+      core_main_idle_01                        0.0066 m   in place
+      core_main_walk_F_01                      1.5869 m   start-to-end 1.5867
+      core_main_sprint_F_01                    3.7807 m   start-to-end 3.7801
+      core_main_roll_to_idle_F_01              4.6342 m   start-to-end 4.6335
+      core_main_back_step_medium_01            2.9679 m   start-to-end 2.7662
+      core_main_hit_reaction_medium_f_01       1.1402 m   start-to-end 1.0922
+      core_main_stance_broken_f_01             1.1719 m   start-to-end 0.6287
+      core_main_death_01                       1.1266 m   start-to-end 1.0999
+      unarmed_dw_light_attack_01               1.6138 m   start-to-end 1.5478
+      unarmed_dw_charged_attack_01_release     2.9334 m   start-to-end 2.9321
+
+So the body's whole travel is baked onto a bone the strip deliberately preserved, and NOT ONE clip
+returns to its start - which is why it read as a teleport on every loop as well as drift within a clip.
+
+FIX: `_flatten_horizontal_travel()` in `player_visual.gd`, applied on extraction beside the existing
+strip. It pins the X and Z of every `Root`/`Hips` position track to that track's FIRST key, so each clip
+keeps its own authored centring, and it leaves **Y untouched** so the bob, the crouch and the roll's
+0.95 m tuck all still read. `_is_whole_body_bone()` matches `root`/`hips` case-insensitively, so a pack
+that puts travel on the root is handled by the same rule instead of needing a second mechanism.
+
+VERIFIED after the fix: all **10** registered clips measure `flat=0.0000 m`, while walk still carries
+`vertical=0.0727 m` and the roll `vertical=0.9521 m` - so the motion was flattened, not amputated.
+
+### 8Z.4 MEASURED EVIDENCE (fresh runs this pass)
+
+- `animation_visual_correction_probe_debug` (NEW) -> **`RESULT: ALL CHECKS PASSED (20)`**, writing
+  `res://animation_visual_correction_report.txt`. The load-bearing lines:
+  `agreement (dot) = 1.0000`; every clip `is IN PLACE (horizontal travel 0.0000 m)`;
+  `worst offset change over 60 frames: 0.0000 m` (the model did NOT drift from the body);
+  `visual collision nodes: 0`; and the control that matters most -
+  `skeleton still MOVING (4.813 -> 4.586)`, which proves in-place was achieved by REMOVING TRAVEL and
+  not by quietly freezing the animation.
+- `animation_content_probe_debug` -> **`ALL CHECKS PASSED (70)`** (unchanged from Slice B).
+- `animation_lookup_probe_debug` -> **`ALL CHECKS PASSED (30)`**; `animation_adapter_probe_debug` ->
+  **`ALL CHECKS PASSED (54)`**; `actor_contract_probe_debug` -> **`ALL CHECKS PASSED (82)`**.
+- `live_combat_credit_probe_debug` -> **`ALL CHECKS PASSED (54)`**;
+  `combat_feedback_probe_debug` -> **`RESULT: ALL CHECKS PASSED`**;
+  `targeting_probe_debug` -> **`ALL CHECKS PASSED (78)`**;
+  `new_run_reset_probe_debug` -> **`ALL CHECKS PASSED (32)`**.
+- `main.tscn` -> **0 errors, 0 debugger errors, 22 warnings**.
+
+### 8Z.5 WHAT WAS **NOT** CHANGED, stated explicitly
+
+No gameplay file was touched: not movement, collision, the collision shape, hurtbox, hitbox, attack
+timing, damage, stamina, commitment, death/respawn, credits, or save/load. The `CharacterBody3D`
+remains the gameplay actor and the capsule remains gameplay geometry. The adapter, `AnimationIntent`,
+`AnimationSet` and the `_apply_intent()` seam are all unchanged - the real `AnimationPlayer` is still
+strictly downstream of them, and no animation can start, cancel or retime anything.
+
+The 180-degree correction is on the model INSTANCE, not on the body, so gameplay's movement convention
+is untouched and no second facing system was introduced.
+
+### 8Z.6 DEATH PRESENTATION OWNERSHIP - unchanged, and why there is no conflict
+
+`EnemyDeathPresentationDebug` still owns the ENEMY defeat pose (mesh transform + `material_override`)
+and was not touched. The player and the enemies do not share a presentation path: the player's visual
+is driven by `PlayerVisual`, the enemies' defeat poses by that debug component. So the death clip poses
+the player's skeleton while nothing else claims the player's mesh transform, and the enemy pose owner
+is left entirely alone. Settling the transform-versus-clip question for ENEMIES remains future work.
+
+### 8Z.7 REMAINING LIMITATIONS, recorded rather than implied
+
+- **NOT human-playtested.** Correctness of the numbers is measured; whether the result READS correctly
+  in motion is not. Strafe coherence, the look of in-place locomotion against real translation, and
+  whether 180 degrees was the whole facing story are all the user's call.
+- **In-place locomotion is a deliberate trade.** The clips now animate in place and gameplay supplies
+  every metre. Any mismatch between a clip's cadence and the body's actual speed will read as foot
+  sliding. That is a TUNING question, not a defect, and no value was changed to chase it.
+- **`backstep` remains mapped but unreachable** - `AnimationIntent` maps every evasion to `dodge`.
+- **The intent Label3D is still on by default** (`show_label`), which is why labels render over the
+  arena. It is the prototype driver, not shipping UI.
 

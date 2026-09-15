@@ -1,0 +1,44 @@
+--- STATIC STRUCTURE ---
+player=Player  visual=Visual  model=Model
+visual local transform: pos=(0.0, 0.0, 0.0) rot_deg=(0.0, 0.0, 0.0) scale=(1.0, 1.0, 1.0)
+MODEL local transform: pos=(0.0, 0.0, 0.0) rot_deg=(0.0, 0.0, 0.0) scale=(1.0, 1.0, 1.0)
+SKELETON local transform: pos=(0.0, 0.0, 0.0) rot_deg=(0.0, 0.0, 0.0) scale=(1.0, 1.0, 1.0)
+skeleton bone count: 59
+bone[0]='Root'   hips_index=1 ('Hips')
+physical bone simulator: none
+
+--- TRACK CENSUS (per clip) ---
+AnimationPlayer root_node=../Model
+root_node resolves to: Model
+core_main_idle_01: 30 track(s) - 0 node-level, 30 bone-level | len=2.67s
+    e.g. Skeleton3D:Hips [pos3d]
+    e.g. Skeleton3D:Hips [rot3d]
+    e.g. Skeleton3D:Spine_01 [rot3d]
+    e.g. Skeleton3D:UpperLeg_R [rot3d]
+core_main_walk_F_01: 22 track(s) - 0 node-level, 22 bone-level | len=1.13s
+    e.g. Skeleton3D:Hips [pos3d]
+    e.g. Skeleton3D:Hips [rot3d]
+    e.g. Skeleton3D:Spine_01 [rot3d]
+    e.g. Skeleton3D:UpperLeg_R [rot3d]
+
+--- SAMPLING 'core_main_walk_F_01' started, root bone world=(0.0, 0.000911, 12.0) ---
+  sample 0: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 1: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 2: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 3: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 4: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 5: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 6: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 7: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 8: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+  sample 9: root=(0.0, 0.000911, 12.0)  drift=0.0000 m
+walk_F root-bone displacement: (0.0, 0.0, 0.0) (0.0000 m)
+cannot sample 'core_main_walk_B_01' (not registered)
+walk_B root-bone displacement: (0.0, 0.0, 0.0) (0.0000 m)
+
+--- FACING ---
+NOT DETERMINED from clip data: both walk clips are IN PLACE (no root translation).
+Facing must be judged from a render, not from this probe.
+
+--- IDLE: does the model stay put over time? ---
+idle hips worst displacement across the clip: 0.0000 m

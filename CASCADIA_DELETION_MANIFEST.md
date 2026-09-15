@@ -4287,3 +4287,86 @@ EXPLICITLY DEFERRED by the user and is not started.
 | `enemy_attack_probe_debug` | `ALL CHECKS PASSED` |
 | `attack_probe_debug` | **2 FAILED - KNOWN RED, diagnosed above (12.5)** |
 | `main.tscn` | boots at 0 errors, 0 debugger errors, 20 warnings |
+
+---
+
+## MILESTONE 21 - ANIMATION INTEGRATION CORRECTION PASS - NEW FILES AND RECORDED CHANGES (2026-09-15)
+
+Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion
+stays manual.
+
+### New diagnostic files (cleanup candidates, delete with their scenes)
+
+- `scripts/diagnostics/animation_model_recon_probe_debug.gd` + its `.tscn` - the FIRST recon probe.
+  Measured the ROOT bone and the static transforms and correctly reported that the root never moves
+  and all transforms are identity. It was kept rather than deleted even though its successor
+  superseded it, because it is the evidence that RULED OUT two of the three candidate mechanisms.
+- `scripts/diagnostics/animation_model_axes_probe_debug.gd` + its `.tscn` - the SECOND recon probe,
+  and the one that found the real causes. It reads each clip's `Animation` RESOURCE directly rather
+  than sampling a playing clip, so its numbers cannot be perturbed by the driver, by frame timing or
+  by which slot happened to be active. Reports the model's authored forward axis from the REST pose
+  foot-to-toe vector, and the Hips position-track span for every clip in the assigned set.
+- `scripts/diagnostics/animation_visual_correction_probe_debug.gd` + its `.tscn` - the ACCEPTANCE
+  probe for this pass. 20 checks, including the control that matters most: the skeleton must still be
+  MOVING, so "in place" cannot be achieved by freezing the animation.
+- `res://animation_model_recon_report.txt`, `res://animation_model_axes_report.txt`,
+  `res://animation_visual_correction_report.txt` - durable transcripts, same convention as the other
+  probe reports. NOT cleanup candidates: they are the measured evidence for this pass.
+
+### Changed files (NOT new, and NOT deletion candidates)
+
+- `scripts/animation/player_visual.gd` - added `_flatten_horizontal_travel()` and
+  `_is_whole_body_bone()`, called during extraction beside the existing `_strip_node_tracks()`.
+  Added `flattened_tracks` as a diagnostic counter. The class comment was corrected: it previously
+  described only NODE-level stripping and did not mention that this pack's travel lives on a BONE.
+- `scenes/actors/player_visual.tscn` - the `Model` instance now carries a 180-degree yaw
+  (`Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)`), which is the facing correction. Written as
+  ONE whole-file write, per the project's rule against incremental scene edits.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - section 8Z and the current-state entry.
+
+### MEASURED ROOT CAUSES (not inferred - recorded because both were counter-intuitive)
+
+1. **FACING.** The model's rest-pose foot-to-toe vector is `(0, 0, 1)` = **+Z**, and gameplay forward
+   is **-Z**, so `dot = -1.000`: exactly opposed. Measured independently on all four toe bones across
+   both feet, unanimous. Nothing had applied a rotation anywhere - visual, model and skeleton were all
+   identity transforms - so the mismatch was purely the pack's AUTHORED axis.
+2. **DRIFT.** The root bone NEVER moves (`0.0000 m` over a whole walk clip) and no clip contains a
+   single node-level track (measured: `node=0` in every one of the 10 clips). The travel is baked onto
+   the **HIPS BONE**, which `_strip_node_tracks()` correctly preserves because it IS a bone track. So
+   the character walked forward inside its own body and snapped back at every loop point. Measured
+   horizontal travel before the fix: walk 1.5869 m, sprint 3.7807 m, roll 4.6342 m, heavy attack
+   2.9334 m, light attack 1.6138 m, death 1.1266 m, hit reaction 1.1402 m, stagger 1.1719 m, backstep
+   2.9679 m, idle 0.0066 m. NOT ONE of them returned to its starting value.
+
+### A RECORDED NEGATIVE RESULT
+
+The first recon probe sampled the ROOT bone only and reported **zero drift**, which CONTRADICTED the
+hand-reported defect. That was NOT a probe bug and NOT a false report: both were correct, about
+different bones. Recorded because the natural next step - "the probe says there is no drift, so the
+report must be wrong" - would have discarded a real defect. Widening the measurement from the root to
+the hips is what found it.
+
+### Regression results recorded THIS pass (all re-run fresh, not carried over)
+
+| Probe | Fresh result |
+| ----- | ------------ |
+| `animation_visual_correction_probe_debug` (new) | `RESULT: ALL CHECKS PASSED (20)` |
+| `animation_content_probe_debug` | `ALL CHECKS PASSED (70)` |
+| `animation_lookup_probe_debug` | `ALL CHECKS PASSED (30)` |
+| `animation_adapter_probe_debug` | `ALL CHECKS PASSED (54)` |
+| `actor_contract_probe_debug` | `ALL CHECKS PASSED (82)` |
+| `targeting_probe_debug` | `ALL CHECKS PASSED (78)` |
+| `new_run_reset_probe_debug` | `ALL CHECKS PASSED (32)` |
+| `live_combat_credit_probe_debug` | `ALL CHECKS PASSED (54)` |
+| `combat_feedback_probe_debug` | `RESULT: ALL CHECKS PASSED` |
+| `main.tscn` | boots at 0 errors, 0 debugger errors, 22 warnings |
+
+The 22 warnings are the pre-existing third-party case-mismatch import warnings plus the adapter's
+BY-DESIGN `slot 'parry' has no clip` report, which is the fallback policy being visible as intended.
+
+### Defect found and fixed IN THE PROBE during this pass
+
+`animation_model_recon_probe_debug.gd` line 248 returned `_skeleton.global_transform *
+get_bone_global_pose(i)`, which is a `Transform3D`, from a function declared to return `Vector3`. A
+parse error. Fixed by taking `.origin`. Recorded because it is the second time this pass that a
+probe's own type error - not a game defect - was the thing standing between the work and its evidence.

@@ -517,8 +517,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("CapsuleShape_player")
 
 [node name="Mesh" type="MeshInstance3D" parent="Player" unique_id=1456733949]
-visible = false
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+visible = false
 material_override = SubResource("Mat_player")
 mesh = SubResource("CapsuleMesh_player")
 
@@ -579,7 +579,7 @@ script = ExtResource("14_wwk3j")
 script = ExtResource("15_2ugr5")
 animation_set = ExtResource("23_pset")
 
-[node name="Visual" parent="Player" instance=ExtResource("22_pvisual")]
+[node name="Visual" parent="Player" unique_id=115442163 instance=ExtResource("22_pvisual")]
 
 [node name="CameraRig" type="Node3D" parent="." unique_id=1012415909]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
