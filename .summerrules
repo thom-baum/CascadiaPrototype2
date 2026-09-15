@@ -115,3 +115,10 @@ Persistent project decisions. Append new rules; do not rewrite existing ones.
 - **NO aggro, threat or deaggro system exists.** "Engaged" is a STAND-IN meaning "damaged recently or currently locked". `EnemyHealthBars.is_engaged()` is the single recorded seam where enemy AI will be asked instead. Never describe the current rule as aggro, and never build an aggro system as part of bar work.
 - The bar READS `HealthComponent.health_fraction()` and `TargetingComponent.get_current_target()` and owns neither. It must never store a health copy or a lock copy.
 - The PLAYER is never tracked by this module: the HUD already draws the player's health, and a second floating bar would be a duplicate authority.
+
+## Version control workflow - the USER pushes (recorded 2026-09-15, Milestone 21 acceptance)
+
+- **The USER performs the git PUSHES manually. This is the normal workflow, not a workaround.** `git push` from the assistant fails against this project's HTTPS remote every time it is attempted, and it fails SILENTLY: it returns only "Git push failed" with no diagnostic detail at all. That symptom has been reproduced across many attempts.
+- Therefore: do NOT keep retrying the push, do NOT treat it as a blocker, and do NOT report it as a defect in the work being committed. Local `commit` DOES succeed and IS the durable named history.
+- The correct end-of-work sequence is: stage the exact change set, commit, and state the branch position. Leave the push to the user.
+- Consequence for reporting: never describe committed work as "unpushed" as though it were at risk. Say it is COMMITTED LOCALLY and that the remote is the user's step. Check `git log` for the commit appearing on `origin/main` before assuming it has not been pushed - the user may already have done it.

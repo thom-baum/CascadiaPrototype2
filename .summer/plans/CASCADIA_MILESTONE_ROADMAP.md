@@ -103,6 +103,18 @@ sections; this block is the entry point, not a replacement for them.
   `0.0000 m`, `visual collision nodes: 0`, and the control that matters - the skeleton is **still
   moving**, so in-place was achieved by removing travel rather than by freezing the animation.
   `main.tscn` 0 errors / 0 debugger errors / 22 warnings. Full record: section 8Z.
+- **Milestone 22 - APPROVED BY THE USER 2026-09-15 AS THE NEXT MILESTONE. NOT started.** Give ONE enemy a
+  real imported model and its own `AnimationSet`, driven by the **SAME** `AnimationAdapter` with **NO code
+  change to it**, in order to FALSIFY the swappability claim Milestone 21's architecture rests on. That
+  claim is currently UNFALSIFIED rather than proven: exactly ONE set exists
+  (`resources/animation/player_fist.animset.tres`) and exactly ONE actor wears a visual driver
+  (`Player/Visual`), so "the controller stays the same and the set changes" has never been exercised. This
+  milestone also forces the enemy DEATH-POSE OWNERSHIP decision recorded at 8X.6, which becomes live the
+  moment an enemy skeleton animates. **STEP 0 IS AN ASSET RECON AND ITS RESULT IS NOT ASSUMED**: the
+  milestone needs a rigged non-player model, no candidate has been checked, and if none exists the work
+  STOPS AND REPORTS rather than re-using the player's model on an enemy. TWO OPEN DECISIONS REMAIN THE
+  USER'S: which enemy wears the rig, and which model. Full scope, boundaries, acceptance criteria and the
+  recorded fallback: **section 8AA** at the end of this file.
 - **Milestone 14 - ENEMY HEALTH BARS - IMPLEMENTED + MEASURED, still not human-read.** Requested by the user 2026-09-14 as the
   remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
   implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
@@ -8237,6 +8249,134 @@ WHAT THE ACCEPTANCE DOES NOT COVER, recorded so it is not later mistaken for ver
   - Milestone 14's ENEMY HEALTH BARS remain not human-read. This milestone did not touch them.
   - The intent `Label3D` is still ON by default over every actor. Prototype driver, not shipping UI.
 
-CONSEQUENCE FOR THE NEXT MILESTONE: **NONE is selected or approved by this record.** The project rule is
-explicit - a roadmap entry is not approval, and an acceptance is not a queue.
+CONSEQUENCE FOR THE NEXT MILESTONE: **NONE is approved BY THIS RECORD.** The project rule is explicit:
+an acceptance is not a queue, and a roadmap entry is not approval. **Milestone 22 was approved
+SEPARATELY, by the user's own instruction on 2026-09-15**, and it has its own scope record in section 8AA
+at the end of this file. Approval came from the user NAMING it, not from this acceptance - which is the
+distinction the rule exists to protect.
+
+---
+
+## Milestone 22 - Enemy animation: prove the set is truly swappable (section 8AA, APPROVED 2026-09-15)
+
+STATUS: **APPROVED BY THE USER AS THE NEXT MILESTONE TO IMPLEMENT. NOT STARTED.** This scope record was
+written BEFORE implementation, per the standing rule. Nothing below is delivered.
+
+### 8AA.1 THE CLAIM THIS MILESTONE EXISTS TO FALSIFY
+
+Milestone 21 was built on one architectural promise: **the controller stays the same and the SET changes** -
+`FistAnimationSet`, `MacheteAnimationSet` and `BatAnimationSet` are three `.tres` files and three
+assignments, with no code change.
+
+**THAT PROMISE IS CURRENTLY UNFALSIFIED, NOT PROVEN.** MEASURED, present tense: exactly ONE animation set
+exists (`resources/animation/player_fist.animset.tres`) and exactly ONE actor wears a visual driver
+(`Player/Visual`). The 54-check adapter probe reports "4 actors, 3 kinds, 1 script", but three of those four
+actors have NO `AnimationSet` assigned and therefore resolve NONE - they report the slot they would ask for
+and play nothing. So the swappability claim has never been exercised by a second set on a second actor.
+
+A single-instance architecture cannot distinguish "general" from "hardcoded". This milestone is the smallest
+change that can tell those apart, and it is worth doing BEFORE more content is authored, because every set
+written against an untested abstraction inherits whatever the abstraction actually got wrong.
+
+### 8AA.2 THE DECISION THAT IS CURRENTLY DEFERRED AND BECOMES LIVE HERE
+
+Recorded as a known integration hazard at 8X.6, and answerable the moment an enemy skeleton animates:
+
+**`EnemyDeathPresentationDebug` owns the enemy defeat pose by writing a MESH TRANSFORM plus a
+`material_override`.** The animation adapter deliberately writes NO mesh transforms and NO materials because
+of that. When an enemy wears an animated skeleton, those two presentation owners overlap on the same body.
+
+ONE of these must be chosen and recorded, and choosing is PART of this milestone:
+
+  - the death CLIP owns the enemy's pose and the transform-level defeat presentation stands down; or
+  - the transform presentation keeps the pose and the clip plays UNDERNEATH it.
+
+There is no third option that avoids the decision. Do NOT leave both writing the same body.
+
+### 8AA.3 SCOPE
+
+IN SCOPE:
+
+  1. **STEP 0 - ASSET RECON, AND ITS RESULT IS NOT ASSUMED.** Establish whether a rigged, NON-PLAYER model
+     exists and can be imported (`*.fbx.import` sidecars, a `Skeleton3D`, and at least one clip). **No
+     candidate has been checked.** The pack is named for fists and every clip name read in the Slice B
+     census is humanoid, so a non-humanoid enemy rig is UNVERIFIED and may not exist at all.
+  2. ONE enemy wears a real imported model as a VISUAL CHILD, with its collision shape, hurtbox, hitbox,
+     `ActorState`, `CombatParticipant`, health, death and combat state machine left EXACTLY as authored.
+  3. That enemy gets its OWN `AnimationSet` `.tres`, mapped to real imported clip names.
+  4. Resolve the 8AA.2 death-pose ownership question for enemies.
+  5. A probe that measures the result rather than asserting it.
+
+OUT OF SCOPE, explicitly: enemy AI, navigation, pathfinding, obstacle avoidance, multi-enemy coordination,
+threat tables, strafing, spacing, new attack types or timings, animation-driven hitboxes/damage/stamina,
+root motion, enemy archetype redesign, replacing EVERY capsule enemy, new enemy animation sets beyond the
+one, any change to `AnimationAdapter`'s contract, any gameplay retune, broad visual polish.
+
+### 8AA.4 THE LOAD-BEARING CONSTRAINT
+
+**`AnimationAdapter` MUST NOT NEED A CODE CHANGE FOR THIS TO WORK.** That is the entire experiment. If the
+adapter has to learn about a second actor, or about an enemy, or about a weapon name, then the
+Milestone 21 abstraction is FALSIFIED and that finding must be RECORDED AS THE RESULT rather than patched
+around. A recorded falsification is a successful outcome of this milestone; a quiet workaround is not.
+
+Corollary: do NOT add enemy-specific branches, do NOT add a second driver script for enemies, and do NOT
+give the adapter a weapon or archetype concept. The set is DATA assigned to a node.
+
+### 8AA.5 THE TWO DECISIONS THAT REMAIN THE USER'S
+
+These are NOT the implementer's to choose. If neither is answered before the work starts, ask once and then
+proceed:
+
+  1. **WHICH enemy wears the rig.** `TestAttacker` is the lighter, faster archetype; `HeavyBrute` is the
+     heavier one with the longer windup (`1.05` windup, `34.0` damage, `180.0` health against the attacker's
+     `0.60` / `20.0` / `100.0`). Proximity to the player's own rig matters for judging scale and read.
+  2. **WHICH model, once Step 0 reports what actually exists.** If Step 0 finds no suitable rig, the choice
+     becomes: leave enemies primitive, generate/obtain a rig, or re-scope.
+
+### 8AA.6 THE RECORDED FALLBACK - WHAT TO DO IF STEP 0 FINDS NO ENEMY RIG
+
+**STOP AND REPORT WITH EVIDENCE. Do NOT silently re-use the player's low poly man on an enemy.** Dressing an
+enemy in the player's own model would corrupt the very readability the milestone is meant to improve, and it
+would make "two actors, two sets" impossible to judge honestly because both actors would look identical.
+Report exactly what the assets contain and let the user re-scope. Do not treat a missing asset as licence to
+substitute silently - that is the same class of error as the retracted "NOT IMPORTED" claim at 8Y.8.
+
+### 8AA.7 ACCEPTANCE CRITERIA
+
+The milestone is done when ALL of these hold, each with EVIDENCE rather than assertion:
+
+  1. An enemy carries an imported rigged model as a visual child, and its gameplay collision, hurtbox,
+     hitbox and combat components are measurably UNCHANGED (same nodes, same shapes, still on the body).
+  2. The enemy's visual subtree owns ZERO collision nodes, so it cannot become a physics authority.
+  3. The enemy's `AnimationSet` resolves its slots to clips that ACTUALLY EXIST and are DIFFERENT from the
+     player set's clips for the same slot - the two-actor, two-set check that has never been run.
+  4. **`AnimationAdapter` is byte-for-byte unchanged.** Stated as a criterion so a silent code change cannot
+     be reported as success.
+  5. The enemy's skeleton ACTUALLY MOVES while a clip plays, and a STOPPED control proves the driver is what
+     poses it. (`is_playing()` alone is NOT proof - see the Slice B lesson at 8Y.)
+  6. Clips are IN PLACE: no horizontal travel displaces the visual from the body. Re-use the
+     `_flatten_horizontal_travel()` mechanism; do not write a second one.
+  7. The death-pose ownership decision is recorded AND measurably enforced - exactly one owner poses the
+     defeated enemy.
+  8. Gameplay timing is untouched: attack phases, damage, stamina and commitment identical to the accepted
+     Milestone 21 build.
+  9. All existing suites still green, with exact fresh counts: lookup 30, adapter 54, actor contract 82,
+     content 70, visual correction 20, targeting 78, new-run reset 32, player-death reset 38, live combat
+     credit 54, combat feedback, enemy engagement.
+ 10. `main.tscn` boots at 0 errors / 0 debugger errors.
+
+### 8AA.8 EVIDENCE CEILING FOR THIS MILESTONE - STATE IT HONESTLY
+
+The honest ceiling of a build pass is **APPLIED, NOT HUMAN-JUDGED**: probes can prove that a second actor
+resolves a second set to real, different clips and that the skeleton moves. Probes CANNOT grade scale,
+proportion, whether an enemy reads as the right archetype, or whether its animation FEEL is acceptable.
+
+So the report MUST end at: the change is applied and measured; the playtest is the user's step. Do NOT claim
+acceptance. Acceptance is the user handplaying it and saying so, exactly as Milestone 21 required.
+
+### 8AA.9 ON PUBLICATION
+
+Git is handled MANUALLY BY THE USER in this project - see the `.summerrules` note recorded 2026-09-15. Commit
+the work locally if the user asks; do NOT repeatedly attempt `push`. A failing push is the user's workflow,
+not a defect to keep reporting.
 
