@@ -82,6 +82,12 @@ var heavy_attack: AttackDefinition
 
 var state: int = State.IDLE
 var current_attack: AttackDefinition = null
+## The identity of the attack most recently begun (Milestone 21). REMEMBERED because `current_attack`
+## is cleared the moment an attack completes, and an identity lookup that went blank there would
+## report an attack the actor is still committed to as anonymous - which a presentation layer cannot
+## tell apart from a misconfiguration. Written in exactly ONE place, `try_start`, which is also the
+## only place an attack begins.
+var _last_attack_id := ""
 ## Seconds spent in the current phase.
 var phase_elapsed := 0.0
 ## Attacks accepted since load. How a refused input is proven to have started
@@ -114,9 +120,9 @@ func _ready() -> void:
 	# the attack starts instead of one frame later.
 	process_physics_priority = -1
 	light_attack = AttackDefinition.make(
-		"Light Attack", LIGHT_STARTUP, LIGHT_ACTIVE, LIGHT_RECOVERY, LIGHT_DAMAGE)
+		"Light Attack", LIGHT_STARTUP, LIGHT_ACTIVE, LIGHT_RECOVERY, LIGHT_DAMAGE, "light")
 	heavy_attack = AttackDefinition.make(
-		"Heavy Attack", HEAVY_STARTUP, HEAVY_ACTIVE, HEAVY_RECOVERY, HEAVY_DAMAGE)
+		"Heavy Attack", HEAVY_STARTUP, HEAVY_ACTIVE, HEAVY_RECOVERY, HEAVY_DAMAGE, "heavy")
 	_hitbox = _resolve_hitbox()
 
 
@@ -162,6 +168,25 @@ func phase_remaining() -> float:
 		State.RECOVERY:
 			total = current_attack.recovery
 	return maxf(0.0, total - phase_elapsed)
+
+
+## The IDENTITY of the attack being performed, or "" while idle (Milestone 21).
+##
+## WHAT THIS IS FOR, and what it deliberately is not. An animation layer has to choose between
+## attacks, and the phase vocabulary cannot: `startup` is the same key for every attack in the game.
+## So the owner reports WHICH attack it is, and nothing else - no timing, no damage, no phase.
+##
+## REMEMBERED RATHER THAN ONLY READ FROM `current_attack`, and the memory is load-bearing. An attack
+## that has completed clears `current_attack`, so a lookup that read only that field would report an
+## attack the actor is still committed to as having no identity at all - and a presentation layer
+## cannot tell that apart from a misconfiguration. The memory is written in the ONE place an attack
+## begins (`try_start`), which is also the only place it can be wrong.
+func attack_id() -> String:
+	if state == State.IDLE:
+		return ""
+	if current_attack != null:
+		return current_attack.key()
+	return _last_attack_id
 
 
 # --- Starting an attack -----------------------------------------------------
@@ -213,6 +238,7 @@ func try_start(definition: AttackDefinition) -> bool:
 		stamina.try_spend(cost)
 
 	current_attack = definition
+	_last_attack_id = definition.key()
 	attacks_started += 1
 	_enter_phase(State.STARTUP)
 	attack_started.emit(definition)

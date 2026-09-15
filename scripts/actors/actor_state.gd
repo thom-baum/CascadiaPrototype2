@@ -276,6 +276,28 @@ func phase_remaining() -> float:
 	return 0.0
 
 
+## The IDENTITY of the attack currently being performed, or "" when there is no attack or the owner
+## reports none (Milestone 21 - animation lookup architecture).
+##
+## WHY THIS IS ON THE CONTRACT RATHER THAN REACHED FOR THROUGH get_attack(). The phase vocabulary
+## says an actor is attacking; it cannot say WHICH attack, so `startup` is the same key for every
+## attack in the game and a presentation layer cannot choose between them. Reading the owner's
+## definition directly would work, but it would make the presentation layer depend on a gameplay
+## COMPONENT - the same coupling this contract exists to remove. So identity is translated here,
+## from the owner's own report, and the one-way rule still holds: gameplay owns the attack, this
+## reports which one it is.
+##
+## Deliberately reports identity and NOTHING ELSE about the attack: no timing, no damage, no phase.
+## Those stay with the owner, exactly as before.
+func attack_id() -> String:
+	var attack := _get_attack()
+	if attack == null or not is_attacking():
+		return ""
+	if attack.has_method("attack_id"):
+		return String(attack.call("attack_id"))
+	return ""
+
+
 ## The current hit reaction in one word: "none", "stagger" or "hurt".
 func reaction_name() -> String:
 	var reaction := _get_reaction()

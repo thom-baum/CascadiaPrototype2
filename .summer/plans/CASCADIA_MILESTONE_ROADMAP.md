@@ -59,6 +59,18 @@ sections; this block is the entry point, not a replacement for them.
   2026-09-15 and is kept here, demoted rather than deleted, because it is the evidence for M13.
   Milestone 12 (target lock-on) was the previous highest accepted, accepted the same day on its own
   playtest; its record stands at 8P.
+- **Milestone 21 - ANIMATION LOOKUP ARCHITECTURE (SLICE A) - APPLIED + PROBE-MEASURED, NOT accepted
+  and NOT human-playtested.** The presentation layer can now carry attack IDENTITY, not just "attacking":
+  `AttackDefinition.id` / `key()`, `ActorState.attack_id()`, `AnimationIntent`, and `AnimationSet` (the
+  swappable slot -> clip mapping layer with a five-outcome fallback policy). `animation_lookup_probe_debug`
+  reports `RESULT: ALL CHECKS PASSED (30)`, including the central claim measured directly: one attack held
+  ONE slot (`attack:light`) for 33 committed frames while the coarse intent moved through all three phases,
+  and light vs heavy resolve to DIFFERENT slots. Regressions green: adapter probe 54/54, actor contract
+  82/82, live combat credit 54/54; `main.tscn` 0 errors. **SLICE B - the content pipeline - is NOT started**:
+  the Nephilite pack is NOT IMPORTED (no `*.fbx.import` exists; it still ships Unity `.meta` sidecars), NO
+  `AnimationPlayer`/`AnimationTree`/`Skeleton3D` exists anywhere in the project, and the pack contains NO
+  PARRY CLIP. The user has decided the pack's low poly man becomes the PLAYER's visual child when Slice B
+  lands. Full record: section 8X.
 - **Milestone 14 - ENEMY HEALTH BARS - IMPLEMENTED + MEASURED, still not human-read.** Requested by the user 2026-09-14 as the
   remaining DEBUG / player-feedback layer, with the scope record written into section 8R BEFORE
   implementation per section 15. Now IMPLEMENTED AND MEASURED: `ui_hud_probe_debug` reports
@@ -4834,6 +4846,41 @@ bugs. Neither blocks milestone acceptance, and neither is a defect.
   gravity / floor-snap rules) is a design question for a future enemy milestone. The
   current answer is NO: they are static fixtures.
 
+### 12.5 `attack_probe_debug` FAILS 2 CHECKS - a probe MEASUREMENT artifact from hitstop (OPEN, 2026-09-15)
+
+FOUND during the Milestone 21 verification pass, NOT introduced by it, and deliberately NOT fixed.
+
+MEASURED: `attack_probe_debug` reports `RESULT: 2 FAILED -> ["LIGHT: measured ACTIVE matches
+definition", "HEAVY: measured ACTIVE matches definition"]`, with
+`HEAVY measured startup=0.43s active=0.22s recovery=0.63s (defined 0.44/0.14/0.62)`.
+
+WHY THIS IS A PROBE DEFECT AND NOT A GAMEPLAY DEFECT, from the measurement itself:
+
+  - The probe COUNTS FRAMES per phase and divides by fps (`counts["ACTIVE"] / fps`) against a
+    `DURATION_TOLERANCE` of 0.06 s. Only ACTIVE is out of tolerance: 0.22 vs 0.14. STARTUP (0.43 vs
+    0.44) and RECOVERY (0.63 vs 0.62) both PASS.
+  - ACTIVE is exactly the phase in which damage lands, and hitstop (Milestone 18) freezes the
+    participant's processing on that hit. A frozen body does not advance its phase timer, so the
+    phase lasts MORE FRAMES while lasting the SAME gameplay time. About 5 extra frames at 60 fps is
+    0.083 s, which is the size of the measured error and matches the freeze length
+    `enemy_attack_probe_debug` independently reports (`remaining=74 ms`).
+  - Every OTHER assertion in the same probe PASSES, including the ones that would catch a real
+    timing break: phase order is exactly STARTUP/ACTIVE/RECOVERY, the damage window is open on every
+    ACTIVE frame and never outside one, damage lands exactly once and on an ACTIVE frame, and the
+    authored constants are unchanged (0.16/0.10/0.28 and 0.44/0.14/0.62).
+
+WHY IT IS RECORDED AS PRE-EXISTING: the manifest's last recorded green run for this probe is from
+the Milestone 4 era, which PREDATES hitstop. Milestone 21 changed no timing constant - it added
+attack IDENTITY plumbing only - so it cannot move a phase duration. Whether the suite was actually
+re-run after Milestone 18 landed is NOT established, and the M18 record's "all 14 regression suites
+green" claim is therefore NOT confirmed by this pass.
+
+NOT FIXED, deliberately: the fix belongs to the probe (it must stop counting frames in which the
+body was frozen, or measure the phase against gameplay time rather than frame count), and changing a
+diagnostic's measurement semantics is a decision for the user rather than a silent repair. Until it
+is fixed, treat this suite's ACTIVE assertion as KNOWN RED and read the other assertions, which are
+all green.
+
 ---
 
 ## 13. DEFERRED SYSTEMS
@@ -7700,4 +7747,138 @@ ever wrong.
   **NOT YET VERIFIED** and cannot be until enemy AI exists and the user reads it.
 - Bar READABILITY - size, position, colour, legibility against the arena - is **NOT YET VERIFIED**.
   A probe cannot grade it and is not claimed to.
+
+---
+
+## Milestone 21 - Animation lookup architecture, SLICE A (section 8X, recorded 2026-09-15)
+
+STATUS: **APPLIED, statically clean, PROBE-MEASURED.** `main.tscn` boots at 0 errors / 0 debugger
+errors / 20 warnings. NOT human-playtested, so this is applied and probe-proven only - it is **NOT
+accepted**. SLICE B (the content pipeline) is **NOT STARTED**.
+
+### 8X.1 THE DEFECT THIS SOLVES - the lookup key had no identity in it
+
+`AnimationAdapter._read_intent()` returned one of ELEVEN coarse intents and read only
+`state.action_name()` plus `state.phase_name()`. Its attack vocabulary was
+`attack_windup` / `attack_active` / `attack_recovery` - correct as a SHARED STATE vocabulary, and
+**insufficient as an animation lookup key**. It could say "this actor is attacking"; it could not say
+WHICH attack, so it could not choose `unarmed_dw_light_attack_01` over `unarmed_main_back_step_attack_01`.
+Every attack in the game collapsed onto three keys.
+
+The identity was absent from the CONTRACT, not merely from the adapter: `ActorState` exposed
+`action_name()`, `phase_name()`, `source_phase_name()`, `phase_remaining()` and `reaction_name()`,
+and nothing that named the attack. `AttackDefinition.display_name` even carried the comment "Shown in
+diagnostics and, later, drive the animation adapter", and both owners already emitted
+`attack_started(definition)` - so the definition was already flowing, and simply was not reachable
+through the read-only contract.
+
+### 8X.2 WHAT WAS BUILT
+
+    gameplay owner  ->  ActorState  ->  AnimationIntent  ->  AnimationSet  ->  clip
+    (owns the attack)   (reports it)    (describes)         (maps)           (plays)
+
+- **Attack identity on the contract.** `AttackDefinition` gained an `id` and a `key()` (falling back
+  to a slug of the name), plus a `slug()` normalizer, so `"Light 1"`, `"LIGHT-1"` and `"light_1"` are
+  ONE key. `EnemyAttackProfile` gained `attack_id` (seeded one-way at `_ready()` like every other
+  profile field). Owners expose `attack_id()`; `ActorState.attack_id()` reads it through the existing
+  duck-typed resolution, so a presentation layer never reaches into a gameplay component.
+- **`scripts/animation/animation_intent.gd`** - the read model. Built ONLY from `ActorState`, holds
+  no timer, starts nothing, cancels nothing, decides nothing. Carries action, phase, identity,
+  remaining time and the movement context. `variant` and `direction` are declared and DELIBERATELY
+  UNPOPULATED: no combo chain exists to advance `_01` -> `_02`, and a committed attack owns the body
+  so a "running attack" is not reachable today. Declared so the shape says where that content lands.
+- **`scripts/animation/animation_set.gd`** - the swappable mapping layer. `FistAnimationSet`,
+  `MacheteAnimationSet`, `BatAnimationSet` are three `.tres` files and three assignments. Attack slots
+  are keyed by IDENTITY (`attack:light`), and a slot maps to an ORDERED clip list, which subsumes both
+  authoring shapes: one complete motion is a one-element list, and the pack's fragmented
+  `charged_attack_01_charge` / `_hold` / `_release` is a three-element list, with no branch in the driver.
+- **The fallback policy, made explicit** - five distinct outcomes, never collapsed: EXACT, FALLBACK
+  (a DECLARED substitute), NEUTRAL (the neutral slot stands in), MISSING (no content and no neutral),
+  NONE (no set at all). A declared substitute that is itself empty is a CONFIGURATION ERROR and is
+  reported MISSING rather than quietly neutralled - the author's intent is on record and broken.
+- **The adapter** resolves a SLOT and reads the clip from the assigned set. Slot and intent are tracked
+  SEPARATELY because they move INDEPENDENTLY: an attack's slot follows its identity, while the intent
+  walks startup -> active -> recovery. `_apply_intent()` is still the driver seam; the placeholder label
+  now shows the slot and the resolved clip.
+
+### 8X.3 MEASURED EVIDENCE (all fresh runs this pass)
+
+- `animation_lookup_probe_debug` (NEW) -> **`RESULT: ALL CHECKS PASSED (30)`**, writing
+  `res://animation_lookup_probe_report.txt`. THE CENTRAL CLAIM, measured rather than assumed:
+  `light: 33 committed frame(s), slots=["attack:light"] intents=["attack_windup", "attack_active",
+  "attack_recovery"]` - ONE slot held for the whole commitment while the coarse intent moved through
+  three phases, and `light` vs `heavy` resolve to DIFFERENT slots. All five resolution outcomes are
+  asserted against a SYNTHETIC set, so the policy is proven independently of whether a real clip exists.
+- `animation_adapter_probe_debug` -> **`ALL CHECKS PASSED (54)`**, unchanged count: 4 actors, 3 kinds,
+  1 script, and it still DRIVES a real attack and a real killing blow.
+- `actor_contract_probe_debug` -> **`ALL CHECKS PASSED (82)`**: both enemy variants, one behaviour
+  script, profiles still a SEED.
+- `live_combat_credit_probe_debug` -> **`ALL CHECKS PASSED (54)`**: hitstop, enemy interruption and the
+  death credit reset all intact with identity in the contract.
+- `main.tscn` boots at 0 errors, 0 debugger errors, 20 warnings.
+
+### 8X.4 DEFECTS FOUND AND FIXED DURING THIS PASS (recorded, not worked around)
+
+1. **A duplicate variable declaration in `player_combat.gd`** - `_last_attack_id` was declared TWICE
+   (twice-declared because one edit applied twice). A GDScript parse error, caught by diagnostics and
+   removed. LESSON: an edit tool that can apply the same insertion twice will not tell you.
+2. **`animation_intent.gd` referenced `AnimationSet` and its OWN `class_name` before the global class
+   registry had scanned either new file**, so the file failed to parse - the registration-timing problem
+   this project has now hit three times. Fixed by making the new classes depend only on `preload` consts
+   and never on their own `class_name`.
+3. **PROBE defect (not production): the lookup probe invented a `"player"` group that does not exist.**
+   The project's established player group is `CreditLedger.GROUP_PLAYER_ACTOR` (`"player_actor"`) - used
+   by every other probe, the HUD, the ledger and the stake. The invented group found NOTHING, which
+   turned three player assertions into null comparisons that read exactly like GAMEPLAY failures. Fixed
+   to use the established group AND to FAIL LOUDLY when it finds nothing, because a silent null is how a
+   probe reports a bug that is not there.
+4. **PROBE defect: `String()` wrapped a `PackedStringArray`** in the MISSING-clip assertion, which
+   raised at runtime and aborted the audit.
+
+### 8X.5 WHAT IS DELIBERATELY NOT DONE
+
+No animation clips, no `AnimationPlayer`, no `AnimationTree`, no blend tree, no root motion, no
+animation-driven hitboxes or timing, no changes to any gameplay timing, cost, damage or commitment.
+Deleting `animation_intent.gd`, `animation_set.gd` and the set lookup leaves every actor behaving
+exactly as it does now, which is the test of whether a presentation layer is a presentation layer.
+Measured fact: there is NO `AnimationPlayer`, `AnimationTree` or `Skeleton3D` anywhere in the project.
+
+### 8X.6 SLICE B - the content pipeline (NOT STARTED, and NOT approved by this record)
+
+THE RIG DECISION IS MADE: on the user's instruction, the pack's own low poly man
+(`Models/Md_Char_Low_Poly_Man.fbx`) becomes the PLAYER's visual child, while the collision shape,
+hurtbox and hitbox stay exactly as authored on the existing body.
+
+THREE MEASURED BLOCKERS STAND IN FRONT OF IT:
+
+1. **THE PACK IS NOT IMPORTED.** A search for `*.fbx.import` across the whole Nephilite folder returns
+   ZERO files, and the pack ships UNITY `.meta` sidecars (172-byte folder metas, ~27 KB model metas).
+   Godot writes an `.import` sidecar for every asset it imports, so all 112 animations and the model are
+   currently inert raw files sitting beside the scene tree. Nothing can reach the screen until this is
+   solved, and it is a TOOLING problem that can fail independently of the design.
+2. **NO SKELETON NODE EXISTS ANYWHERE**, so there is no path by which a clip could be applied even if
+   one imported.
+3. **THE PACK HAS NO PARRY CLIP.** A search for `*arry*` across the entire pack returns ZERO results;
+   the README's own action list is light, charged, running, rolling, backstepping and jumping
+   light/heavy. Parry is an implemented, measured, HUMAN-PLAYED, ACCEPTED gameplay system, so on day one
+   of the fist set an accepted action has no content. **The fallback policy is therefore LOAD-BEARING,
+   not defensive** - the first real set will report MISSING for parry, and that is the correct outcome.
+
+TWO INTEGRATION HAZARDS to decide at the moment Slice B lands, recorded so they are not discovered late:
+
+- **The defeat pose will fight the death clip.** `EnemyDeathPresentationDebug` owns the defeat pose by
+  writing a MESH TRANSFORM plus a `material_override`, and the adapter deliberately refuses to write mesh
+  transforms BECAUSE of that. A skeleton animating the body at the same time needs one owner: either the
+  death clip takes over the pose, or the transform keeps holding and the clip plays underneath.
+- **The rig must not touch gameplay geometry.** The animated mesh is a visual child; collision, hurtbox
+  and hitbox stay as authored. This project has already paid once for a presentation layer becoming an
+  accidental authority.
+
+### 8X.7 UNPOPULATED SLOTS ARE A REPORTED STATE, NOT A FAILURE
+
+`AnimationSet.unpopulated_slots()` asks the asset-completeness question in one call, and the adapter
+reports each unsatisfied slot ONCE via `push_warning` (`report_missing_slots`, ON by default). With NO
+set assigned, every adapter honestly reports the slot it WOULD ask for and resolves NONE - which is why
+the whole lookup is readable today, before a single clip exists. **No real `.tres` set has been authored
+yet**, so the policy is proven against a synthetic set and NOT against the fist pack's real contents.
 

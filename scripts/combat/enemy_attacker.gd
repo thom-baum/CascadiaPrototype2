@@ -166,6 +166,9 @@ var attack: AttackDefinition
 ## Name carried into the built AttackDefinition. Seeded from the archetype profile when one is
 ## assigned, so a diagnostic reports the VARIANT's own name rather than a generic one.
 var _display_name := "Enemy Attack"
+## Identity carried into the built AttackDefinition, seeded by the same one-way rule from the profile
+## (Milestone 21). Empty means "derive it from the name" - see `AttackDefinition.key()`.
+var _attack_id := ""
 
 var _phase: int = Phase.IDLE
 ## Seconds spent in the current phase.
@@ -238,7 +241,7 @@ func _ready() -> void:
 	# the attack lands second. That ordering is deliberate, not incidental.
 	_apply_profile()
 	_body = get_parent() as Node3D
-	attack = AttackDefinition.make(_display_name, windup, active, recovery, damage)
+	attack = AttackDefinition.make(_display_name, windup, active, recovery, damage, _attack_id)
 	_hitbox = _resolve_hitbox()
 	_telegraph = _resolve_telegraph()
 	if _telegraph != null:
@@ -273,6 +276,12 @@ func _apply_profile() -> void:
 	face_target = profile.face_target
 	if not String(profile.display_name).is_empty():
 		_display_name = profile.display_name
+	# The presentation identity, seeded by the SAME one-way rule as every other field here. A new
+	# enemy variant is a new profile carrying a new `attack_id`, so two variants with different
+	# windups are distinguishable to the presentation layer without either owning a bespoke
+	# animation script - which is the whole point of the archetype layer.
+	if not String(profile.attack_id).is_empty():
+		_attack_id = profile.attack_id
 
 
 func _physics_process(delta: float) -> void:
@@ -353,6 +362,21 @@ func phase_remaining() -> float:
 ## Total committed time, windup through recovery.
 func total_duration() -> float:
 	return windup + active + recovery
+
+
+## The IDENTITY of the attack being performed, or "" while idle (Milestone 21).
+##
+## WHAT THIS IS FOR, and what it deliberately is not. An animation layer has to choose between
+## attacks, and the phase vocabulary cannot: `startup` is the same key for every attack in the game.
+## So the owner reports WHICH attack it is, and nothing else - no timing, no damage, no phase. Those
+## remain this component's authority, and nothing here exposes them any differently than before.
+##
+## The identity comes from the same one-way profile seed the numbers do, so an archetype that wants
+## its own animation key declares one and an archetype that does not keeps deriving it from its name.
+func attack_id() -> String:
+	if attack == null or _phase == Phase.IDLE:
+		return ""
+	return attack.key()
 
 
 ## Flat (XZ) distance from this attacker to its target, or INF when there is none.

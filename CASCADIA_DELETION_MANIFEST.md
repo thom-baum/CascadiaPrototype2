@@ -4127,3 +4127,96 @@ than on their spawn marks. NEW RUN is unaffected (`_spawn_transforms`) and the p
 encounter reset is unaffected (the locomotion component's own recorded mark). Recorded because
 movement makes the gap observable for the first time; deliberately NOT addressed in this milestone,
 which forbade enemy-position save/load.
+
+---
+
+## MILESTONE 21 - ANIMATION LOOKUP ARCHITECTURE, SLICE A (2026-09-15)
+
+Recorded at the moment of the work, per the file-hygiene rule. Recording is the action; deletion
+stays manual. NOTHING WAS DELETED. Slice B (FBX import, a rig, a real `AnimationPlayer`) was
+EXPLICITLY DEFERRED by the user and is not started.
+
+### New gameplay files (NOT deletion candidates - real systems)
+
+- `scripts/animation/animation_set.gd` (`class_name AnimationSet`, extends `Resource`). The
+  swappable per-weapon/per-creature clip mapping: slot key -> ordered clip list, plus declared
+  fallbacks and a neutral slot. Holds no timing, no damage and no phase. A new moveset is a new
+  `.tres`, not a code change.
+- `scripts/animation/animation_intent.gd` (`class_name AnimationIntent`, extends `RefCounted`). The
+  read model that carries ATTACK IDENTITY alongside the state the adapter already reported. Built
+  exclusively from `ActorState`; owns no timer and decides nothing.
+
+### New diagnostic files (cleanup candidates, delete with their scene)
+
+- `scripts/diagnostics/animation_lookup_probe_debug.gd` - the Slice A acceptance probe. 30 checks,
+  `RESULT: ALL CHECKS PASSED (30)`. Proves the five resolution outcomes against a SYNTHETIC set, the
+  slot vocabulary, that four actors resolve non-empty slots, and - by DRIVING real attacks through
+  `PlayerCombat.try_start` - that one attack holds ONE slot for its whole commitment while the coarse
+  intent walks all three phases.
+- `scenes/diagnostics/animation_lookup_probe_debug.tscn` - its standalone entry scene.
+
+### New report transcript at project root (evidence, same convention as the other `_*_report.txt`)
+
+- `res://animation_lookup_probe_report.txt` - written by the probe above, overwritten each run.
+
+### Recorded changes to EXISTING files
+
+- `scripts/combat/attack_definition.gd` - NEW `id` field (the stable lookup key), NEW optional `id`
+  parameter on `make()` (last and optional, so every existing call site is unchanged), NEW `key()`
+  and NEW `slug()`. Fallback behaviour when no id is authored: the key derives from the display name.
+- `scripts/combat/enemy_attack_profile.gd` - NEW optional exported `attack_id`, seeded one-way like
+  every other field here.
+- `scripts/combat/enemy_attacker.gd` - NEW `_attack_id` seeded from the profile, passed into
+  `AttackDefinition.make`, NEW `attack_id()` accessor. No timing value touched.
+- `scripts/player/player_combat.gd` - the two definitions now author `"light"` / `"heavy"` ids, NEW
+  `_last_attack_id` remembered at `try_start()`, NEW `attack_id()` accessor. No timing value touched.
+- `scripts/actors/actor_state.gd` - NEW `attack_id()` on the read-only contract, duck-typed off the
+  owning component so it works for both the player and an enemy.
+- `scripts/animation/animation_adapter.gd` - NEW slot vocabulary, NEW optional `animation_set` export,
+  NEW `report_missing_slots`, NEW `_slot` / `_resolved_clip` / `_resolved_status` / `_missing_slot`
+  tracking, NEW `slot_name()` / `resolved_clip()` / `resolution_status()` / `resolution_note()`, and
+  `_apply_intent()` now takes the previous slot as well. `intent_name()`, `history_values()` and
+  `intent_vocabulary()` are UNCHANGED, which is why the existing adapter probe still passes at 54/54.
+- `.summer/plans/CASCADIA_MILESTONE_ROADMAP.md` - new Milestone 21 section, current-state entry, and
+  new known-defect 12.5.
+
+### DEFECTS FOUND AND FIXED IN THIS PASS
+
+1. `player_combat.gd` ended up with `_last_attack_id` declared TWICE (two edits both applied), which
+   is a parse error. Fixed by keeping one declaration with the fuller comment. LESSON: two
+   independent edits sent against overlapping regions of one file are not safe - the second
+   duplicated the first.
+2. `animation_intent.gd` referenced `AnimationSet` and its own `class_name` before the global class
+   registry had scanned either new file, so both scripts failed to resolve. This is the
+   REGISTRATION-TIMING class of failure this project has recorded before (see the deletion-manifest
+   recurring-issues entries). Rewritten to depend only on `preload` and duck typing, the same
+   convention `animation_adapter_probe_debug.gd` already documents for exactly this reason.
+3. `animation_lookup_probe_debug.gd` crashed at runtime with
+   `Invalid call 'String' constructor: missing` - `String()` applied to a `PackedStringArray`. Fixed
+   to inspect the array directly.
+4. `animation_lookup_probe_debug.gd` also discovered the player through an INVENTED group name
+   (`"player"`) that does not exist in this project, which silently turned three player assertions
+   into null comparisons that read like gameplay failures. Corrected to the project's ESTABLISHED
+   group, `CreditLedger.GROUP_PLAYER_ACTOR` (`"player_actor"`), the same one every other probe, the
+   HUD, the ledger and the stake use. LESSON: an invented group name in a diagnostic is not a
+   harmless placeholder - it finds nothing and turns every downstream assertion into a false failure.
+
+### NEW DEFECT FOUND, RECORDED, DELIBERATELY NOT FIXED
+
+- `attack_probe_debug` now FAILS 2 checks (`LIGHT`/`HEAVY`: "measured ACTIVE matches definition").
+  Diagnosed as a PROBE MEASUREMENT artifact caused by hitstop (Milestone 18): the probe counts
+  FRAMES per phase, and a hitstop freeze stops the body advancing but not the frame count, so only
+  ACTIVE inflates (0.22 vs 0.14 authored) while STARTUP and RECOVERY both PASS. Separate from
+  Milestone 21, which changed no timing constant. Full record: roadmap section 12.5.
+
+### Regression results recorded THIS pass (all re-run fresh, not carried over)
+
+| Probe | Fresh result |
+| ----- | ------------ |
+| `animation_lookup_probe_debug` (new) | `RESULT: ALL CHECKS PASSED (30)` |
+| `animation_adapter_probe_debug` | `ALL CHECKS PASSED (54)` - unchanged, and it still drives a real attack |
+| `actor_contract_probe_debug` | `ALL CHECKS PASSED (82)` |
+| `live_combat_credit_probe_debug` | `ALL CHECKS PASSED (54)` - hitstop, interruption and the death credit reset intact |
+| `enemy_attack_probe_debug` | `ALL CHECKS PASSED` |
+| `attack_probe_debug` | **2 FAILED - KNOWN RED, diagnosed above (12.5)** |
+| `main.tscn` | boots at 0 errors, 0 debugger errors, 20 warnings |

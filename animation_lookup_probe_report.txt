@@ -1,0 +1,36 @@
+PASS  an authored id IS the lookup key ('light' from id='light')
+PASS  with no id, the key is derived from the name ('heavy_attack' from 'Heavy Attack')
+PASS  a display name with a space slugs to one key ('Light 1' -> 'light_1')
+PASS  case and punctuation do not change the key ('LIGHT-1' -> 'light_1')
+PASS  an already-clean key is unchanged
+attack keys: with_id='light' derived='heavy_attack'
+PASS  a populated slot resolves EXACT
+PASS  the exact slot returns ITS OWN clip
+PASS  an empty slot with a DECLARED substitute resolves FALLBACK
+PASS  the fallback returns the substitute's clip, not the requested slot's
+PASS  an empty undeclared slot falls to the NEUTRAL slot and says so
+PASS  the neutral stand-in returns the neutral clip
+PASS  with no neutral to stand in, an absent clip resolves MISSING
+PASS  a MISSING slot returns NO clip rather than an arbitrary one
+PASS  a declared substitute that is itself EMPTY is reported MISSING, not silently neutralled
+slot vocabulary: ["idle", "locomotion", "sprint", "dodge", "parry", "hurt", "stagger", "dead"]
+adapters found (by group): 4
+PASS  at least FOUR actors are driven by one adapter (4)
+PASS  Player: a wired adapter resolves a non-empty SLOT ('idle')
+PASS  Player: reports one of the five documented resolution outcomes ('none')
+PASS  TestAttacker: a wired adapter resolves a non-empty SLOT ('locomotion')
+PASS  TestAttacker: reports one of the five documented resolution outcomes ('none')
+PASS  PassiveNpc: a wired adapter resolves a non-empty SLOT ('idle')
+PASS  PassiveNpc: reports one of the five documented resolution outcomes ('none')
+PASS  HeavyBrute: a wired adapter resolves a non-empty SLOT ('idle')
+PASS  HeavyBrute: reports one of the five documented resolution outcomes ('none')
+PASS  the light attack was OBSERVED on committed frames (33 frame(s))
+PASS  the light attack holds ONE slot for its whole commitment ('attack:light')
+PASS  the coarse INTENT moved through multiple phases while the slot stayed fixed (3 phase(s))
+light: 33 committed frame(s), slots=["attack:light"] intents=["attack_windup", "attack_active", "attack_recovery"]
+PASS  light and heavy resolve to DIFFERENT slots ('attack:light' vs 'attack:heavy')
+PASS  the player is at rest once the driven attacks completed
+PASS  at rest the contract reports NO attack identity ('')
+PASS  the driven definition kept its own authored key ('heavy')
+
+RESULT: ALL CHECKS PASSED (30)

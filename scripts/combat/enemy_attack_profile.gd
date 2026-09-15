@@ -41,6 +41,11 @@ extends Resource
 @export_group("Attack")
 ## Shown in diagnostics. Names the variant in a log or a probe report.
 @export var display_name := "Enemy Attack"
+## The attack's identity for PRESENTATION (Milestone 21), carried into the `AttackDefinition` this
+## profile seeds. Two enemy variants with different timings are two profiles with two ids, so the
+## animation layer can tell them apart without either variant owning a bespoke animation script.
+## Leave EMPTY to derive the key from `display_name` instead.
+@export var attack_id := ""
 ## Seconds of telegraphed commitment before the damage window opens. The actor is
 ## vulnerable for exactly this long.
 @export var windup := 0.60
@@ -84,6 +89,6 @@ func total_duration() -> float:
 ## The whole profile on one line, for a log line or a probe report. Every field is printed,
 ## so a profile can never be reported as something it is not.
 func summary() -> String:
-	return "%s: windup=%.2f active=%.2f recovery=%.2f damage=%.1f detect=%.1f range=%.2f cooldown=%.2f auto=%s face=%s" % [
-		display_name, windup, active, recovery, damage, detection_radius, engage_range,
+	return "%s (id=%s): windup=%.2f active=%.2f recovery=%.2f damage=%.1f detect=%.1f range=%.2f cooldown=%.2f auto=%s face=%s" % [
+		display_name, attack_id, windup, active, recovery, damage, detection_radius, engage_range,
 		attack_cooldown, str(auto_attack), str(face_target)]
